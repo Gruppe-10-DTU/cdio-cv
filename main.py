@@ -2,8 +2,10 @@ from ultralytics import YOLO
 from ultralytics.utils.plotting import Annotator
 import cv2
 
-model = YOLO('yolov8n.pt')
-cap = cv2.VideoCapture("vid/Overview_Video.mp4")
+model = YOLO("runs/detect/train10/weights/best.pt")
+cap = cv2.VideoCapture("vid/Bane_different_orientation.mp4")
+
+threshold = 0.70
 
 ret = True
 while ret:
@@ -19,8 +21,9 @@ while ret:
             cls = box.cls
             conf = box.conf
 
-            label = f"{model.names[int(cls)]} {float(conf):0.2f}"
-            annotator.box_label(cords, label)
+            if conf >= threshold:
+                label = f"{model.names[int(cls)]} {float(conf):0.2f}"
+                annotator.box_label(cords, label)
 
     img = annotator.result()
     cv2.imshow("YOLO", img)
