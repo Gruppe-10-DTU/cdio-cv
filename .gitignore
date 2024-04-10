@@ -161,5 +161,4 @@ cython_debug/
 
 #Go Stuff:
 .mod
-pbinfo/*
-invoicer/*
+
