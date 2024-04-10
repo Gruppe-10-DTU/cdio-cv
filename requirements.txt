@@ -1,0 +1,4 @@
+opencv-python~=4.9.0.80
+lapx~=0.5.7
+ultralytics~=8.1.42
+torchvision~=0.9.1
