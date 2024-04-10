@@ -1,0 +1,30 @@
+syntax="proto3";
+option go_package = "main/Gocode";
+
+message moveReq{
+  string dir = 1;
+  int32 dur = 2;
+}
+
+message turnReq{
+  string dir = 1;
+  int32 deg = 2;
+}
+
+message power{
+  bool pow = 1;
+}
+
+message stat{
+  bool err_code = 1;
+}
+
+service pb{
+  rpc move(moveReq) returns (stat) {}
+  rpc turn(turnReq) returns (stat) {}
+  rpc vacuum(power) returns (stat) {}
+  rpc stats(stat) returns (stat) {}
+}
+
+
+
