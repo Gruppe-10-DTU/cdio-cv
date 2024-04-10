@@ -161,4 +161,5 @@ cython_debug/
 
 #Go Stuff:
 .mod
+*.pb.go
 
