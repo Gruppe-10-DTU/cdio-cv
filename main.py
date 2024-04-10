@@ -43,7 +43,7 @@ while ret:
         if results[0].names[box.cls.item()] == "ball":
             old_ball = balls[box.id]
             if old_ball.x1 != x or old_ball.y1 != y:
-                balls[box.id] = Ball(x, y, x + w, y + h)
+                balls[box.id] = Ball(x, y, x + w, y + h, box.id)
 
     ret, frame = cap.read()
 
