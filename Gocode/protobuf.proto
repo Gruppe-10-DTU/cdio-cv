@@ -1,29 +1,34 @@
 syntax="proto3";
 option go_package = "main/Gocode";
 
-message moveReq{
-  string dir = 1;
-  int32 dur = 2;
+message MoveReq{
+  string direction = 1;
+  int32 distance = 2;
+  int32 speed = 3;
 }
 
-message turnReq{
-  string dir = 1;
-  int32 deg = 2;
+message TurnRequest{
+  string direction = 1;
+  int32 degrees = 2;
 }
 
-message power{
+message VacuumPower{
   bool pow = 1;
 }
 
-message stat{
+message Status{
   bool err_code = 1;
 }
 
+message Empty {}
+
+// The services provided over rpc
 service pb{
-  rpc move(moveReq) returns (stat) {}
-  rpc turn(turnReq) returns (stat) {}
-  rpc vacuum(power) returns (stat) {}
-  rpc stats(stat) returns (stat) {}
+  rpc move(MoveReq) returns (Status) {}
+  rpc turn(TurnRequest) returns (Status) {}
+  rpc vacuum(VacuumPower) returns (Status) {}
+  rpc stats(Status) returns (Status) {}
+  rpc stopMovement(Empty) returns(Status) {}
 }
 
 
