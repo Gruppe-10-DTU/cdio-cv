@@ -16,11 +16,11 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - uses: wizhi/setup-buf@v1
-        with:
-          version: '0.36.0'
+      with:
+        version: '0.36.0'
     - uses: arduino/setup-protoc@v1
-        with:
-          version: '3.x'
+      with:
+        version: '3.x'
 
 
     - name: Set up Go
@@ -35,15 +35,15 @@ jobs:
         
     - name: Compile proto
       run: |
-      cd Gocode
-      protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative protobuf.proto
+        cd Gocode
+        protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative protobuf.proto
       
     - name: Build
       run: |
-      cd Gocode
-      go build -v ./...
+        cd Gocode
+        go build -v ./...
 
     - name: Test
       run: |
-      cd Gocode
-      go test -v ./...
+        cd Gocode
+        go test -v ./...
