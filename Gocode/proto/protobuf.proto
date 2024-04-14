@@ -1,29 +1,31 @@
 syntax="proto3";
-option go_package = "main/Gocode";
 
-message MoveReq{
+package proto;
+option go_package = "main/proto";
+
+message MoveReq {
   string direction = 1;
   int32 distance = 2;
   int32 speed = 3;
 }
 
-message TurnRequest{
+message TurnRequest {
   string direction = 1;
   int32 degrees = 2;
 }
 
-message VacuumPower{
+message VacuumPower {
   bool power = 1;
 }
 
-message Status{
+message Status {
   bool err_code = 1;
 }
 
 message Empty {}
 
 // The services provided over rpc
-service pb{
+service Robot {
   rpc move(MoveReq) returns (Status) {}
   rpc turn(TurnRequest) returns (Status) {}
   rpc vacuum(VacuumPower) returns (Status) {}
