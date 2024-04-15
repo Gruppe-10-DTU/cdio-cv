@@ -23,7 +23,16 @@ const (
 	RESET   = "reset"
 )
 
+var leftMotor *ev3dev.TachoMotor
+var rightMotor *ev3dev.TachoMotor
+var vacuumMotor *ev3dev.TachoMotor
+var gyro_1 *ev3dev.Sensor
+var gyro_2 *ev3dev.Sensor
+
 func main() {
+
+	initializeRobotPeripherals()
+
 	lis, err := net.Listen("tcp", ":50051")
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
@@ -40,16 +49,6 @@ func main() {
 
 func (grpcServer *robotServer) move(request *pbuf.MoveReq) error {
 
-	leftMotor, err := ev3dev.TachoMotorFor("ev3-ports:outA", "lego-ev3-l-motor")
-	if err != nil {
-		log.Print(err)
-		return err
-	}
-	rightMotor, err := ev3dev.TachoMotorFor("ev3-ports:outD", "lego-ev3-l-motor")
-	if err != nil {
-		log.Print(err)
-		return err
-	}
 	leftMotor.Command(RESET)
 	rightMotor.Command(RESET)
 
@@ -76,7 +75,7 @@ func (grpcServer *robotServer) move(request *pbuf.MoveReq) error {
 	for distance > pos {
 		pos1, _ := leftMotor.Position()
 		pos2, _ := rightMotor.Position()
-		pos = int(math.Ceil(float64(pos1+pos2)/(360*2.0)) * (float64(WHEEL_DIAMETER) * 2 * math.Pi))
+		pos = int(math.Ceil(((float64(pos1/leftMotor.CountPerRot()) + float64(pos2/rightMotor.CountPerRot())) / 2.0) * (float64(WHEEL_DIAMETER) * 2 * math.Pi)))
 	}
 
 	leftMotor.Command(STOP)
@@ -97,16 +96,6 @@ func (grpcServer *robotServer) vacuum(request *pbuf.VacuumPower) error {
 }
 
 func (grpcServer *robotServer) stopMovement(request *pbuf.Empty) error {
-	leftMotor, err := ev3dev.TachoMotorFor("ev3-ports:outA", "lego-ev3-l-motor")
-	if err != nil {
-		log.Print(err)
-		return err
-	}
-	rightMotor, err := ev3dev.TachoMotorFor("ev3-ports:outD", "lego-ev3-l-motor")
-	if err != nil {
-		log.Print(err)
-		return err
-	}
 
 	rightMotor.Command(STOP)
 	leftMotor.Command(STOP)
@@ -118,4 +107,30 @@ func (grpcServer *robotServer) stats(request *pbuf.Status) error {
 	/* TODO */
 
 	return nil
+}
+
+func initializeRobotPeripherals() {
+	leftMotor, err := ev3dev.TachoMotorFor("ev3-ports:outA", "lego-ev3-l-motor")
+	if err != nil {
+		log.Fatal(err)
+	}
+	rightMotor, err := ev3dev.TachoMotorFor("ev3-ports:outD", "lego-ev3-l-motor")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	vacuumMotor, err := ev3dev.TachoMotorFor("ev3-ports:outD", "lego-ev3-l-motor")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	gyro_1, err := ev3dev.SensorFor("ev3-ports:in1", "lego-ev3-gyro")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	gyro_2, err := ev3dev.SensorFor("ev3-ports:in1", "lego-ev3-gyro")
+	if err != nil {
+		log.Fatal(err)
+	}
 }
