@@ -137,26 +137,27 @@ func (grpcServer *robotServer) stats(request *pbuf.Status) error {
 }
 
 func initializeRobotPeripherals() {
-	leftMotor, err := ev3dev.TachoMotorFor("ev3-ports:outA", "lego-ev3-l-motor")
+	var err error
+	leftMotor, err = ev3dev.TachoMotorFor("ev3-ports:outA", "lego-ev3-l-motor")
 	if err != nil {
 		log.Fatal(err)
 	}
-	rightMotor, err := ev3dev.TachoMotorFor("ev3-ports:outD", "lego-ev3-l-motor")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	vacuumMotor, err := ev3dev.TachoMotorFor("ev3-ports:outD", "lego-ev3-l-motor")
+	rightMotor, err = ev3dev.TachoMotorFor("ev3-ports:outD", "lego-ev3-l-motor")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	gyro_1, err := ev3dev.SensorFor("ev3-ports:in1", "lego-ev3-gyro")
+	vacuumMotor, err = ev3dev.TachoMotorFor("ev3-ports:outD", "lego-ev3-l-motor")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	gyro_2, err := ev3dev.SensorFor("ev3-ports:in1", "lego-ev3-gyro")
+	gyro_1, err = ev3dev.SensorFor("ev3-ports:in1", "lego-ev3-gyro")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	gyro_2, err = ev3dev.SensorFor("ev3-ports:in1", "lego-ev3-gyro")
 	if err != nil {
 		log.Fatal(err)
 	}
