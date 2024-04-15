@@ -162,3 +162,7 @@ cython_debug/
 #Go Stuff:
 *.pb.go
 
+# Proto generated files
+/Pythoncode/grpc/protobuf_pb2_grpc.py
+/Pythoncode/grpc/protobuf_pb2.pyi
+/Pythoncode/grpc/protobuf_pb2.py
