@@ -17,10 +17,10 @@ type robotServer struct {
 const WHEEL_DIAMETER int = 40
 
 const (
-	RUN     = "RUN-forever"
-	STOP    = "STOP"
-	ABS_POS = "RUN-to-abs-pos"
-	RESET   = "RESET"
+	RUN     = "run-forever"
+	STOP    = "stop"
+	ABS_POS = "run-to-abs-pos"
+	RESET   = "reset"
 )
 
 func main() {
