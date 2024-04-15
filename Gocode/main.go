@@ -144,7 +144,8 @@ func (grpcServer *robotServer) vacuum(request *pbuf.VacuumPower) error {
 }
 
 func (grpcServer *robotServer) stopMovement(request *pbuf.Empty) error {
-
+	rightMotor.Command(RESET)
+	leftMotor.Command(RESET)
 	rightMotor.Command(STOP)
 	leftMotor.Command(STOP)
 
