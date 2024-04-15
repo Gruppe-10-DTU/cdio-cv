@@ -67,14 +67,28 @@ func (grpcServer *robotServer) move(request *pbuf.MoveReq) error {
 		return proto.Error
 	}
 
+	var Kp = 0.0
+	var Ki = 0.0
+	var Kd = 0.0
+	var gyroError = 0.0
+	var integral = 0.0
+	var derivative = 0.0
+	var lastError = 0.0
+	var correction = 0.0
+	target := 0.0
 	pos := 0
-
-	leftMotor.SetSpeedSetpoint(speed)
-	rightMotor.SetSpeedSetpoint(speed)
-
-	leftMotor.Command(RUN)
-	rightMotor.Command(RUN)
 	for distance > pos {
+		gyroError = target - getGyroValue()
+		integral = integral + gyroError
+		derivative = gyroError - lastError
+		correction = (Kp * gyroError) + (Ki * integral) + (Kd * derivative)
+
+		leftMotor.SetSpeedSetpoint(speed + int(correction))
+		rightMotor.SetSpeedSetpoint(speed - int(correction))
+
+		leftMotor.Command(RUN)
+		rightMotor.Command(RUN)
+
 		pos1, _ := leftMotor.Position()
 		pos2, _ := rightMotor.Position()
 		pos = int(math.Ceil(((float64(pos1/leftMotor.CountPerRot()) + float64(pos2/rightMotor.CountPerRot())) / 2.0) * (float64(WHEEL_DIAMETER) * 2 * math.Pi)))
