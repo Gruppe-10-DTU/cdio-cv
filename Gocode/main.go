@@ -132,7 +132,14 @@ func (grpcServer *robotServer) turn(request *pbuf.TurnRequest) error {
 }
 
 func (grpcServer *robotServer) vacuum(request *pbuf.VacuumPower) error {
-
+	vacuumMotor.Command(RESET)
+	target := int(float32(vacuumMotor.CountPerRot()) * 1.25)
+	vacuumMotor.SetSpeedSetpoint(500)
+	if !request.Power {
+		target *= -1
+	}
+	vacuumMotor.SetPositionSetpoint(target)
+	vacuumMotor.Command(ABS_POS)
 	return nil
 }
 
