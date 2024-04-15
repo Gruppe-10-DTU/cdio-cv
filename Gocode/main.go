@@ -9,6 +9,7 @@ import (
 	"math"
 	"net"
 	"strconv"
+	"time"
 )
 
 type robotServer struct {
@@ -86,7 +87,32 @@ func (grpcServer *robotServer) move(request *pbuf.MoveReq) error {
 }
 
 func (grpcServer *robotServer) turn(request *pbuf.TurnRequest) error {
-	/* TODO */
+
+	resetGyros()
+
+	degrees := int(request.Degrees)
+	direction := 1.0
+	speed := 500
+	switch request.Direction {
+	case "left":
+		direction = -1.0
+	case "right":
+		direction = 1.0
+	default:
+		return proto.Error
+	}
+	leftMotor.SetSpeedSetpoint(speed)
+	leftMotor.SetRampUpSetpoint(2 * time.Second)
+
+	rightMotor.SetSpeedSetpoint(speed)
+	rightMotor.SetRampUpSetpoint(2 * time.Second)
+	pos := 0
+	for degrees > pos {
+		leftMotor.Command(RUN)
+		rightMotor.Command(RUN)
+
+		pos = int(math.Ceil(getGyroValue() * direction))
+	}
 
 	return nil
 }
