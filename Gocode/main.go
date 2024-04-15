@@ -144,3 +144,10 @@ func getGyroValue() float64 {
 
 	return (pos1 + pos2) / 2.0
 }
+func resetGyros() {
+	gyro_1.SetMode("GYRO-CAL")
+	gyro_1.SetMode("GYRO-ANG")
+
+	gyro_2.SetMode("GYRO-CAL")
+	gyro_2.SetMode("GYRO-ANG")
+}
