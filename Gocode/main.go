@@ -8,6 +8,7 @@ import (
 	"log"
 	"math"
 	"net"
+	"strconv"
 )
 
 type robotServer struct {
@@ -133,4 +134,13 @@ func initializeRobotPeripherals() {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+func getGyroValue() float64 {
+
+	tmp, _ := gyro_1.Value(math.MaxInt)
+	pos1, _ := strconv.ParseFloat(tmp, 64)
+	tmp, _ = gyro_2.Value(math.MaxInt)
+	pos2, _ := strconv.ParseFloat(tmp, 64)
+
+	return (pos1 + pos2) / 2.0
 }
