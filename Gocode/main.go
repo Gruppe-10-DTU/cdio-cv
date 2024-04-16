@@ -127,7 +127,8 @@ func (grpcServer *robotServer) turn(request *pbuf.TurnRequest) error {
 
 		pos = int(math.Ceil(getGyroValue() * direction))
 	}
-
+	leftMotor.Command(STOP)
+	rightMotor.Command(STOP)
 	return nil
 }
 
