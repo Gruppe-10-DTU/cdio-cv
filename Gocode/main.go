@@ -54,19 +54,19 @@ func (grpcServer *robotServer) move(request *pbuf.MoveReq) error {
 	leftMotor.Command(RESET)
 	rightMotor.Command(RESET)
 
-	direction := request.Direction
+	direction := 0.0
 	distance := int(request.Distance)
 	speed := int(request.Speed)
-
-	switch direction {
+	distance = int(float32(distance) / (float32(WHEEL_DIAMETER) * 2 * math.Pi))
+	switch request.Direction {
 	case "backward":
-		speed *= -1
+		direction = -1.0
 	case "forward":
-		speed = speed
+		direction = 1.0
 	default:
 		return proto.Error
 	}
-
+	speed = speed * int(direction)
 	var Kp = 0.0
 	var Ki = 0.0
 	var Kd = 0.0
@@ -81,7 +81,7 @@ func (grpcServer *robotServer) move(request *pbuf.MoveReq) error {
 		gyroError = target - getGyroValue()
 		integral = integral + gyroError
 		derivative = gyroError - lastError
-		correction = (Kp * gyroError) + (Ki * integral) + (Kd * derivative)
+		correction = ((Kp * gyroError) + (Ki * integral) + (Kd * derivative)) * direction
 
 		leftMotor.SetSpeedSetpoint(speed + int(correction))
 		rightMotor.SetSpeedSetpoint(speed - int(correction))
@@ -91,7 +91,7 @@ func (grpcServer *robotServer) move(request *pbuf.MoveReq) error {
 
 		pos1, _ := leftMotor.Position()
 		pos2, _ := rightMotor.Position()
-		pos = int(math.Ceil(((float64(pos1/leftMotor.CountPerRot()) + float64(pos2/rightMotor.CountPerRot())) / 2.0) * (float64(WHEEL_DIAMETER) * 2 * math.Pi)))
+		pos = (pos1 + pos2) / 2
 	}
 
 	leftMotor.Command(STOP)
@@ -187,9 +187,9 @@ func initializeRobotPeripherals() {
 func getGyroValue() float64 {
 
 	tmp, _ := gyro_1.Value(math.MaxInt)
-	pos1, _ := strconv.ParseFloat(tmp, 64)
+	pos1, _ := strconv.ParseFloat(tmp, 32)
 	tmp, _ = gyro_2.Value(math.MaxInt)
-	pos2, _ := strconv.ParseFloat(tmp, 64)
+	pos2, _ := strconv.ParseFloat(tmp, 32)
 
 	return (pos1 + pos2) / 2.0
 }
