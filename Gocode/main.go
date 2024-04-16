@@ -27,8 +27,8 @@ const (
 var leftMotor *ev3dev.TachoMotor
 var rightMotor *ev3dev.TachoMotor
 var vacuumMotor *ev3dev.TachoMotor
-var gyro_1 *ev3dev.Sensor
-var gyro_2 *ev3dev.Sensor
+var gyro1 *ev3dev.Sensor
+var gyro2 *ev3dev.Sensor
 
 func main() {
 
@@ -66,14 +66,14 @@ func (grpcServer *robotServer) move(request *pbuf.MoveReq) error {
 		return proto.Error
 	}
 	speed = speed * int(direction)
-	var Kp = 0.0
-	var Ki = 0.0
-	var Kd = 0.0
-	var gyroError = 0.0
-	var integral = 0.0
-	var derivative = 0.0
-	var lastError = 0.0
-	var correction = 0.0
+	Kp := 0.0
+	Ki := 0.0
+	Kd := 0.0
+	gyroError := 0.0
+	integral := 0.0
+	derivative := 0.0
+	lastError := 0.0
+	correction := 0.0
 	target := 0.0
 	pos := 0
 	for distance > pos {
@@ -186,29 +186,29 @@ func initializeRobotPeripherals() {
 		log.Fatal(err)
 	}
 
-	gyro_1, err = ev3dev.SensorFor("ev3-ports:in1", "lego-ev3-gyro")
+	gyro1, err = ev3dev.SensorFor("ev3-ports:in1", "lego-ev3-gyro")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	gyro_2, err = ev3dev.SensorFor("ev3-ports:in1", "lego-ev3-gyro")
+	gyro2, err = ev3dev.SensorFor("ev3-ports:in1", "lego-ev3-gyro")
 	if err != nil {
 		log.Fatal(err)
 	}
 }
 func getGyroValue() float64 {
 
-	tmp, _ := gyro_1.Value(math.MaxInt)
+	tmp, _ := gyro1.Value(math.MaxInt)
 	pos1, _ := strconv.ParseFloat(tmp, 32)
-	tmp, _ = gyro_2.Value(math.MaxInt)
+	tmp, _ = gyro2.Value(math.MaxInt)
 	pos2, _ := strconv.ParseFloat(tmp, 32)
 
 	return (pos1 + pos2) / 2.0
 }
 func resetGyros() {
-	gyro_1.SetMode("GYRO-CAL")
-	gyro_1.SetMode("GYRO-ANG")
+	gyro1.SetMode("GYRO-CAL")
+	gyro1.SetMode("GYRO-ANG")
 
-	gyro_2.SetMode("GYRO-CAL")
-	gyro_2.SetMode("GYRO-ANG")
+	gyro2.SetMode("GYRO-CAL")
+	gyro2.SetMode("GYRO-ANG")
 }
