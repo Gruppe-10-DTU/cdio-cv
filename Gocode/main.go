@@ -22,7 +22,7 @@ const (
 	RESET   = "reset"
 )
 
-type server struct {
+type robotServer struct {
 	pbuf.UnimplementedRobotServer
 }
 
@@ -35,18 +35,18 @@ func main() {
 		log.Fatalf("failed to listen: %v", err)
 	}
 	fmt.Printf("Succesful bind on 50051 ...\n")
-	s := grpc.NewServer()
-	fmt.Printf("Created server ...\n")
-	pbuf.RegisterRobotServer(s, &server{})
-	fmt.Printf("Registered server ...\n")
-	err = s.Serve(listen)
+	server := grpc.NewServer()
+	fmt.Printf("Created robotServer ...\n")
+	pbuf.RegisterRobotServer(server, &robotServer{})
+	fmt.Printf("Registered robotServer ...\n")
+	err = server.Serve(listen)
 	if err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}
 
 }
 
-func (s *server) move(_ context.Context, request *pbuf.MoveRequest) (*pbuf.Status, error) {
+func (s *robotServer) Move(_ context.Context, request *pbuf.MoveRequest) (*pbuf.Status, error) {
 	fmt.Printf("Received move command ... \n")
 	rightMotor, err := ev3dev.TachoMotorFor("ev3-ports:outA", "lego-ev3-l-motor")
 	if err != nil {
@@ -60,10 +60,10 @@ func (s *server) move(_ context.Context, request *pbuf.MoveRequest) (*pbuf.Statu
 	leftMotor.Command(RESET)
 	rightMotor.Command(RESET)
 
-	direction := 0.0
+	direction, err := getGyroValue()
 	distance := int(request.Distance)
 	speed := int(request.Speed)
-	distance = int(float32(distance) / (float32(WHEEL_DIAMETER) * 2 * math.Pi))
+	distance = int(float32(distance)/(float32(WHEEL_DIAMETER)*math.Pi)) * leftMotor.CountPerRot()
 	switch request.Direction {
 	case "backward":
 		direction = -1.0
@@ -85,6 +85,7 @@ func (s *server) move(_ context.Context, request *pbuf.MoveRequest) (*pbuf.Statu
 	pos := 0
 	for distance > pos {
 		deg, _ := getGyroValue()
+		fmt.Printf("heading: %f \n", deg)
 		gyroError = target - deg
 		integral = integral + gyroError
 		derivative = gyroError - lastError
@@ -107,7 +108,7 @@ func (s *server) move(_ context.Context, request *pbuf.MoveRequest) (*pbuf.Statu
 	return &pbuf.Status{ErrCode: true}, nil
 }
 
-func (s *server) turn(_ context.Context, request *pbuf.TurnRequest) (*pbuf.Status, error) {
+func (s *robotServer) Turn(_ context.Context, request *pbuf.TurnRequest) (*pbuf.Status, error) {
 	fmt.Printf("Received turn command ... \n")
 	rightMotor, err := ev3dev.TachoMotorFor("ev3-ports:outA", "lego-ev3-l-motor")
 	if err != nil {
@@ -159,7 +160,7 @@ func (s *server) turn(_ context.Context, request *pbuf.TurnRequest) (*pbuf.Statu
 	return &pbuf.Status{ErrCode: true}, nil
 }
 
-func (s *server) vacuum(_ context.Context, request *pbuf.VacuumPower) (*pbuf.Status, error) {
+func (s *robotServer) Vacuum(_ context.Context, request *pbuf.VacuumPower) (*pbuf.Status, error) {
 	vacuumMotor, err := ev3dev.TachoMotorFor("ev3-ports:outB", "lego-ev3-l-motor")
 	if err != nil {
 		return &pbuf.Status{ErrCode: false}, err
@@ -175,7 +176,7 @@ func (s *server) vacuum(_ context.Context, request *pbuf.VacuumPower) (*pbuf.Sta
 	return &pbuf.Status{ErrCode: true}, err
 }
 
-func (s *server) stopMovement(_ context.Context, request *pbuf.Empty) (*pbuf.Status, error) {
+func (s *robotServer) StopMovement(_ context.Context, request *pbuf.Empty) (*pbuf.Status, error) {
 	rightMotor, err := ev3dev.TachoMotorFor("ev3-ports:outA", "lego-ev3-l-motor")
 	if err != nil {
 		return &pbuf.Status{ErrCode: false}, err
@@ -192,7 +193,7 @@ func (s *server) stopMovement(_ context.Context, request *pbuf.Empty) (*pbuf.Sta
 	return &pbuf.Status{ErrCode: true}, nil
 }
 
-func (s *server) stats(_ context.Context, request *pbuf.Status) (*pbuf.Status, error) {
+func (s *robotServer) Stats(_ context.Context, request *pbuf.Status) (*pbuf.Status, error) {
 	/* TODO */
 
 	return &pbuf.Status{ErrCode: true}, nil
