@@ -11,6 +11,7 @@ import (
 	"math"
 	"net"
 	"strconv"
+	"time"
 )
 
 const WHEEL_DIAMETER float32 = 5.6
@@ -94,15 +95,18 @@ func (s *robotServer) Move(_ context.Context, request *pbuf.MoveRequest) (*pbuf.
 	correction := 0.0
 	target, err := getGyroValue()
 	pos := 0
+
+	leftMotor.Command(DIR)
+	rightMotor.Command(DIR)
 	for distance > pos {
 		deg, _ := getGyroValue()
 		gyroError = target - deg
 		integral = math.Max(math.Min(integral+gyroError, 1000.0), -1000.0) // To handle saturation due to max speed of motor
 		derivative = gyroError - lastError
-		correction = ((Kp * gyroError) + (Ki * integral) + (Kd * derivative)) * direction
+		correction = (Kp * gyroError) + (Ki * integral) + (Kd * derivative)
 
-		leftMotor.SetSpeedSetpoint(speed - int(correction))
-		rightMotor.SetSpeedSetpoint(speed + int(correction))
+		leftMotor.SetRampUpSetpoint(4 * time.Second)
+		rightMotor.SetRampUpSetpoint(4 * time.Second)
 
 		leftMotor.SetRampDownSetpoint(4 * time.Second)
 		rightMotor.SetRampDownSetpoint(4 * time.Second)
@@ -112,7 +116,8 @@ func (s *robotServer) Move(_ context.Context, request *pbuf.MoveRequest) (*pbuf.
 
 		pos1, _ := leftMotor.Position()
 		pos2, _ := rightMotor.Position()
-		pos = int(float64(pos1+pos2) / 2.0 * direction)
+		pos = int(math.Max(float64(pos1)*direction, float64(pos2)*direction))
+		fmt.Printf("Status:\tHeading: %f\tcorrection: %f\n", deg, correction)
 	}
 
 	leftMotor.Command(STOP)
