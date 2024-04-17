@@ -3,6 +3,7 @@ import cv2
 
 from Pathfinding.Pathfinding import Pathfinding
 from model.Ball import Ball
+from model.Robot import Robot
 from model.coordinate import Coordinate
 
 
@@ -14,6 +15,7 @@ def main():
 
     balls = {}
     corners = []
+
 
     if ret:
         results = model.track(frame, persist=True)
@@ -31,11 +33,13 @@ def main():
                 balls[current_id] = Ball(int(x), int(y), int(x) + int(w), int(y) + int(h), current_id)
             elif results[0].names[box.cls.item()] == "robot_front":
                 x, y, w, h = box.xywh[0]
-                robot_start = Coordinate(int(x), int(y))
+                robot_front = Coordinate(int(x), int(y))
             elif results[0].names[box.cls.item()] == "robot_body":
                 x, y, w, h = box.xywh[0]
                 robot_body = Coordinate(int(x), int(y))
             elif results[0].names[box.cls.item()] == "corner":
+                #Left cornor of video is 0,0 which can be used to find the position of each corner.
+                #Iffy if less than 4 corners are found
                 print("Corner")
             elif results[0].names[box.cls.item()] == "obstacle":
                 print("Cross")
@@ -44,7 +48,8 @@ def main():
             elif results[0].names[box.cls.item()] == "orange_ball":
                 print("Orange ball")
 
-        dijk = Pathfinding(balls, robot_start)
+        robot = Robot(robot_body, robot_front)
+        dijk = Pathfinding(balls, robot_front)
         closest = dijk.get_closest()
 
     ret, frame = cap.read()
