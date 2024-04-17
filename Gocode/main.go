@@ -106,7 +106,7 @@ func (s *robotServer) Move(_ context.Context, request *pbuf.MoveRequest) (*pbuf.
 
 		pos1, _ := leftMotor.Position()
 		pos2, _ := rightMotor.Position()
-		pos = (pos1 + pos2) / 2
+		pos = int(float64(pos1+pos2) / 2.0 * direction)
 	}
 
 	leftMotor.Command(STOP)
