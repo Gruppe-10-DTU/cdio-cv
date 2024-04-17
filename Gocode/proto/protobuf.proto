@@ -1,0 +1,37 @@
+syntax="proto3";
+
+package proto;
+option go_package = "main/proto";
+
+message MoveReq {
+  string direction = 1;
+  int32 distance = 2;
+  int32 speed = 3;
+}
+
+message TurnRequest {
+  string direction = 1;
+  int32 degrees = 2;
+}
+
+message VacuumPower {
+  bool power = 1;
+}
+
+message Status {
+  bool err_code = 1;
+}
+
+message Empty {}
+
+// The services provided over rpc
+service Robot {
+  rpc move(MoveReq) returns (Status) {}
+  rpc turn(TurnRequest) returns (Status) {}
+  rpc vacuum(VacuumPower) returns (Status) {}
+  rpc stats(Status) returns (Status) {}
+  rpc stopMovement(Empty) returns(Status) {}
+}
+
+
+
