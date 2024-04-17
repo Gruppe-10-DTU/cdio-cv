@@ -47,11 +47,11 @@ func main() {
 
 func (s *robotServer) Move(_ context.Context, request *pbuf.MoveRequest) (*pbuf.Status, error) {
 	fmt.Printf("Received move command ... \n")
-	rightMotor, err := ev3dev.TachoMotorFor("ev3-ports:outA", "lego-ev3-l-motor")
+	leftMotor, err := ev3dev.TachoMotorFor("ev3-ports:outA", "lego-ev3-l-motor")
 	if err != nil {
 		return &pbuf.Status{ErrCode: false}, err
 	}
-	leftMotor, err := ev3dev.TachoMotorFor("ev3-ports:outD", "lego-ev3-l-motor")
+	rightMotor, err := ev3dev.TachoMotorFor("ev3-ports:outD", "lego-ev3-l-motor")
 	if err != nil {
 		return &pbuf.Status{ErrCode: false}, err
 	}
@@ -92,7 +92,6 @@ func (s *robotServer) Move(_ context.Context, request *pbuf.MoveRequest) (*pbuf.
 	pos := 0
 	for distance > pos {
 		deg, _ := getGyroValue()
-		fmt.Printf("heading: %f \n", deg)
 		gyroError = target - deg
 		integral = math.Max(math.Min(integral+gyroError, 1000.0), -1000.0) // To handle saturation due to max speed of motor
 		derivative = gyroError - lastError
@@ -101,8 +100,11 @@ func (s *robotServer) Move(_ context.Context, request *pbuf.MoveRequest) (*pbuf.
 		leftMotor.SetSpeedSetpoint(speed - int(correction))
 		rightMotor.SetSpeedSetpoint(speed + int(correction))
 
-		leftMotor.Command(RUN)
-		rightMotor.Command(RUN)
+		leftMotor.SetRampDownSetpoint(4 * time.Second)
+		rightMotor.SetRampDownSetpoint(4 * time.Second)
+
+		leftMotor.SetDutyCycleSetpoint(speed + int(correction))
+		rightMotor.SetSpeedSetpoint(speed - int(correction))
 
 		pos1, _ := leftMotor.Position()
 		pos2, _ := rightMotor.Position()
@@ -186,11 +188,11 @@ func (s *robotServer) Vacuum(_ context.Context, request *pbuf.VacuumPower) (*pbu
 }
 
 func (s *robotServer) StopMovement(_ context.Context, request *pbuf.Empty) (*pbuf.Status, error) {
-	rightMotor, err := ev3dev.TachoMotorFor("ev3-ports:outA", "lego-ev3-l-motor")
+	rightMotor, err := ev3dev.TachoMotorFor("ev3-ports:outD", "lego-ev3-l-motor")
 	if err != nil {
 		return &pbuf.Status{ErrCode: false}, err
 	}
-	leftMotor, err := ev3dev.TachoMotorFor("ev3-ports:outD", "lego-ev3-l-motor")
+	leftMotor, err := ev3dev.TachoMotorFor("ev3-ports:outA", "lego-ev3-l-motor")
 	if err != nil {
 		return &pbuf.Status{ErrCode: false}, err
 	}
