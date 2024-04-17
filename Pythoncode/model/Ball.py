@@ -1,4 +1,4 @@
-from model.coordinate import Coordinate
+from Pythoncode.model.coordinate import Coordinate
 
 
 class Ball:

@@ -1,7 +1,7 @@
 import math
 
-from model import Ball
-from model.coordinate import Coordinate
+from Pythoncode.model import Ball
+from Pythoncode.model.coordinate import Coordinate
 
 
 class Pathfinding:

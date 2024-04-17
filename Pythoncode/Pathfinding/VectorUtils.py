@@ -1,7 +1,7 @@
 import math
 
-from model.Vector import Vector
-from model.coordinate import Coordinate
+from Pythoncode.model.Vector import Vector
+from Pythoncode.model.coordinate import Coordinate
 
 
 def get_length(vector1: Coordinate, vector2: Coordinate) -> float:

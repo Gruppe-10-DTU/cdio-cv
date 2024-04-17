@@ -1,4 +1,4 @@
-from model.Ball import Ball
+from Pythoncode.model.Ball import Ball
 
 
 class Vip(Ball):

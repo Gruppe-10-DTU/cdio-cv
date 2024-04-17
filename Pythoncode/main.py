@@ -1,13 +1,18 @@
 from ultralytics import YOLO
 import cv2
 
-from Pathfinding.Pathfinding import Pathfinding
-from model.Ball import Ball
-from model.Robot import Robot
-from model.coordinate import Coordinate
+from Pythoncode.Pathfinding.Pathfinding import Pathfinding
+from Pythoncode.grpc.gRPC import gRPC
+from Pythoncode.model.Ball import Ball
+from Pythoncode.model.Robot import Robot
+from Pythoncode.model.coordinate import Coordinate
 
 
 def main():
+    grpc = gRPC()
+    grpc.move()
+    exit(1)
+
     model = YOLO("model/best.pt")
     cap = cv2.VideoCapture('videos/with_egg.mp4')
 

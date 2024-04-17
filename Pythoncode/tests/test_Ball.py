@@ -1,7 +1,6 @@
 from unittest import TestCase
 
-from model.Ball import Ball
-from model.coordinate import Coordinate
+from Pythoncode.model.Ball import Ball
 
 
 class TestBall(TestCase):

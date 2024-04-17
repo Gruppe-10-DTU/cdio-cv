@@ -1,7 +1,7 @@
 from unittest import TestCase
 
-from Pathfinding import VectorUtils
-from model.coordinate import Coordinate
+from Pythoncode.Pathfinding import VectorUtils
+from Pythoncode.model.coordinate import Coordinate
 
 
 class Test(TestCase):
