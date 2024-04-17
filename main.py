@@ -46,7 +46,7 @@ def main():
 
         dijk = Pathfinding(balls, robot_start)
         closest = dijk.get_closest()
-        angle = 
+
     ret, frame = cap.read()
 
     while ret:
