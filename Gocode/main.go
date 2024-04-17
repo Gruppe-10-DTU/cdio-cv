@@ -88,7 +88,7 @@ func (s *robotServer) Move(_ context.Context, request *pbuf.MoveRequest) (*pbuf.
 	derivative := 0.0
 	lastError := 0.0
 	correction := 0.0
-	target := 0.0
+	target, err := getGyroValue()
 	pos := 0
 	for distance > pos {
 		deg, _ := getGyroValue()
