@@ -101,7 +101,7 @@ func (s *robotServer) Move(_ context.Context, request *pbuf.MoveRequest) (*pbuf.
 	for distance > pos {
 		deg, _ := getGyroValue()
 		gyroError = target - deg
-		integral = math.Max(math.Min(integral+gyroError, 1000.0), -1000.0) // To handle saturation due to max speed of motor
+		integral = math.Max(math.Min(integral+gyroError, 100.0), -100.0) // To handle saturation due to max speed of motor
 		derivative = gyroError - lastError
 		correction = (Kp * gyroError) + (Ki * integral) + (Kd * derivative)
 
@@ -112,7 +112,7 @@ func (s *robotServer) Move(_ context.Context, request *pbuf.MoveRequest) (*pbuf.
 		rightMotor.SetRampDownSetpoint(4 * time.Second)
 
 		leftMotor.SetDutyCycleSetpoint(speed + int(correction))
-		rightMotor.SetSpeedSetpoint(speed - int(correction))
+		rightMotor.SetDutyCycleSetpoint(speed - int(correction))
 
 		pos1, _ := leftMotor.Position()
 		pos2, _ := rightMotor.Position()
