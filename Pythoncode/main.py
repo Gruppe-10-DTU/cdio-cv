@@ -17,7 +17,8 @@ def main():
     cap = cv2.VideoCapture('videos/with_egg.mp4')
 
     ret, frame = cap.read()
-
+    vip = None
+    egg = None
     balls = {}
     corners = []
 
@@ -51,7 +52,10 @@ def main():
             elif results[0].names[box.cls.item()] == "egg":
                 print("Egg")
             elif results[0].names[box.cls.item()] == "orange_ball":
-                print("Orange ball")
+                x, y, w, h = box.xywh[0]
+                current_id = int(box.id)
+
+                vip = Vip(int(x), int(y), int(x) + int(w), int(y) + int(h), current_id)
 
         robot = Robot(robot_body, robot_front)
         dijk = Pathfinding(balls, robot_front)
