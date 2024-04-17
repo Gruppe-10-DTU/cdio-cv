@@ -229,13 +229,12 @@ func resetGyros() {
 	if err != nil {
 		return
 	}
-	gyro2, err := ev3dev.SensorFor("ev3-ports:in1", "lego-ev3-gyro")
+	gyro2, err := ev3dev.SensorFor("ev3-ports:in4", "lego-ev3-gyro")
 	if err != nil {
 		return
 	}
 	gyro1.SetMode("GYRO-CAL")
-	gyro1.SetMode("GYRO-ANG")
-
 	gyro2.SetMode("GYRO-CAL")
+	gyro1.SetMode("GYRO-ANG")
 	gyro2.SetMode("GYRO-ANG")
 }
