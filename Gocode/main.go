@@ -6,6 +6,7 @@ import (
 	"github.com/ev3go/ev3dev"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/proto"
 	"log"
 	"math"
 	"net"
@@ -45,15 +46,15 @@ func main() {
 
 }
 
-func (s *server) move(_ context.Context, request *pbuf.MoveRequest) *pbuf.Status {
+func (s *server) move(_ context.Context, request *pbuf.MoveRequest) (*pbuf.Status, error) {
 	fmt.Printf("Received move command ... \n")
 	rightMotor, err := ev3dev.TachoMotorFor("ev3-ports:outA", "lego-ev3-l-motor")
 	if err != nil {
-		return &pbuf.Status{ErrCode: false}
+		return &pbuf.Status{ErrCode: false}, err
 	}
 	leftMotor, err := ev3dev.TachoMotorFor("ev3-ports:outD", "lego-ev3-l-motor")
 	if err != nil {
-		return &pbuf.Status{ErrCode: false}
+		return &pbuf.Status{ErrCode: false}, err
 	}
 
 	leftMotor.Command(RESET)
@@ -69,7 +70,7 @@ func (s *server) move(_ context.Context, request *pbuf.MoveRequest) *pbuf.Status
 	case "forward":
 		direction = 1.0
 	default:
-		return &pbuf.Status{ErrCode: false}
+		return &pbuf.Status{ErrCode: false}, err
 	}
 	speed = speed * int(direction)
 	Kp := 0.0
@@ -103,18 +104,18 @@ func (s *server) move(_ context.Context, request *pbuf.MoveRequest) *pbuf.Status
 	leftMotor.Command(STOP)
 	rightMotor.Command(STOP)
 
-	return &pbuf.Status{ErrCode: true}
+	return &pbuf.Status{ErrCode: true}, nil
 }
 
-func (s *server) turn(_ context.Context, request *pbuf.TurnRequest) *pbuf.Status {
+func (s *server) turn(_ context.Context, request *pbuf.TurnRequest) (*pbuf.Status, error) {
 	fmt.Printf("Received turn command ... \n")
 	rightMotor, err := ev3dev.TachoMotorFor("ev3-ports:outA", "lego-ev3-l-motor")
 	if err != nil {
-		return &pbuf.Status{ErrCode: false}
+		return &pbuf.Status{ErrCode: false}, err
 	}
 	leftMotor, err := ev3dev.TachoMotorFor("ev3-ports:outD", "lego-ev3-l-motor")
 	if err != nil {
-		return &pbuf.Status{ErrCode: false}
+		return &pbuf.Status{ErrCode: false}, err
 	}
 	resetGyros()
 
@@ -133,7 +134,7 @@ func (s *server) turn(_ context.Context, request *pbuf.TurnRequest) *pbuf.Status
 		forwardMotor = rightMotor
 		backwardMotor = leftMotor
 	default:
-		return &pbuf.Status{ErrCode: false}
+		return &pbuf.Status{ErrCode: false}, proto.Error
 	}
 
 	Kp := speed / 10
@@ -155,13 +156,13 @@ func (s *server) turn(_ context.Context, request *pbuf.TurnRequest) *pbuf.Status
 	}
 	leftMotor.Command(STOP)
 	rightMotor.Command(STOP)
-	return &pbuf.Status{ErrCode: true}
+	return &pbuf.Status{ErrCode: true}, nil
 }
 
-func (s *server) vacuum(_ context.Context, request *pbuf.VacuumPower) *pbuf.Status {
+func (s *server) vacuum(_ context.Context, request *pbuf.VacuumPower) (*pbuf.Status, error) {
 	vacuumMotor, err := ev3dev.TachoMotorFor("ev3-ports:outB", "lego-ev3-l-motor")
 	if err != nil {
-		return &pbuf.Status{ErrCode: false}
+		return &pbuf.Status{ErrCode: false}, err
 	}
 	vacuumMotor.Command(RESET)
 	target := int(float32(vacuumMotor.CountPerRot()) * 1.25)
@@ -171,30 +172,30 @@ func (s *server) vacuum(_ context.Context, request *pbuf.VacuumPower) *pbuf.Stat
 	}
 	vacuumMotor.SetPositionSetpoint(target)
 	vacuumMotor.Command(ABS_POS)
-	return &pbuf.Status{ErrCode: true}
+	return &pbuf.Status{ErrCode: true}, err
 }
 
-func (s *server) stopMovement(_ context.Context, request *pbuf.Empty) pbuf.Status {
+func (s *server) stopMovement(_ context.Context, request *pbuf.Empty) (*pbuf.Status, error) {
 	rightMotor, err := ev3dev.TachoMotorFor("ev3-ports:outA", "lego-ev3-l-motor")
 	if err != nil {
-		return pbuf.Status{ErrCode: false}
+		return &pbuf.Status{ErrCode: false}, err
 	}
 	leftMotor, err := ev3dev.TachoMotorFor("ev3-ports:outD", "lego-ev3-l-motor")
 	if err != nil {
-		return pbuf.Status{ErrCode: false}
+		return &pbuf.Status{ErrCode: false}, err
 	}
 	rightMotor.Command(RESET)
 	leftMotor.Command(RESET)
 	rightMotor.Command(STOP)
 	leftMotor.Command(STOP)
 
-	return pbuf.Status{ErrCode: true}
+	return &pbuf.Status{ErrCode: true}, nil
 }
 
-func (s *server) stats(_ context.Context, request *pbuf.Status) *pbuf.Status {
+func (s *server) stats(_ context.Context, request *pbuf.Status) (*pbuf.Status, error) {
 	/* TODO */
 
-	return &pbuf.Status{ErrCode: true}
+	return &pbuf.Status{ErrCode: true}, nil
 }
 
 func getGyroValue() (float64, error) {
