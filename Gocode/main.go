@@ -59,7 +59,7 @@ func (s *robotServer) Move(_ context.Context, request *pbuf.MoveRequest) (*pbuf.
 	leftMotor.Command(RESET)
 	rightMotor.Command(RESET)
 
-	direction, err := getGyroValue()
+	direction := 0.0
 	distance := int(request.Distance)
 	speed := int(request.Speed)
 	distance = int(float32(distance)/(float32(WHEEL_DIAMETER)*math.Pi)) * leftMotor.CountPerRot()
