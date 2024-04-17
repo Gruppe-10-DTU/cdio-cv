@@ -3,10 +3,13 @@ syntax="proto3";
 package proto;
 option go_package = "main/proto";
 
-message MoveReq {
+message MoveRequest {
   string direction = 1;
   int32 distance = 2;
   int32 speed = 3;
+  optional float Kp = 4;
+  optional float Ki = 5;
+  optional float Kd = 6;
 }
 
 message TurnRequest {
@@ -26,7 +29,7 @@ message Empty {}
 
 // The services provided over rpc
 service Robot {
-  rpc move(MoveReq) returns (Status) {}
+  rpc move(MoveRequest) returns (Status) {}
   rpc turn(TurnRequest) returns (Status) {}
   rpc vacuum(VacuumPower) returns (Status) {}
   rpc stats(Status) returns (Status) {}
