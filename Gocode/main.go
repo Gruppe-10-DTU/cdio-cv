@@ -16,8 +16,11 @@ import (
 const WHEEL_DIAMETER float32 = 5.6
 const (
 	RUN     = "run-forever"
+	DIR     = "run-direct"
 	STOP    = "stop"
 	ABS_POS = "run-to-abs-pos"
+	REL_POS = "run-to-rel-pos"
+	TIME    = "run-timed"
 	RESET   = "reset"
 )
 
@@ -58,6 +61,7 @@ func (s *robotServer) Move(_ context.Context, request *pbuf.MoveRequest) (*pbuf.
 
 	leftMotor.Command(RESET)
 	rightMotor.Command(RESET)
+	resetGyros()
 
 	direction := 0.0
 	distance := int(request.Distance)
