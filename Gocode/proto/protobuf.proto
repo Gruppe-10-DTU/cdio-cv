@@ -29,11 +29,11 @@ message Empty {}
 
 // The services provided over rpc
 service Robot {
-  rpc move(MoveRequest) returns (Status) {}
-  rpc turn(TurnRequest) returns (Status) {}
-  rpc vacuum(VacuumPower) returns (Status) {}
-  rpc stats(Status) returns (Status) {}
-  rpc stopMovement(Empty) returns(Status) {}
+  rpc Move(MoveRequest) returns (Status) {}
+  rpc Turn(TurnRequest) returns (Status) {}
+  rpc Vacuum(VacuumPower) returns (Status) {}
+  rpc Stats(Status) returns (Status) {}
+  rpc StopMovement(Empty) returns(Status) {}
 }
 
 
