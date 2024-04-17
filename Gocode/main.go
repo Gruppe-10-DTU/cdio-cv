@@ -13,8 +13,7 @@ import (
 	"strconv"
 )
 
-const WHEEL_DIAMETER int = 40
-
+const WHEEL_DIAMETER float32 = 5.6
 const (
 	RUN     = "run-forever"
 	STOP    = "stop"
@@ -73,9 +72,17 @@ func (s *robotServer) Move(_ context.Context, request *pbuf.MoveRequest) (*pbuf.
 		return &pbuf.Status{ErrCode: false}, err
 	}
 	speed = speed * int(direction)
-	Kp := 0.0
-	Ki := 0.0
-	Kd := 0.0
+	Kp := 10.0
+	Ki := 1.0
+	Kd := 5.0
+	switch {
+	case request.Kp != nil:
+		Kp = float64(*request.Kp)
+	case request.Ki != nil:
+		Ki = float64(*request.Ki)
+	case request.Kd != nil:
+		Kd = float64(*request.Kd)
+	}
 	gyroError := 0.0
 	integral := 0.0
 	derivative := 0.0
@@ -91,8 +98,8 @@ func (s *robotServer) Move(_ context.Context, request *pbuf.MoveRequest) (*pbuf.
 		derivative = gyroError - lastError
 		correction = ((Kp * gyroError) + (Ki * integral) + (Kd * derivative)) * direction
 
-		leftMotor.SetSpeedSetpoint(speed + int(correction))
-		rightMotor.SetSpeedSetpoint(speed - int(correction))
+		leftMotor.SetSpeedSetpoint(speed - int(correction))
+		rightMotor.SetSpeedSetpoint(speed + int(correction))
 
 		leftMotor.Command(RUN)
 		rightMotor.Command(RUN)
