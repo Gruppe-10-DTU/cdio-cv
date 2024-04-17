@@ -11,14 +11,22 @@ import (
 	"math"
 	"net"
 	"strconv"
+	"time"
 )
 
 const WHEEL_DIAMETER float32 = 5.6
 const (
 	RUN     = "run-forever"
+	DIR     = "run-direct"
 	STOP    = "stop"
 	ABS_POS = "run-to-abs-pos"
+	REL_POS = "run-to-rel-pos"
+	TIME    = "run-timed"
 	RESET   = "reset"
+
+	BRAKE = "brake"
+	COAST = "coast"
+	HOLD  = "hold"
 )
 
 type robotServer struct {
@@ -59,6 +67,10 @@ func (s *robotServer) Move(_ context.Context, request *pbuf.MoveRequest) (*pbuf.
 	leftMotor.Command(RESET)
 	rightMotor.Command(RESET)
 
+	leftMotor.SetStopAction(BRAKE)
+	rightMotor.SetStopAction(BRAKE)
+	resetGyros()
+
 	direction := 0.0
 	distance := int(request.Distance)
 	speed := int(request.Speed)
@@ -93,22 +105,27 @@ func (s *robotServer) Move(_ context.Context, request *pbuf.MoveRequest) (*pbuf.
 	for distance > pos {
 		deg, _ := getGyroValue()
 		gyroError = target - deg
-		integral = math.Max(math.Min(integral+gyroError, 1000.0), -1000.0) // To handle saturation due to max speed of motor
+		integral = math.Max(math.Min(integral+gyroError, 100.0), -100.0) // To handle saturation due to max speed of motor
 		derivative = gyroError - lastError
-		correction = ((Kp * gyroError) + (Ki * integral) + (Kd * derivative)) * direction
+		correction = (Kp * gyroError) + (Ki * integral) + (Kd * derivative)
+		lastError = gyroError
 
-		leftMotor.SetSpeedSetpoint(speed - int(correction))
-		rightMotor.SetSpeedSetpoint(speed + int(correction))
+		leftMotor.SetRampUpSetpoint(100 * time.Millisecond)
+		rightMotor.SetRampUpSetpoint(100 * time.Millisecond)
 
-		leftMotor.SetRampDownSetpoint(4 * time.Second)
-		rightMotor.SetRampDownSetpoint(4 * time.Second)
+		leftMotor.SetRampDownSetpoint(100 * time.Millisecond)
+		rightMotor.SetRampDownSetpoint(100 * time.Millisecond)
 
-		leftMotor.SetDutyCycleSetpoint(speed + int(correction))
+		leftMotor.SetSpeedSetpoint(speed + int(correction))
 		rightMotor.SetSpeedSetpoint(speed - int(correction))
+
+		leftMotor.Command(RUN)
+		rightMotor.Command(RUN)
 
 		pos1, _ := leftMotor.Position()
 		pos2, _ := rightMotor.Position()
-		pos = int(float64(pos1+pos2) / 2.0 * direction)
+		pos = int(math.Max(float64(pos1)*direction, float64(pos2)*direction))
+		fmt.Printf("Status:\tHeading: %f\tcorrection: %f\n", deg, correction)
 	}
 
 	leftMotor.Command(STOP)
