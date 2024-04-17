@@ -117,14 +117,16 @@ func (s *robotServer) Move(_ context.Context, request *pbuf.MoveRequest) (*pbuf.
 
 func (s *robotServer) Turn(_ context.Context, request *pbuf.TurnRequest) (*pbuf.Status, error) {
 	fmt.Printf("Received turn command ... \n")
-	rightMotor, err := ev3dev.TachoMotorFor("ev3-ports:outA", "lego-ev3-l-motor")
+	leftMotor, err := ev3dev.TachoMotorFor("ev3-ports:outA", "lego-ev3-l-motor")
 	if err != nil {
 		return &pbuf.Status{ErrCode: false}, err
 	}
-	leftMotor, err := ev3dev.TachoMotorFor("ev3-ports:outD", "lego-ev3-l-motor")
+
+	rightMotor, err := ev3dev.TachoMotorFor("ev3-ports:outD", "lego-ev3-l-motor")
 	if err != nil {
 		return &pbuf.Status{ErrCode: false}, err
 	}
+
 	resetGyros()
 
 	degrees := int(request.Degrees)
@@ -139,8 +141,8 @@ func (s *robotServer) Turn(_ context.Context, request *pbuf.TurnRequest) (*pbuf.
 		backwardMotor = leftMotor
 	case "right":
 		direction = 1.0
-		forwardMotor = rightMotor
-		backwardMotor = leftMotor
+		forwardMotor = leftMotor
+		backwardMotor = rightMotor
 	default:
 		return &pbuf.Status{ErrCode: false}, proto.Error
 	}
