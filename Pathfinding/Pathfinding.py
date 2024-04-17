@@ -11,9 +11,9 @@ class Pathfinding:
         self.map = {}
         for target in targets.items():
             self.map[target[0]] = math.inf
-        self.calculate_distance()
+        self.find_closest()
 
-    def calculate_distance(self):
+    def find_closest(self):
         start = self.start
         for target in self.targets.items():
             distance = math.sqrt(math.pow(target[1].center.x - start.x, 2) + math.pow(target[1].center.y - start.y, 2))
@@ -24,9 +24,12 @@ class Pathfinding:
         return self.map[0]
 
     def remove_target(self, ball: Ball):
-        self.map[ball.id] = math.inf
+        del self.map[ball]
+        self.find_closest()
 
     def update_target(self, targets):
         self.targets = targets
-        self.calculate_distance()
+        self.find_closest()
 
+    def display_items(self):
+        print(self.map)

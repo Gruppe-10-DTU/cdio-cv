@@ -9,4 +9,4 @@ class Ball:
         self.y1 = y1
         self.y2 = y2
         self.id = id
-        self.center = Coordinate(x2/2, y2/2)
+        self.center = Coordinate(x1 + (x2-x1)/2, y1 + (y2-y1)/2)
