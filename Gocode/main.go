@@ -84,7 +84,7 @@ func (s *robotServer) Move(_ context.Context, request *pbuf.MoveRequest) (*pbuf.
 		return &pbuf.Status{ErrCode: false}, err
 	}
 	speed = speed * int(direction)
-	Kp := 0.0
+	Kp := float64(speed*speed) / 10000.0
 	Ki := 0.0
 	Kd := 0.0
 	switch {
@@ -105,7 +105,7 @@ func (s *robotServer) Move(_ context.Context, request *pbuf.MoveRequest) (*pbuf.
 	for distance > pos {
 		deg, _ := getGyroValue()
 		gyroError = target - deg
-		integral = math.Max(math.Min(integral+gyroError, 100.0), -100.0) // To handle saturation due to max speed of motor
+		integral = math.Max(math.Min(integral+gyroError, 500.0), -500.0) // To handle saturation due to max speed of motor
 		derivative = gyroError - lastError
 		correction = (Kp * gyroError) + (Ki * integral) + (Kd * derivative)
 		lastError = gyroError
@@ -125,7 +125,7 @@ func (s *robotServer) Move(_ context.Context, request *pbuf.MoveRequest) (*pbuf.
 		pos1, _ := leftMotor.Position()
 		pos2, _ := rightMotor.Position()
 		pos = int(math.Max(float64(pos1)*direction, float64(pos2)*direction))
-		fmt.Printf("Status:\tHeading: %f\tcorrection: %f\n", deg, correction)
+		//fmt.Printf("Status:\tHeading: %f\tcorrection: %f\tIntegral: %f\n", deg, correction, integral)
 	}
 
 	leftMotor.Command(STOP)
