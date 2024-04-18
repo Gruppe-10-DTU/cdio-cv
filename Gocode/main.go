@@ -181,6 +181,7 @@ func (s *robotServer) Turn(_ context.Context, request *pbuf.TurnRequest) (*pbuf.
 		forwardMotor.Command(RUN)
 		backwardMotor.Command(RUN)
 		deg, _ := getGyroValue()
+		//fmt.Printf("Heading: %f\n", deg)
 		pos = int(math.Ceil(deg * direction))
 	}
 	leftMotor.Command(STOP)
@@ -252,8 +253,42 @@ func resetGyros() {
 	if err != nil {
 		return
 	}
-	gyro1.SetMode("GYRO-CAL")
-	gyro2.SetMode("GYRO-CAL")
 	gyro1.SetMode("GYRO-ANG")
 	gyro2.SetMode("GYRO-ANG")
+
+	direct, err := gyro1.Direct(777)
+	if err != nil {
+		fmt.Printf("Gyro 1 open: %s\n", err)
+		return
+	}
+	_, err = direct.Write([]byte("\x88"))
+	if err != nil {
+		fmt.Printf("Gyro 1 write: %s\n", err)
+		return
+	}
+	err = direct.Close()
+	if err != nil {
+		fmt.Printf("Gyro 1 close: %s\n", err)
+		return
+	}
+	direct, err = gyro2.Direct(666)
+	if err != nil {
+		fmt.Printf("Gyro 2 open: %s\n", err)
+		return
+	}
+	_, err = direct.Write([]byte("\x88"))
+	if err != nil {
+		fmt.Printf("Gyro 2 write: %s\n", err)
+		return
+	}
+	err = direct.Close()
+	if err != nil {
+		fmt.Printf("Gyro 2 close: %s\n", err)
+		return
+	}
+	//time.Sleep(250 * time.Millisecond)
+
+	gyro1.SetPollRate(5 * time.Millisecond)
+	gyro2.SetPollRate(5 * time.Millisecond)
+
 }
