@@ -37,7 +37,14 @@ jobs:
       run: |
         cd Gocode/proto
         protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative protobuf.proto
-      
+    
+    - name: golangci-lint
+      uses: golangci/golangci-lint-action@v4
+      with:
+        working-directory: Gocode
+        skip-pkg-cache: true
+        skip-build-cache: true
+    
     - name: Build
       run: |
         cd Gocode
