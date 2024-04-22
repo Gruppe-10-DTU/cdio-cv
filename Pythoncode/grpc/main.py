@@ -4,10 +4,11 @@ import protobuf_pb2
 import protobuf_pb2_grpc
 
 def run():
+    # Go forward testing
     with grpc.insecure_channel("localhost:50051") as channel:
         stub = protobuf_pb2_grpc.RobotStub(channel)
-        stub.move(protobuf_pb2.MoveReq("1", 2, 3))
-    print("Move forward request sent")
+        response = stub.Move(protobuf_pb2.MoveRequest(direction="1", distance=2, speed=3))
+        print(response)
 
 if __name__ == "__main__":
     run()
