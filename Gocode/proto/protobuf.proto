@@ -3,25 +3,55 @@ syntax="proto3";
 package proto;
 option go_package = "main/proto";
 
+/*
+  Forward/backward movement request.
+*/
 message MoveRequest {
-  string direction = 1;
+  //Direction determines x-axis movement direction of robot. 0 is forwards, 1 is backwards.
+  bytes direction = 1;
+
+  //Distance determines where along the x-axis the robot should stop movement.
   int32 distance = 2;
+
+  //Speed determines at what speed the robot moves.
   int32 speed = 3;
+
+  /*
+  The below fields are for a movement correction algorithm called PID, implemented by Philip A. Cramer.
+   */
+  //Proportional describes the error value, as it is directly correlated. If the error is large, then the P value will also be
+  //proportionally large.
   optional float Kp = 4;
+
+  //Integral accounts for the accumulation of error-values and integrates them over time.
   optional float Ki = 5;
+
+  //Derivative is responsible for trying to predict the trend of the errors based on the current rate of change.
   optional float Kd = 6;
 }
 
+/*
+  Responsible for turning the robot.
+ */
 message TurnRequest {
-  string direction = 1;
-  int32 degrees = 2;
+  //Degrees determine how many degrees the robot should turn (either left or right, depending on which is fastest) relative to its current
+  //facing position.
+  int32 degrees = 1;
 }
 
+/*
+  Responsible for turning the vacuum on/off.
+ */
 message VacuumPower {
+  //power. 0 is off, 1 is on.
   bool power = 1;
 }
 
+/*
+  Error status message.
+ */
 message Status {
+  //0 no error occurred, 1 error occurred.
   bool err_code = 1;
 }
 
