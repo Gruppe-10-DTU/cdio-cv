@@ -76,9 +76,10 @@ func (s *robotServer) Move(_ context.Context, request *pbuf.MoveRequest) (*pbuf.
 	speed := int(request.Speed)
 	distance = int(float32(distance)/(float32(WHEEL_DIAMETER)*math.Pi)) * leftMotor.CountPerRot()
 	switch request.Direction {
-	case "backward":
+	case []byte{0}:
+
 		direction = -1.0
-	case "forward":
+	case []byte{1}:
 		direction = 1.0
 	default:
 		return &pbuf.Status{ErrCode: false}, err
@@ -154,11 +155,11 @@ func (s *robotServer) Turn(_ context.Context, request *pbuf.TurnRequest) (*pbuf.
 	var forwardMotor *ev3dev.TachoMotor
 	var backwardMotor *ev3dev.TachoMotor
 	switch request.Direction {
-	case "left":
+	case []byte{0}:
 		direction = -1.0
 		forwardMotor = rightMotor
 		backwardMotor = leftMotor
-	case "right":
+	case []byte{1}:
 		direction = 1.0
 		forwardMotor = leftMotor
 		backwardMotor = rightMotor
