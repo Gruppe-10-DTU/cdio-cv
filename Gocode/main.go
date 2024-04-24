@@ -83,7 +83,7 @@ func (s *robotServer) Move(_ context.Context, request *pbuf.MoveRequest) (*pbuf.
 		return &pbuf.Status{ErrCode: false}, err
 	}
 	speed = speed * int(direction)
-	Kp := float64(speed*speed) / 20000.0
+	Kp := float64(speed*speed) / 200.0
 	Ki := Kp * 0.1
 	Kd := Kp * 0.5
 	switch {
@@ -98,6 +98,8 @@ func (s *robotServer) Move(_ context.Context, request *pbuf.MoveRequest) (*pbuf.
 	integral, lastError := 0.0, 0.0
 	target, _ := getGyroValue()
 	pos := 0
+	leftMotor.Command(DIR)
+	rightMotor.Command(DIR)
 	for distance > pos {
 		deg, _ := getGyroValue()
 		gyroError := target - deg
@@ -106,17 +108,8 @@ func (s *robotServer) Move(_ context.Context, request *pbuf.MoveRequest) (*pbuf.
 		correction := (Kp * gyroError) + (Ki * integral) + (Kd * derivative)
 		lastError = gyroError
 
-		leftMotor.SetRampUpSetpoint(100 * time.Millisecond)
-		rightMotor.SetRampUpSetpoint(100 * time.Millisecond)
-
-		leftMotor.SetRampDownSetpoint(100 * time.Millisecond)
-		rightMotor.SetRampDownSetpoint(100 * time.Millisecond)
-
-		leftMotor.SetSpeedSetpoint(speed + int(correction))
-		rightMotor.SetSpeedSetpoint(speed - int(correction))
-
-		leftMotor.Command(RUN)
-		rightMotor.Command(RUN)
+		leftMotor.SetDutyCycleSetpoint(speed + int(correction))
+		rightMotor.SetDutyCycleSetpoint(speed - int(correction))
 
 		if !bothMotorsRunning() {
 			rightMotor.Command(RESET)
@@ -127,7 +120,6 @@ func (s *robotServer) Move(_ context.Context, request *pbuf.MoveRequest) (*pbuf.
 		pos1, _ := leftMotor.Position()
 		pos2, _ := rightMotor.Position()
 		pos = int(math.Max(float64(pos1)*direction, float64(pos2)*direction))
-		//fmt.Printf("Status:\tHeading: %f\tcorrection: %f\tIntegral: %f\n", deg, correction, integral)
 	}
 
 	leftMotor.Command(STOP)
