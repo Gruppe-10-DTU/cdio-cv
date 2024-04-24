@@ -9,9 +9,7 @@ from Pythoncode.model.coordinate import Coordinate
 
 
 def main():
-    grpc = gRPC()
-    grpc.move()
-    exit(1)
+
 
     model = YOLO("model/best.pt")
     cap = cv2.VideoCapture('videos/with_egg.mp4')
