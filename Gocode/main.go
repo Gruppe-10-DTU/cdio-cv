@@ -6,7 +6,6 @@ import (
 	"github.com/ev3go/ev3dev"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
-	"google.golang.org/protobuf/proto"
 	"log"
 	"math"
 	"net"
@@ -54,7 +53,7 @@ func main() {
 }
 
 func (s *robotServer) Move(_ context.Context, request *pbuf.MoveRequest) (*pbuf.Status, error) {
-	fmt.Printf("Received move command ... \n")
+	//fmt.Printf("Received move command ... \n")
 	leftMotor, err := ev3dev.TachoMotorFor("ev3-ports:outA", "lego-ev3-l-motor")
 	if err != nil {
 		return &pbuf.Status{ErrCode: false}, err
@@ -118,6 +117,12 @@ func (s *robotServer) Move(_ context.Context, request *pbuf.MoveRequest) (*pbuf.
 
 		leftMotor.Command(RUN)
 		rightMotor.Command(RUN)
+
+		if !bothMotorsRunning() {
+			rightMotor.Command(RESET)
+			leftMotor.Command(RESET)
+			return &pbuf.Status{ErrCode: false}, nil
+		}
 
 		pos1, _ := leftMotor.Position()
 		pos2, _ := rightMotor.Position()
