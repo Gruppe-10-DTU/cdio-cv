@@ -6,13 +6,22 @@ if [ $# -eq 0 ]
     exit
 fi
 
+echo "Compiling protofiles"
 cd ./Gocode/proto/ || exit
 protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative protobuf.proto
 
 cd ..
+echo "Compiling binary"
 GOOS=linux GOARCH=arm GOARM=5 go build -o robot-grpc
 
+echo "Stopping old gRPC service"
 ssh robot@$1 "sudo systemctl stop robot.service" || exit
+
+echo "Deploying new binary"
 scp ./robot-grpc robot@$1:~/robot-grpc || exit
+
+echo "Restarting gRPC service"
 ssh robot@$1 "sudo systemctl start robot.service"
+
+echo "Done"
 
