@@ -1,30 +1,28 @@
-from ultralytics import YOLO
 import cv2
+from ultralytics import YOLO
 
 from Pythoncode.Pathfinding.Pathfinding import Pathfinding
-from Pythoncode.grpc.gRPC import gRPC
 from Pythoncode.model.Ball import Ball
+from Pythoncode.model.Corner import Corner
 from Pythoncode.model.Robot import Robot
+from Pythoncode.model.Vip import Vip
 from Pythoncode.model.coordinate import Coordinate
-
+from Pythoncode.Course.CornerUtils import set_placements
 
 def main():
-
-
-    model = YOLO("model/best.pt")
-    cap = cv2.VideoCapture('videos/with_egg.mp4')
+    model = YOLO("../model/best.pt")
+    cap = cv2.VideoCapture('../video/with_egg.mp4')
 
     ret, frame = cap.read()
     vip = None
     egg = None
     balls = {}
-    corners = []
-
+    corners = {}
 
     if ret:
         results = model.track(frame, persist=True)
 
-        displayFrame(results[0].plot())
+        display_frame(results[0].plot())
         boxes = results[0].boxes.cpu()
         # track_ids = results[0].boxes.id.int().cpu().tolist()
 
@@ -42,8 +40,9 @@ def main():
                 x, y, w, h = box.xywh[0]
                 robot_body = Coordinate(int(x), int(y))
             elif results[0].names[box.cls.item()] == "corner":
-                #Left cornor of video is 0,0 which can be used to find the position of each corner.
-                #Iffy if less than 4 corners are found
+                x, y, w, h = box.xywh[0]
+                current_id = int(box.id)
+                corners[current_id] = Corner(int(x), int(y), int(x) + int(w), int(y) + int(h), current_id)
                 print("Corner")
             elif results[0].names[box.cls.item()] == "obstacle":
                 print("Cross")
@@ -58,12 +57,14 @@ def main():
         robot = Robot(robot_body, robot_front)
         dijk = Pathfinding(balls, robot_front)
         closest = dijk.get_closest()
+        corners = set_placements(corners)
+        print(corners)
 
     ret, frame = cap.read()
 
     while ret:
         results = model.track(frame, persist=True)
-        displayFrame(results[0].plot())
+        display_frame(results[0].plot())
         dijk.display_items()
 
         # Press q to stop
@@ -86,7 +87,7 @@ def main():
     cv2.destroyAllWindows()
 
 
-def displayFrame(frame_):
+def display_frame(frame_):
     frame2 = cv2.resize(frame_, (620, 480))
     cv2.imshow("YOLO", frame2)
 
