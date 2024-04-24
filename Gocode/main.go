@@ -147,7 +147,7 @@ func (s *robotServer) Turn(_ context.Context, request *pbuf.TurnRequest) (*pbuf.
 
 	degrees := int(request.Degrees)
 	direction := 0.0
-	speed := 500
+	speed := 1050
 	var forwardMotor *ev3dev.TachoMotor
 	var backwardMotor *ev3dev.TachoMotor
 	switch request.Degrees < 0 {
@@ -164,11 +164,15 @@ func (s *robotServer) Turn(_ context.Context, request *pbuf.TurnRequest) (*pbuf.
 	}
 
 	Kp := speed / 10
+	Kd := Kp / 2
 	power := 0
 	pos := 0
+	lastPos := 0
 	for degrees > pos {
-		if speed > Kp*(degrees-pos) {
-			power = (degrees - pos) * Kp
+		dynSpeed := Kp*(degrees-pos) + Kd*(pos-lastPos)
+		lastPos = pos
+		if speed > dynSpeed {
+			power = dynSpeed
 		} else {
 			power = speed
 		}
