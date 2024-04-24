@@ -138,7 +138,11 @@ func (s *robotServer) Turn(_ context.Context, request *pbuf.TurnRequest) (*pbuf.
 	if err != nil {
 		return &pbuf.Status{ErrCode: false}, err
 	}
+	leftMotor.Command(RESET)
+	rightMotor.Command(RESET)
 
+	leftMotor.SetStopAction(BRAKE)
+	rightMotor.SetStopAction(BRAKE)
 	resetGyros()
 
 	direction := 0.0
@@ -161,8 +165,6 @@ func (s *robotServer) Turn(_ context.Context, request *pbuf.TurnRequest) (*pbuf.
 	pos := 0.0
 	lastPos := 0.0
 
-	forwardMotor.Command(RESET)
-	backwardMotor.Command(RESET)
 	forwardMotor.Command(DIR)
 	backwardMotor.Command(DIR)
 
