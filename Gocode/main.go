@@ -76,17 +76,17 @@ func (s *robotServer) Move(_ context.Context, request *pbuf.MoveRequest) (*pbuf.
 	speed := int(request.Speed)
 	distance = int(float32(distance)/(float32(WHEEL_DIAMETER)*math.Pi)) * leftMotor.CountPerRot()
 	switch request.Direction {
-	case "backward":
+	case false:
 		direction = -1.0
-	case "forward":
+	case true:
 		direction = 1.0
 	default:
 		return &pbuf.Status{ErrCode: false}, err
 	}
 	speed = speed * int(direction)
-	Kp := float64(speed*speed) / 10000.0
-	Ki := 0.0
-	Kd := 0.0
+	Kp := float64(speed*speed) / 20000.0
+	Ki := Kp * 0.1
+	Kd := Kp * 0.5
 	switch {
 	case request.Kp != nil:
 		Kp = float64(*request.Kp)
@@ -95,19 +95,16 @@ func (s *robotServer) Move(_ context.Context, request *pbuf.MoveRequest) (*pbuf.
 	case request.Kd != nil:
 		Kd = float64(*request.Kd)
 	}
-	gyroError := 0.0
-	integral := 0.0
-	derivative := 0.0
-	lastError := 0.0
-	correction := 0.0
-	target, err := getGyroValue()
+
+	integral, lastError := 0.0, 0.0
+	target, _ := getGyroValue()
 	pos := 0
 	for distance > pos {
 		deg, _ := getGyroValue()
-		gyroError = target - deg
+		gyroError := target - deg
 		integral = math.Max(math.Min(integral+gyroError, 500.0), -500.0) // To handle saturation due to max speed of motor
-		derivative = gyroError - lastError
-		correction = (Kp * gyroError) + (Ki * integral) + (Kd * derivative)
+		derivative := gyroError - lastError
+		correction := (Kp * gyroError) + (Ki * integral) + (Kd * derivative)
 		lastError = gyroError
 
 		leftMotor.SetRampUpSetpoint(100 * time.Millisecond)
@@ -153,12 +150,12 @@ func (s *robotServer) Turn(_ context.Context, request *pbuf.TurnRequest) (*pbuf.
 	speed := 500
 	var forwardMotor *ev3dev.TachoMotor
 	var backwardMotor *ev3dev.TachoMotor
-	switch request.Direction {
-	case "left":
+	switch request.Degrees < 0 {
+	case true:
 		direction = -1.0
 		forwardMotor = rightMotor
 		backwardMotor = leftMotor
-	case "right":
+	case false:
 		direction = 1.0
 		forwardMotor = leftMotor
 		backwardMotor = rightMotor
