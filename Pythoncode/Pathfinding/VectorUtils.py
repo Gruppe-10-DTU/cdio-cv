@@ -4,8 +4,8 @@ from Pythoncode.model.Vector import Vector
 from Pythoncode.model.coordinate import Coordinate
 
 
-def get_length(vector1: Coordinate, vector2: Coordinate) -> float:
-    return math.sqrt(math.pow(vector1.x - vector2.x, 2) + math.pow(vector1.y - vector2.y, 2))
+def get_length(point1: Coordinate, point2: Coordinate) -> float:
+    return math.sqrt(math.pow(point1.x - point2.x, 2) + math.pow(point1.y - point2.y, 2))
 
 
 def get_vector(coordinate1: Coordinate, coordinate2: Coordinate) -> Vector:

@@ -25,6 +25,7 @@ class Pathfinding:
 
     def remove_target(self, ball: Ball):
         del self.map[ball]
+        del self.targets[ball.id]
         self.find_closest()
 
     def update_target(self, targets):
