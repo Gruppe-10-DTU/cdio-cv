@@ -8,7 +8,7 @@ option go_package = "main/proto";
 */
 message MoveRequest {
   //Direction determines x-axis movement direction of robot. 0 is forwards, 1 is backwards.
-  bytes direction = 1;
+  bool direction = 1;
 
   //Distance determines where along the x-axis the robot should stop movement.
   int32 distance = 2;

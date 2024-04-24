@@ -76,9 +76,9 @@ func (s *robotServer) Move(_ context.Context, request *pbuf.MoveRequest) (*pbuf.
 	speed := int(request.Speed)
 	distance = int(float32(distance)/(float32(WHEEL_DIAMETER)*math.Pi)) * leftMotor.CountPerRot()
 	switch request.Direction {
-	case []byte{0}:
+	case false:
 		direction = -1.0
-	case []byte{1}:
+	case true:
 		direction = 1.0
 	default:
 		return &pbuf.Status{ErrCode: false}, err
