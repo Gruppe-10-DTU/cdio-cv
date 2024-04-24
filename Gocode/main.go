@@ -132,7 +132,6 @@ func (s *robotServer) Move(_ context.Context, request *pbuf.MoveRequest) (*pbuf.
 }
 
 func (s *robotServer) Turn(_ context.Context, request *pbuf.TurnRequest) (*pbuf.Status, error) {
-	fmt.Printf("Received turn command ... \n")
 	leftMotor, err := ev3dev.TachoMotorFor("ev3-ports:outA", "lego-ev3-l-motor")
 	if err != nil {
 		return &pbuf.Status{ErrCode: false}, err
@@ -145,45 +144,51 @@ func (s *robotServer) Turn(_ context.Context, request *pbuf.TurnRequest) (*pbuf.
 
 	resetGyros()
 
-	degrees := int(request.Degrees)
 	direction := 0.0
-	speed := 1050
+	speed := 100.0
 	var forwardMotor *ev3dev.TachoMotor
 	var backwardMotor *ev3dev.TachoMotor
-	switch request.Degrees < 0 {
-	case true:
-		direction = -1.0
+	if request.Degrees < 0 {
+		direction = -1
 		forwardMotor = rightMotor
 		backwardMotor = leftMotor
-	case false:
-		direction = 1.0
+	} else {
+		direction = 1
 		forwardMotor = leftMotor
 		backwardMotor = rightMotor
-	default:
-		return &pbuf.Status{ErrCode: false}, proto.Error
 	}
-
-	Kp := speed / 10
-	Kd := Kp / 2
+	degrees := float64(request.Degrees) * direction
+	Kp := speed / 30.0
+	Kd := Kp / 2.0
 	power := 0
-	pos := 0
-	lastPos := 0
+	pos := 0.0
+	lastPos := 0.0
+
+	forwardMotor.Command(RESET)
+	backwardMotor.Command(RESET)
+	forwardMotor.Command(DIR)
+	backwardMotor.Command(DIR)
+
 	for degrees > pos {
 		dynSpeed := Kp*(degrees-pos) + Kd*(pos-lastPos)
 		lastPos = pos
 		if speed > dynSpeed {
-			power = dynSpeed
+			power = int(dynSpeed)
 		} else {
-			power = speed
+			power = int(speed)
 		}
-		forwardMotor.SetSpeedSetpoint(power)
-		backwardMotor.SetSpeedSetpoint(-power)
+		forwardMotor.SetDutyCycleSetpoint(power)
+		backwardMotor.SetDutyCycleSetpoint(-power)
 
-		forwardMotor.Command(RUN)
-		backwardMotor.Command(RUN)
-		deg, _ := getGyroValue()
+		if !bothMotorsRunning() {
+			rightMotor.Command(RESET)
+			leftMotor.Command(RESET)
+			return &pbuf.Status{ErrCode: false}, nil
+		}
+
+		gyroDeg, _ := getGyroValue()
 		//fmt.Printf("Heading: %f\n", deg)
-		pos = int(math.Ceil(deg * direction))
+		pos = gyroDeg * direction
 	}
 	leftMotor.Command(STOP)
 	rightMotor.Command(STOP)
