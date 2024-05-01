@@ -83,7 +83,7 @@ func (s *robotServer) Move(_ context.Context, request *pbuf.MoveRequest) (*pbuf.
 		return &pbuf.Status{ErrCode: false}, err
 	}
 	speed = speed * int(direction)
-	Kp := float64(speed*speed) / 200.0
+	Kp := float64(speed*speed) / 20.0
 	Ki := Kp * 0.1
 	Kd := Kp * 0.5
 	switch {
