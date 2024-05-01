@@ -103,7 +103,7 @@ func (s *robotServer) Move(_ context.Context, request *pbuf.MoveRequest) (*pbuf.
 	for distance > pos {
 		deg, _ := getGyroValue()
 		gyroError := target - deg
-		integral = math.Max(math.Min(integral+gyroError, 500.0), -500.0) // To handle saturation due to max speed of motor
+		integral = math.Max(math.Min(integral+gyroError, 50.0), -50.0) // To handle saturation due to max speed of motor
 		derivative := gyroError - lastError
 		correction := (Kp * gyroError) + (Ki * integral) + (Kd * derivative)
 		lastError = gyroError
