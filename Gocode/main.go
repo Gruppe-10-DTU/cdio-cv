@@ -195,7 +195,7 @@ func (s *robotServer) Turn(_ context.Context, request *pbuf.TurnRequest) (*pbuf.
 }
 
 func (s *robotServer) Vacuum(_ context.Context, request *pbuf.VacuumPower) (*pbuf.Status, error) {
-	vacuumMotor, err := ev3dev.TachoMotorFor("ev3-ports:outB", "lego-ev3-l-motor")
+	vacuumMotor, err := ev3dev.TachoMotorFor("ev3-ports:outB", "lego-ev3-m-motor")
 	if err != nil {
 		return &pbuf.Status{ErrCode: false}, err
 	}
