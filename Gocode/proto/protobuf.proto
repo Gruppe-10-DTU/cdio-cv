@@ -53,6 +53,7 @@ message VacuumPower {
 message Status {
   //0 no error occurred, 1 error occurred.
   bool err_code = 1;
+  optional string message = 2;
 }
 
 message Empty {}

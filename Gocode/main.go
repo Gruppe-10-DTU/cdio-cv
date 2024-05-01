@@ -13,7 +13,7 @@ import (
 	"time"
 )
 
-const WHEEL_DIAMETER float32 = 5.6
+const WHEEL_DIAMETER float64 = 5.6
 const (
 	RUN     = "run-forever"
 	DIR     = "run-direct"
@@ -56,11 +56,17 @@ func (s *robotServer) Move(_ context.Context, request *pbuf.MoveRequest) (*pbuf.
 	//fmt.Printf("Received move command ... \n")
 	leftMotor, err := ev3dev.TachoMotorFor("ev3-ports:outA", "lego-ev3-l-motor")
 	if err != nil {
-		return &pbuf.Status{ErrCode: false}, err
+		errMsg := "Couldn't get left motor"
+		return &pbuf.Status{ErrCode: false, Message: &errMsg}, err
 	}
 	rightMotor, err := ev3dev.TachoMotorFor("ev3-ports:outD", "lego-ev3-l-motor")
 	if err != nil {
-		return &pbuf.Status{ErrCode: false}, err
+		errMsg := "Couldn't get right motor"
+		return &pbuf.Status{ErrCode: false, Message: &errMsg}, err
+	}
+	if leftMotor == rightMotor {
+		errMsg := "Motors are the same"
+		return &pbuf.Status{ErrCode: false, Message: &errMsg}, nil
 	}
 
 	leftMotor.Command(RESET)
@@ -73,7 +79,7 @@ func (s *robotServer) Move(_ context.Context, request *pbuf.MoveRequest) (*pbuf.
 	direction := 0.0
 	distance := int(request.Distance)
 	speed := int(request.Speed)
-	distance = int(float32(distance)/(float32(WHEEL_DIAMETER)*math.Pi)) * leftMotor.CountPerRot()
+	distance = int(float64(distance)/(WHEEL_DIAMETER*math.Pi)) * leftMotor.CountPerRot()
 	switch request.Direction {
 	case false:
 		direction = -1.0
@@ -96,12 +102,23 @@ func (s *robotServer) Move(_ context.Context, request *pbuf.MoveRequest) (*pbuf.
 	}
 
 	integral, lastError := 0.0, 0.0
-	target, _ := getGyroValue()
+	target, gyroCount, gErr := getGyroValue()
+	if gyroCount == 0 {
+		rightMotor.Command(RESET)
+		leftMotor.Command(RESET)
+		return &pbuf.Status{ErrCode: false}, gErr
+	}
 	pos := 0
 	leftMotor.Command(DIR)
 	rightMotor.Command(DIR)
 	for distance > pos {
-		deg, _ := getGyroValue()
+		deg, gyroCount, gErr := getGyroValue()
+		if gyroCount == 0 {
+			rightMotor.Command(RESET)
+			leftMotor.Command(RESET)
+			errMsg := "Error reading gyro values"
+			return &pbuf.Status{ErrCode: false, Message: &errMsg}, gErr
+		}
 		gyroError := target - deg
 		integral = math.Max(math.Min(integral+gyroError, 50.0), -50.0) // To handle saturation due to max speed of motor
 		derivative := gyroError - lastError
@@ -114,7 +131,8 @@ func (s *robotServer) Move(_ context.Context, request *pbuf.MoveRequest) (*pbuf.
 		if !bothMotorsRunning() {
 			rightMotor.Command(RESET)
 			leftMotor.Command(RESET)
-			return &pbuf.Status{ErrCode: false}, nil
+			errMsg := "Both motors aren't running"
+			return &pbuf.Status{ErrCode: false, Message: &errMsg}, nil
 		}
 
 		pos1, _ := leftMotor.Position()
@@ -131,12 +149,17 @@ func (s *robotServer) Move(_ context.Context, request *pbuf.MoveRequest) (*pbuf.
 func (s *robotServer) Turn(_ context.Context, request *pbuf.TurnRequest) (*pbuf.Status, error) {
 	leftMotor, err := ev3dev.TachoMotorFor("ev3-ports:outA", "lego-ev3-l-motor")
 	if err != nil {
-		return &pbuf.Status{ErrCode: false}, err
+		errMsg := "Error getting left motor"
+		return &pbuf.Status{ErrCode: false, Message: &errMsg}, err
 	}
 
 	rightMotor, err := ev3dev.TachoMotorFor("ev3-ports:outD", "lego-ev3-l-motor")
 	if err != nil {
-		return &pbuf.Status{ErrCode: false}, err
+		errMsg := "Error getting right motor"
+		return &pbuf.Status{ErrCode: false, Message: &errMsg}, err
+	}
+	if leftMotor == rightMotor {
+		return &pbuf.Status{ErrCode: false}, nil
 	}
 	leftMotor.Command(RESET)
 	rightMotor.Command(RESET)
@@ -182,10 +205,17 @@ func (s *robotServer) Turn(_ context.Context, request *pbuf.TurnRequest) (*pbuf.
 		if !bothMotorsRunning() {
 			rightMotor.Command(RESET)
 			leftMotor.Command(RESET)
-			return &pbuf.Status{ErrCode: false}, nil
+			errMsg := "Both motors aren't running"
+			return &pbuf.Status{ErrCode: false, Message: &errMsg}, err
 		}
 
-		gyroDeg, _ := getGyroValue()
+		gyroDeg, gyroCount, gErr := getGyroValue()
+		if gyroCount == 0 {
+			rightMotor.Command(RESET)
+			leftMotor.Command(RESET)
+			errMsg := "Error reading gyro values"
+			return &pbuf.Status{ErrCode: false, Message: &errMsg}, gErr
+		}
 		//fmt.Printf("Heading: %f\n", deg)
 		pos = gyroDeg * direction
 	}
@@ -197,7 +227,8 @@ func (s *robotServer) Turn(_ context.Context, request *pbuf.TurnRequest) (*pbuf.
 func (s *robotServer) Vacuum(_ context.Context, request *pbuf.VacuumPower) (*pbuf.Status, error) {
 	vacuumMotor, err := ev3dev.TachoMotorFor("ev3-ports:outB", "lego-ev3-m-motor")
 	if err != nil {
-		return &pbuf.Status{ErrCode: false}, err
+		errMsg := "Error getting vacuum motor"
+		return &pbuf.Status{ErrCode: false, Message: &errMsg}, err
 	}
 	vacuumMotor.Command(RESET)
 	target := int(float32(vacuumMotor.CountPerRot()) * 0.95)
@@ -213,11 +244,13 @@ func (s *robotServer) Vacuum(_ context.Context, request *pbuf.VacuumPower) (*pbu
 func (s *robotServer) StopMovement(_ context.Context, request *pbuf.Empty) (*pbuf.Status, error) {
 	rightMotor, err := ev3dev.TachoMotorFor("ev3-ports:outD", "lego-ev3-l-motor")
 	if err != nil {
-		return &pbuf.Status{ErrCode: false}, err
+		errMsg := "Error getting left motor"
+		return &pbuf.Status{ErrCode: false, Message: &errMsg}, err
 	}
 	leftMotor, err := ev3dev.TachoMotorFor("ev3-ports:outA", "lego-ev3-l-motor")
 	if err != nil {
-		return &pbuf.Status{ErrCode: false}, err
+		errMsg := "Error getting right motor"
+		return &pbuf.Status{ErrCode: false, Message: &errMsg}, err
 	}
 	rightMotor.Command(RESET)
 	leftMotor.Command(RESET)
@@ -233,27 +266,27 @@ func (s *robotServer) Stats(_ context.Context, request *pbuf.Status) (*pbuf.Stat
 	return &pbuf.Status{ErrCode: true}, nil
 }
 
-func getGyroValue() (float64, error) {
+func getGyroValue() (float64, int, error) {
 	gyro1, err := ev3dev.SensorFor("ev3-ports:in1", "lego-ev3-gyro")
 
 	gyro2, err2 := ev3dev.SensorFor("ev3-ports:in4", "lego-ev3-gyro")
 	if err != nil && err2 != nil {
-		return 0, err
+		return 0, 0, err
 	} else if err != nil {
 		tmp, _ := gyro2.Value(0)
 		pos2, _ := strconv.ParseFloat(tmp, 32)
-		return pos2, nil
+		return pos2, 1, nil
 	} else if err2 != nil {
 		tmp, _ := gyro1.Value(0)
 		pos1, _ := strconv.ParseFloat(tmp, 32)
-		return pos1, nil
+		return pos1, 1, nil
 	}
 	tmp, _ := gyro1.Value(0)
 	pos1, _ := strconv.ParseFloat(tmp, 32)
 	tmp, _ = gyro2.Value(0)
 	pos2, _ := strconv.ParseFloat(tmp, 32)
 
-	return (pos1 + pos2) / 2.0, nil
+	return (pos1 + pos2) / 2.0, 2, nil
 }
 func resetGyros() {
 	gyro1, err1 := ev3dev.SensorFor("ev3-ports:in1", "lego-ev3-gyro")
