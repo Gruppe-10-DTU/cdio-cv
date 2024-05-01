@@ -382,6 +382,6 @@ func bothMotorsRunning() bool {
 	}
 	leftRunning, _ := leftMotor.State()
 	rightRunning, _ := rightMotor.State()
-	fmt.Printf("left: %s\tright: %s\n", leftRunning, rightRunning)
+	//fmt.Printf("left: %s\tright: %s\n", leftRunning, rightRunning)
 	return (leftRunning == ev3dev.Running || leftRunning == ev3dev.Ramping) && (rightRunning == ev3dev.Running || rightRunning == ev3dev.Ramping)
 }
