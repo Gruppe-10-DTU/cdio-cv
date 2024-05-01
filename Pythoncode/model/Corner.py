@@ -10,7 +10,7 @@ class Corner:
         self.y2 = y2
         self.center = Coordinate(x1 + (x2 - x1) / 2, y1 + (y2 - y1) / 2)
         self.id = tracking_id
-        self.placement = Placement.UNSET
+        self.placement = None
 
     def set_placement(self, placement):
         if isinstance(placement, Placement):
@@ -18,7 +18,6 @@ class Corner:
 
 
 class Placement(Enum):
-    UNSET = 0
     TOP_LEFT = 1
     BOTTOM_LEFT = 2
     TOP_RIGHT = 3
