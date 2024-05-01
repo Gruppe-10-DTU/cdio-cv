@@ -200,8 +200,8 @@ func (s *robotServer) Vacuum(_ context.Context, request *pbuf.VacuumPower) (*pbu
 		return &pbuf.Status{ErrCode: false}, err
 	}
 	vacuumMotor.Command(RESET)
-	target := int(float32(vacuumMotor.CountPerRot()) * 1.25)
-	vacuumMotor.SetSpeedSetpoint(500)
+	target := int(float32(vacuumMotor.CountPerRot()) * 0.95)
+	vacuumMotor.SetSpeedSetpoint(800)
 	if !request.Power {
 		target *= -1
 	}
