@@ -1,3 +1,4 @@
+import grpc
 from ultralytics import YOLO
 import cv2
 
@@ -11,18 +12,18 @@ from Pythoncode.grpc import protobuf_pb2_grpc, protobuf_pb2
 
 from Pythoncode.model.coordinate import Coordinate
 
-pixel_per_cm = 10
+pixel_per_cm = 412/180
 
 
 def main():
     model = YOLO("model/best.pt")
     # cap = cv2.VideoCapture('videos/with_egg.mp4')
-    cap = cv2.VideoCapture(0)
-    print("Cam works")
+    cap = cv2.VideoCapture(1, cv2.CAP_DSHOW)
+
     ret, frame = cap.read()
     vip = None
     egg = None
-    balls = {}
+    balls = []
     corners = []
 
     if ret:
@@ -38,7 +39,7 @@ def main():
             if results[0].names[box.cls.item()] == "ball":
                 x, y, w, h = box.xywh[0]
                 current_id = int(box.id)
-                balls[current_id] = Ball(int(x), int(y), int(x) + int(w), int(y) + int(h), current_id)
+                balls.append(Ball(int(x), int(y), int(x) + int(w), int(y) + int(h), current_id))
             elif results[0].names[box.cls.item()] == "robot_front":
                 x, y, w, h = box.xywh[0]
                 robot_front = Coordinate(int(x), int(y))
@@ -61,16 +62,14 @@ def main():
 
                 vip = Vip(int(x), int(y), int(x) + int(w), int(y) + int(h), current_id)
 
-        # robot = Robot(robot_body, robot_front)
-        # pathfinding = Pathfinding(balls, robot_front)
-        # commandHandler(pathfinding, robot)
-
+        robot = Robot(robot_body, robot_front)
+        pathfinding = Pathfinding(balls, robot_body)
+        commandHandler(pathfinding, robot)
     ret, frame = cap.read()
 
     while ret:
         results = model.track(frame, persist=True)
         displayFrame(results[0].plot())
-        # pathfinding.display_items()
 
         # Press q to stop
         key = cv2.waitKey(1)
@@ -92,7 +91,7 @@ def main():
     cv2.destroyAllWindows()
 
 
-"""
+
 def commandHandler(pathfinding, robot):
     with grpc.insecure_channel("172.20.10.12:50051") as channel:
         stub = protobuf_pb2_grpc.RobotStub(channel)
@@ -101,12 +100,22 @@ def commandHandler(pathfinding, robot):
             target = pathfinding.get_closest()
 
             angle = VectorUtils.calculate_angle_clockwise(target.center, robot.front, robot.center)
-            stub.Turn(angle)
+            tmp = int(angle)
+
+            #Robot can't take negative numbers, so can only turn right.
+            if tmp < 0:
+                tmp += 360
+
+            stub.Turn(protobuf_pb2.TurnRequest(degrees=tmp))
             length = VectorUtils.get_length(target.center, robot.center)
 
-            stub.Move(True, length / pixel_per_cm, 30)
+            stub.Move(protobuf_pb2.MoveRequest(direction=True, distance=int(length / pixel_per_cm), speed=700))
 
-"""
+            key = cv2.waitKey(1)
+            if key == ord('q'):
+                break
+
+            pathfinding.remove_target(target)
 
 
 def displayFrame(frame_):

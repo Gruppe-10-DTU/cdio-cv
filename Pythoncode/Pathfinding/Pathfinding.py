@@ -5,32 +5,23 @@ from Pythoncode.model.coordinate import Coordinate
 
 
 class Pathfinding:
-    def __init__(self, targets, start: Coordinate):
+    def __init__(self, targets: list[Ball], start: Coordinate):
         self.targets = targets
         self.start = start
-        self.map = {}
-        for target in targets.items():
-            self.map[target[0]] = math.inf
-        self.find_closest()
 
-    def find_closest(self):
-        start = self.start
-        for target in self.targets.items():
-            distance = math.sqrt(math.pow(target[1].center.x - start.x, 2) + math.pow(target[1].center.y - start.y, 2))
-            self.map[target[0]] = distance
-        self.map = sorted(self.map.items(), key=lambda x: x[1])
-
-    def get_closest(self):
-        return self.map[0]
+    def get_closest(self, point: Coordinate) -> Ball:
+        closest_distance = math.inf
+        m = None
+        for target in self.targets:
+            distance = math.sqrt(math.pow(target.center.x - point.x, 2) + math.pow(target.center.y - point.y, 2))
+            if closest_distance > distance:
+                closest_distance = distance
+                m = target
+        return m
 
     def remove_target(self, ball: Ball):
-        del self.map[ball]
-        del self.targets[ball.id]
-        self.find_closest()
+        self.targets.remove(ball)
 
     def update_target(self, targets):
         self.targets = targets
-        self.find_closest()
 
-    def display_items(self):
-        print(self.map)
