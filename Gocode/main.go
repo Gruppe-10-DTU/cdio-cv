@@ -103,17 +103,18 @@ func (s *robotServer) Move(_ context.Context, request *pbuf.MoveRequest) (*pbuf.
 
 	integral, lastError := 0.0, 0.0
 	target, gyroCount, gErr := getGyroValue()
-	if gyroCount == 0 {
+	if gyroCount == 0 || gErr != nil {
 		rightMotor.Command(RESET)
 		leftMotor.Command(RESET)
-		return &pbuf.Status{ErrCode: false}, gErr
+		errMsg := "Error reading target direction"
+		return &pbuf.Status{ErrCode: false, Message: &errMsg}, gErr
 	}
 	pos := 0
 	leftMotor.Command(DIR)
 	rightMotor.Command(DIR)
 	for distance > pos {
 		deg, gyroCount, gErr := getGyroValue()
-		if gyroCount == 0 {
+		if gyroCount == 0 || gErr != nil {
 			rightMotor.Command(RESET)
 			leftMotor.Command(RESET)
 			errMsg := "Error reading gyro values"
@@ -159,7 +160,8 @@ func (s *robotServer) Turn(_ context.Context, request *pbuf.TurnRequest) (*pbuf.
 		return &pbuf.Status{ErrCode: false, Message: &errMsg}, err
 	}
 	if leftMotor == rightMotor {
-		return &pbuf.Status{ErrCode: false}, nil
+		errMsg := "Only one motor available"
+		return &pbuf.Status{ErrCode: false, Message: &errMsg}, nil
 	}
 	leftMotor.Command(RESET)
 	rightMotor.Command(RESET)
