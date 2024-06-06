@@ -56,12 +56,12 @@ func (s *robotServer) Move(_ context.Context, request *pbuf.MoveRequest) (*pbuf.
 	//fmt.Printf("Received move command ... \n")
 	leftMotor, err := ev3dev.TachoMotorFor("ev3-ports:outA", "lego-ev3-l-motor")
 	if err != nil {
-		errMsg := "Couldn't get left motor"
+		errMsg := "Couldn't get reference for left motor"
 		return &pbuf.Status{ErrCode: false, Message: &errMsg}, err
 	}
 	rightMotor, err := ev3dev.TachoMotorFor("ev3-ports:outD", "lego-ev3-l-motor")
 	if err != nil {
-		errMsg := "Couldn't get right motor"
+		errMsg := "Couldn't get reference for right motor"
 		return &pbuf.Status{ErrCode: false, Message: &errMsg}, err
 	}
 	if leftMotor == rightMotor {
@@ -79,7 +79,7 @@ func (s *robotServer) Move(_ context.Context, request *pbuf.MoveRequest) (*pbuf.
 	direction := 0.0
 	distance := int(request.Distance)
 	speed := int(request.Speed)
-	distance = int(float64(distance)/(WHEEL_DIAMETER*math.Pi)) * leftMotor.CountPerRot()
+	distance = int((float64(distance) / (WHEEL_DIAMETER * math.Pi)) * float64(leftMotor.CountPerRot()))
 	switch request.Direction {
 	case false:
 		direction = -1.0
@@ -89,15 +89,17 @@ func (s *robotServer) Move(_ context.Context, request *pbuf.MoveRequest) (*pbuf.
 		return &pbuf.Status{ErrCode: false}, err
 	}
 	speed = speed * int(direction)
-	Kp := float64(speed*speed) / 20.0
+	Kp := float64(speed*speed) / 2000.0
 	Ki := Kp * 0.1
 	Kd := Kp * 0.5
-	switch {
-	case request.Kp != nil:
+
+	if request.Kp != nil {
 		Kp = float64(*request.Kp)
-	case request.Ki != nil:
+	}
+	if request.Ki != nil {
 		Ki = float64(*request.Ki)
-	case request.Kd != nil:
+	}
+	if request.Kd != nil {
 		Kd = float64(*request.Kd)
 	}
 
@@ -121,13 +123,18 @@ func (s *robotServer) Move(_ context.Context, request *pbuf.MoveRequest) (*pbuf.
 			return &pbuf.Status{ErrCode: false, Message: &errMsg}, gErr
 		}
 		gyroError := target - deg
-		integral = math.Max(math.Min(integral+gyroError, 50.0), -50.0) // To handle saturation due to max speed of motor
+		integral = math.Max(math.Min(integral+gyroError, 20.0), -20.0) // To handle saturation due to max speed of motor
 		derivative := gyroError - lastError
 		correction := (Kp * gyroError) + (Ki * integral) + (Kd * derivative)
 		lastError = gyroError
 
-		leftMotor.SetDutyCycleSetpoint(speed + int(correction))
-		rightMotor.SetDutyCycleSetpoint(speed - int(correction))
+		leftSp := math.Max(math.Min(float64(speed)+correction, 100.0), -100.0)  // To handle saturation due to max speed of motor
+		rightSp := math.Max(math.Min(float64(speed)-correction, 100.0), -100.0) // To handle saturation due to max speed of motor
+
+		leftMotor.SetDutyCycleSetpoint(int(leftSp))
+		rightMotor.SetDutyCycleSetpoint(int(rightSp))
+
+		time.Sleep(5 * time.Millisecond)
 
 		if !bothMotorsRunning() {
 			rightMotor.Command(RESET)
@@ -143,6 +150,11 @@ func (s *robotServer) Move(_ context.Context, request *pbuf.MoveRequest) (*pbuf.
 
 	leftMotor.Command(STOP)
 	rightMotor.Command(STOP)
+
+	time.Sleep(5 * time.Millisecond)
+
+	leftMotor.Command(RESET)
+	rightMotor.Command(RESET)
 
 	return &pbuf.Status{ErrCode: true}, nil
 }
