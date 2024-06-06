@@ -196,7 +196,7 @@ func (s *robotServer) Turn(_ context.Context, request *pbuf.TurnRequest) (*pbuf.
 		backwardMotor = rightMotor
 	}
 	degrees := float64(request.Degrees) * direction
-	Kp := speed / 30.0
+	Kp := speed / 100.0
 	Kd := Kp / 2.0
 	power := 0
 	pos := 0.0
@@ -209,13 +209,13 @@ func (s *robotServer) Turn(_ context.Context, request *pbuf.TurnRequest) (*pbuf.
 		dynSpeed := Kp*(degrees-pos) + Kd*(pos-lastPos)
 		lastPos = pos
 		if speed > dynSpeed {
-			power = int(dynSpeed)
+			power = int(math.Max(dynSpeed, 40.0))
 		} else {
 			power = int(speed)
 		}
 		forwardMotor.SetDutyCycleSetpoint(power)
 		backwardMotor.SetDutyCycleSetpoint(-power)
-
+		time.Sleep(5 * time.Millisecond)
 		if !bothMotorsRunning() {
 			rightMotor.Command(RESET)
 			leftMotor.Command(RESET)
@@ -230,11 +230,15 @@ func (s *robotServer) Turn(_ context.Context, request *pbuf.TurnRequest) (*pbuf.
 			errMsg := "Error reading gyro values"
 			return &pbuf.Status{ErrCode: false, Message: &errMsg}, gErr
 		}
-		//fmt.Printf("Heading: %f\n", deg)
 		pos = gyroDeg * direction
 	}
 	leftMotor.Command(STOP)
 	rightMotor.Command(STOP)
+
+	time.Sleep(5 * time.Millisecond)
+
+	leftMotor.Command(RESET)
+	rightMotor.Command(RESET)
 	return &pbuf.Status{ErrCode: true}, nil
 }
 
@@ -295,9 +299,9 @@ func getGyroValue() (float64, int, error) {
 		pos1, _ := strconv.ParseFloat(tmp, 32)
 		return pos1, 1, nil
 	}
-	tmp, _ := gyro1.Value(0)
+	tmp, _ := gyro1.Value(62535)
 	pos1, _ := strconv.ParseFloat(tmp, 32)
-	tmp, _ = gyro2.Value(0)
+	tmp, _ = gyro2.Value(62533)
 	pos2, _ := strconv.ParseFloat(tmp, 32)
 
 	return (pos1 + pos2) / 2.0, 2, nil
