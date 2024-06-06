@@ -15,13 +15,21 @@ echo "Compiling binary"
 GOOS=linux GOARCH=arm GOARM=5 go build -o robot-grpc
 
 echo "Stopping old gRPC service"
-ssh robot@$1 "sudo systemctl stop robot.service" || exit
-
+ssh robot@$1 "sudo systemctl stop robot.service" 
+if [ $? -eq 1 ]; then 
+  echo "Failed to stop service..." && exit
+fi
 echo "Deploying new binary"
-scp ./robot-grpc robot@$1:~/robot-grpc || exit
+scp ./robot-grpc robot@$1:~/robot-grpc
+if [ $? -eq 1 ]; then 
+  echo "Failed to copy binary..." && exit
+fi
 
 echo "Restarting gRPC service"
 ssh robot@$1 "sudo systemctl start robot.service"
+if [ $? -eq 1 ]; then 
+  echo "Failed to start service..." && exit
+fi
 
 echo "Done"
 
