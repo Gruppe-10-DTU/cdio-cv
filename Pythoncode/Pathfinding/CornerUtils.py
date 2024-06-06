@@ -19,9 +19,9 @@ def set_placements(corners):
 
 def calculate_goals(corners) -> list:
     goals = []
-    sorted_list = sorted(corners.items(), key=lambda c: c[1].placement)
+    sorted_list = sorted(corners.items(), key=lambda c: c[1].placement.value)
     if len(sorted_list) >= 2:
-        if sorted_list[0][1].placement == Placement.TOP_LEFT and sorted_list[1][1] == Placement.BOTTOM_LEFT:
+        if sorted_list[0][1].placement == Placement.TOP_LEFT and sorted_list[1][1].placement == Placement.BOTTOM_LEFT:
             x1 = sorted_list[0][1].center.x
             x2 = sorted_list[1][1].center.x
             y1 = sorted_list[0][1].center.y
@@ -29,7 +29,7 @@ def calculate_goals(corners) -> list:
             goals.append(Goal(x1 + (x2 - x1) / 2, y1 + (y2 - y1) / 2))
 
         sorted_list.reverse()
-        if sorted_list[0][1].placement == Placement.BOTTOM_RIGHT and sorted_list[1][1] == Placement.TOP_RIGHT:
+        if sorted_list[0][1].placement == Placement.BOTTOM_RIGHT and sorted_list[1][1].placement == Placement.TOP_RIGHT:
             x1 = sorted_list[1][1].center.x
             x2 = sorted_list[0][1].center.x
             y1 = sorted_list[1][1].center.y

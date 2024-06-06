@@ -7,7 +7,7 @@ from Pythoncode.model.Corner import Corner
 from Pythoncode.model.Robot import Robot
 from Pythoncode.model.Vip import Vip
 from Pythoncode.model.coordinate import Coordinate
-from Pythoncode.Course.CornerUtils import set_placements
+from Pythoncode.Pathfinding.CornerUtils import set_placements
 
 def main():
     model = YOLO("../model/best.pt")
