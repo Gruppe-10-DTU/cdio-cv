@@ -65,7 +65,11 @@ class Test(TestCase):
                    2: Corner(10, 0, 10, 0, 2),
                    3: Corner(10, 10, 10, 10, 3)}
 
-        corners = set_placements(corners)
+        corners[0].placement = Placement.TOP_LEFT
+        corners[1].placement = Placement.BOTTOM_LEFT
+        corners[2].placement = Placement.TOP_RIGHT
+        corners[3].placement = Placement.BOTTOM_RIGHT
+
         goals = calculate_goals(corners)
 
         self.assertEqual(len(goals), 2)
@@ -75,4 +79,3 @@ class Test(TestCase):
 
         self.assertEqual(goals[1].x, 10.0)
         self.assertEqual(goals[1].y, 5.0)
-
