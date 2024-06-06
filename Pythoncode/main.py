@@ -11,6 +11,8 @@ from Pythoncode.model.Vip import Vip
 from Pythoncode.grpc import protobuf_pb2_grpc, protobuf_pb2
 
 from Pythoncode.model.coordinate import Coordinate
+from Pythoncode.model.Corner import Corner
+from Pythoncode.Pathfinding.CornerUtils import set_placements, calculate_goals
 
 pixel_per_cm = 412/180
 
@@ -24,7 +26,8 @@ def main():
     vip = None
     egg = None
     balls = []
-    corners = []
+    corners = {}
+    goals = []
 
     if ret:
         results = model.track(frame, persist=True)
@@ -47,11 +50,10 @@ def main():
                 x, y, w, h = box.xywh[0]
                 robot_body = Coordinate(int(x), int(y))
             elif results[0].names[box.cls.item()] == "corner":
-                # Left cornor of video is 0,0 which can be used to find the position of each corner.
-                # Iffy if less than 4 corners are found
                 x, y, w, h = box.xywh[0]
-
-                print(int(x), int(y), int(x) + int(w), int(y) + int(h))
+                current_id = int(box.id)
+                corners[current_id] = Corner(int(x), int(y), int(x) + int(w), int(y) + int(h), current_id)
+                print("Corner")
             elif results[0].names[box.cls.item()] == "obstacle":
                 print("Cross")
             elif results[0].names[box.cls.item()] == "egg":
@@ -63,6 +65,8 @@ def main():
                 vip = Vip(int(x), int(y), int(x) + int(w), int(y) + int(h), current_id)
 
         robot = Robot(robot_body, robot_front)
+        corners = set_placements(corners)
+        goals = calculate_goals(corners)
         pathfinding = Pathfinding(balls, robot_body)
         commandHandler(pathfinding, robot)
     ret, frame = cap.read()
