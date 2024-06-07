@@ -1,3 +1,4 @@
+from Pythoncode.Pathfinding import VectorUtils
 from Pythoncode.model.Corner import Placement
 from Pythoncode.model.Goal import Goal
 
@@ -15,6 +16,12 @@ def set_placements(corners):
         corners[top_right_most[0][1].id].set_placement(Placement.TOP_RIGHT)
         corners[top_right_most[1][1].id].set_placement(Placement.BOTTOM_RIGHT)
     return corners
+
+def get_cm_per_pixel(corners):
+    sorted_list = sorted(corners.items(), key=lambda c: c[1].placement.value)
+    if sorted_list[0][1].placement == Placement.TOP_LEFT and sorted_list[1][1].placement == Placement.BOTTOM_LEFT:
+        return VectorUtils.get_length(sorted_list[0][1].center, sorted_list[1][1].center) / 180
+    return 0
 
 
 def calculate_goals(corners) -> list:

@@ -2,7 +2,7 @@ import grpc
 from ultralytics import YOLO
 import cv2
 
-from Pythoncode.Pathfinding import VectorUtils
+from Pythoncode.Pathfinding import VectorUtils, CornerUtils
 from Pythoncode.Pathfinding.Pathfinding import Pathfinding
 from Pythoncode.model.Ball import Ball
 from Pythoncode.model.Robot import Robot
@@ -15,7 +15,7 @@ from Pythoncode.Pathfinding.CornerUtils import set_placements, calculate_goals
 
 
 
-
+pixel_per_cm = 2.0
 def main():
     model = YOLO("model/best.pt")
     # cap = cv2.VideoCapture('videos/with_egg.mp4')
@@ -30,7 +30,7 @@ def main():
 
     if ret:
         results = model.track(frame, persist=True)
-
+        displayFrame(frame)
         displayFrame(results[0].plot())
         boxes = results[0].boxes.cpu()
         # track_ids = results[0].boxes.id.int().cpu().tolist()
@@ -63,7 +63,7 @@ def main():
                 vip = Vip(int(x), int(y), int(x) + int(w), int(y) + int(h), current_id)
 
         corners = set_placements(corners)
-
+        pixel_per_cm = CornerUtils.get_cm_per_pixel(corners)
         robot = Robot(robot_body, robot_front)
         """goals = calculate_goals(corners)"""
         pathfinding = Pathfinding(balls, robot_body)
@@ -108,7 +108,7 @@ def commandHandler(pathfinding, robot):
             stub.Turn(protobuf_pb2.TurnRequest(degrees=tmp))
             length = int(VectorUtils.get_length(target.center, robot.front))
 
-            stub.Move(protobuf_pb2.MoveRequest(direction=True, distance=int(length / 2.), speed=70))
+            stub.Move(protobuf_pb2.MoveRequest(direction=True, distance=int(length / pixel_per_cm), speed=70))
 
             key = cv2.waitKey(1)
             if key == ord('q'):
