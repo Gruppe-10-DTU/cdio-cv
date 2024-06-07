@@ -4,7 +4,6 @@ import cv2
 
 from Pythoncode.Pathfinding import VectorUtils
 from Pythoncode.Pathfinding.Pathfinding import Pathfinding
-from Pythoncode.grpc.gRPC_Class import gRPC_Class
 from Pythoncode.model.Ball import Ball
 from Pythoncode.model.Robot import Robot
 from Pythoncode.model.Vip import Vip
@@ -14,7 +13,7 @@ from Pythoncode.model.coordinate import Coordinate
 from Pythoncode.model.Corner import Corner
 from Pythoncode.Pathfinding.CornerUtils import set_placements, calculate_goals
 
-pixel_per_cm = 412/180
+
 
 
 def main():
@@ -53,7 +52,6 @@ def main():
                 x, y, w, h = box.xywh[0]
                 current_id = int(box.id)
                 corners[current_id] = Corner(int(x), int(y), int(x) + int(w), int(y) + int(h), current_id)
-                print("Corner")
             elif results[0].names[box.cls.item()] == "obstacle":
                 print("Cross")
             elif results[0].names[box.cls.item()] == "egg":
@@ -64,9 +62,10 @@ def main():
 
                 vip = Vip(int(x), int(y), int(x) + int(w), int(y) + int(h), current_id)
 
-        robot = Robot(robot_body, robot_front)
         corners = set_placements(corners)
-        goals = calculate_goals(corners)
+
+        robot = Robot(robot_body, robot_front)
+        """goals = calculate_goals(corners)"""
         pathfinding = Pathfinding(balls, robot_body)
         commandHandler(pathfinding, robot)
     ret, frame = cap.read()
@@ -97,29 +96,26 @@ def main():
 
 
 def commandHandler(pathfinding, robot):
-    with grpc.insecure_channel("172.20.10.12:50051") as channel:
+    with grpc.insecure_channel("192.168.53.19:50051") as channel:
         stub = protobuf_pb2_grpc.RobotStub(channel)
 
         while len(pathfinding.targets) > 0:
-            target = pathfinding.get_closest()
+            target = pathfinding.get_closest(robot.center)
 
             angle = VectorUtils.calculate_angle_clockwise(target.center, robot.front, robot.center)
             tmp = int(angle)
 
-            #Robot can't take negative numbers, so can only turn right.
-            if tmp < 0:
-                tmp += 360
-
             stub.Turn(protobuf_pb2.TurnRequest(degrees=tmp))
-            length = VectorUtils.get_length(target.center, robot.center)
+            length = int(VectorUtils.get_length(target.center, robot.front))
 
-            stub.Move(protobuf_pb2.MoveRequest(direction=True, distance=int(length / pixel_per_cm), speed=700))
+            stub.Move(protobuf_pb2.MoveRequest(direction=True, distance=int(length / 2.), speed=70))
 
             key = cv2.waitKey(1)
             if key == ord('q'):
                 break
 
             pathfinding.remove_target(target)
+
 
 
 def displayFrame(frame_):
