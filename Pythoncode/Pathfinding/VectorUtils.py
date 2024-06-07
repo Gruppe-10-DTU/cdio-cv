@@ -18,8 +18,9 @@ def get_vector_length(vector: Vector) -> float:
 
 
 def calculate_angle_clockwise(coordinate1: Coordinate, coordinate2: Coordinate, center: Coordinate) -> float:
-    vector1 = get_vector(coordinate1, center)
-    vector2 = get_vector(coordinate2, center)
-    dotproduct = (vector1.x * vector2.y - vector1.y * vector2.x)
-    return -math.degrees(math.asin(
-        dotproduct / (get_vector_length(vector1) * get_vector_length(vector2))))
+    vector2 = get_vector(center, coordinate1)
+    vector1 = get_vector(center, coordinate2)
+    dotproduct = (vector1.x * vector2.x + vector1.y * vector2.y)
+    other = vector2.y * vector1.x - vector2.x * vector1.y
+    arctan2 = math.atan2(other, dotproduct)
+    return math.degrees(arctan2)

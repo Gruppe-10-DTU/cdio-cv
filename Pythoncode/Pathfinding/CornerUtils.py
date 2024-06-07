@@ -1,3 +1,4 @@
+from Pythoncode.Pathfinding import VectorUtils
 from Pythoncode.model.Corner import Placement
 from Pythoncode.model.Goal import Goal
 
@@ -16,6 +17,26 @@ def set_placements(corners):
         corners[top_right_most[1][1].id].set_placement(Placement.BOTTOM_RIGHT)
     return corners
 
+def get_cm_per_pixel(corners):
+    list = []
+    for key, value in corners.items():
+        list.append(value)
+
+    sorted_list = sorted(list, key=lambda c: c.placement.value)
+    match len(sorted_list):
+        case 4:
+            return VectorUtils.get_length(sorted_list[0].center, sorted_list[1].center) / 120
+        case 3, 2:
+
+            if sorted_list[0].placement % 2 == sorted_list[1].placement % 2:
+                return VectorUtils.get_length(sorted_list[0].center, sorted_list[1].center) / 120
+            elif sorted_list[0].placement % 2 == 1 and sorted_list[1].placement % 2 == 0:
+                return VectorUtils.get_length(sorted_list[0].center, sorted_list[1].center) / 180
+            else:
+                """Udregner ud fra diagonalen"""
+                return VectorUtils.get_length(sorted_list[0].center, sorted_list[1].center) / 216.33
+
+    return 2.0
 
 def calculate_goals(corners) -> list:
     goals = []
