@@ -30,7 +30,6 @@ def main():
 
     if ret:
         results = model.track(frame, persist=True)
-        displayFrame(frame)
         displayFrame(results[0].plot())
         boxes = results[0].boxes.cpu()
         # track_ids = results[0].boxes.id.int().cpu().tolist()
@@ -61,7 +60,7 @@ def main():
                 current_id = int(box.id)
 
                 vip = Vip(int(x), int(y), int(x) + int(w), int(y) + int(h), current_id)
-
+        """cv2.waitKey(100000)"""
         corners = set_placements(corners)
         pixel_per_cm = CornerUtils.get_cm_per_pixel(corners)
         robot = Robot(robot_body, robot_front)
@@ -111,10 +110,10 @@ def commandHandler(pathfinding, robot):
             stub.Move(protobuf_pb2.MoveRequest(direction=True, distance=int(length / pixel_per_cm), speed=70))
 
             key = cv2.waitKey(1)
-            if key == ord('q'):
-                break
+
 
             pathfinding.remove_target(target)
+
 
 
 

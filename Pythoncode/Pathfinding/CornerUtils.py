@@ -18,11 +18,25 @@ def set_placements(corners):
     return corners
 
 def get_cm_per_pixel(corners):
-    sorted_list = sorted(corners.items(), key=lambda c: c[1].placement.value)
-    if sorted_list[0][1].placement == Placement.TOP_LEFT and sorted_list[1][1].placement == Placement.BOTTOM_LEFT:
-        return VectorUtils.get_length(sorted_list[0][1].center, sorted_list[1][1].center) / 180
-    return 0
+    list = []
+    for key, value in corners.items():
+        list.append(value)
 
+    sorted_list = sorted(list, key=lambda c: c.placement.value)
+    match len(sorted_list):
+        case 4:
+            return VectorUtils.get_length(sorted_list[0].center, sorted_list[1].center) / 120
+        case 3, 2:
+
+            if sorted_list[0].placement % 2 == sorted_list[1].placement % 2:
+                return VectorUtils.get_length(sorted_list[0].center, sorted_list[1].center) / 120
+            elif sorted_list[0].placement % 2 == 1 and sorted_list[1].placement % 2 == 0:
+                return VectorUtils.get_length(sorted_list[0].center, sorted_list[1].center) / 180
+            else:
+                """Udregner ud fra diagonalen"""
+                return VectorUtils.get_length(sorted_list[0].center, sorted_list[1].center) / 216.33
+
+    return 2.0
 
 def calculate_goals(corners) -> list:
     goals = []
