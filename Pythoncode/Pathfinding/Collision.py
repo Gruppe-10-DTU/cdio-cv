@@ -3,6 +3,7 @@ from Pythoncode.model.coordinate import Coordinate
 
 """
 This is an implementation of the Cohen-Sutherland algorithm for line clipping
+If a line is clipped to fit the rectangle, a collision is detected.
 """
 
 LEFT = 1
@@ -27,7 +28,7 @@ def calculate_endpoint_outcode(box: Rectangle, coordinate: Coordinate):
     return outcode
 
 
-def line_clips_rectangle(box: Rectangle, c1: Coordinate, c2: Coordinate):
+def line_hits_rectangle(box: Rectangle, c1: Coordinate, c2: Coordinate):
     start = calculate_endpoint_outcode(box, Coordinate(c1.x, c1.y))
     end = calculate_endpoint_outcode(box, Coordinate(c2.x, c2.y))
 
