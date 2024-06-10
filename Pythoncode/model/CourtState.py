@@ -49,6 +49,7 @@ class CourtState(object):
     def initialize(cls):
         model = YOLO("model/best.pt")
         cls.model = model
+        cv2.namedWindow("YOLO", cv2.WINDOW_NORMAL)
 
         # cap = cv2.VideoCapture('videos/with_egg.mp4')
         cap = cv2.VideoCapture(1, cv2.CAP_DSHOW)
@@ -131,6 +132,9 @@ class CourtState(object):
     def updateObjects(cls):
         model = cls.model
         cap = cls.cap
+        cv2.destroyAllWindows()
+        cv2.namedWindow("YOLO", cv2.WINDOW_NORMAL)
+
         while True:
             print("Updating models")
             ret, frame = cap.read()

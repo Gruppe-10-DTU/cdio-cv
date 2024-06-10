@@ -42,27 +42,29 @@ def commandHandler(pathfinding):
     ip = config.get("ROBOT", "ip")
     with grpc.insecure_channel(ip) as channel:
         stub = protobuf_pb2_grpc.RobotStub(channel)
-
+        robot = CourtState.getProperty(CourtProperty.ROBOT)
         while len(pathfinding.targets) > 0:
-            robot = CourtState.getProperty(CourtProperty.ROBOT)
             target = pathfinding.get_closest(robot.center)
-            cv2.waitKey(1500)
-
-            angle = VectorUtils.calculate_angle_clockwise(target.center, robot.front, robot.center)
-            angle = round(angle)
-            if angle > 180:
-                angle -= 360
-            cv2.waitKey(1500)
-
-            stub.Turn(protobuf_pb2.TurnRequest(degrees=angle))
-            length = round(VectorUtils.get_length(target.center, robot.front) / pixel_per_cm)*0.9
-
-            stub.Move(protobuf_pb2.MoveRequest(direction=True, distance=int(length), speed=70))
-            cv2.waitKey(15000)
-
+            drive_function(stub, target)
             pathfinding.remove_target(target)
+            pathfinding.update_target(CourtState.getProperty(CourtProperty.BALLS))
+        target = CourtState.getProperty(CourtProperty.VIP)
+        drive_function(stub, target)
 
+def drive_function(stub, target):
+    robot = CourtState.getProperty(CourtProperty.ROBOT)
+    cv2.waitKey(1500)
 
+    angle = VectorUtils.calculate_angle_clockwise(target.center, robot.front, robot.center)
+    if angle > 180:
+        angle -= 360
+    cv2.waitKey(1500)
+
+    stub.Turn(protobuf_pb2.TurnRequest(degrees=angle))
+    length = round(VectorUtils.get_length(target.center, robot.front) / pixel_per_cm) * 0.9
+
+    stub.Move(protobuf_pb2.MoveRequest(direction=True, distance=int(length), speed=70))
+    cv2.waitKey(15000)
 
 
 if __name__ == '__main__':
