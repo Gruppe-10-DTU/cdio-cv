@@ -134,7 +134,7 @@ func (s *robotServer) Move(_ context.Context, request *pbuf.MoveRequest) (*pbuf.
 		leftMotor.SetDutyCycleSetpoint(int(leftSp))
 		rightMotor.SetDutyCycleSetpoint(int(rightSp))
 
-		time.Sleep(5 * time.Millisecond)
+		time.Sleep(10 * time.Millisecond)
 
 		if !peripherherals.BothMotorsRunning() {
 			rightMotor.Command(RESET)
@@ -216,7 +216,7 @@ func (s *robotServer) Turn(_ context.Context, request *pbuf.TurnRequest) (*pbuf.
 		}
 		forwardMotor.SetDutyCycleSetpoint(power)
 		backwardMotor.SetDutyCycleSetpoint(-power)
-		time.Sleep(5 * time.Millisecond)
+		time.Sleep(10 * time.Millisecond)
 		if !peripherherals.BothMotorsRunning() {
 			rightMotor.Command(RESET)
 			leftMotor.Command(RESET)
