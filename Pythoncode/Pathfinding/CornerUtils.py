@@ -27,12 +27,13 @@ def get_cm_per_pixel(corners):
     sorted_list = sorted(list, key=lambda c: c.placement.value)
 
     config = configparser.ConfigParser()
-    config.read('properties/config.ini')
-    length = float(config.get('MAP', 'length'))
+    config.read('config.ini')
+    print(config.sections())
+    height = float(config.get('MAP', 'height'))
     width = float(config.get('MAP', 'width'))
     match len(sorted_list):
         case 4:
-            return VectorUtils.get_length(sorted_list[0].center, sorted_list[1].center) / length
+            return VectorUtils.get_length(sorted_list[0].center, sorted_list[1].center) / height
         case 3, 2:
 
             if sorted_list[0].placement % 2 == sorted_list[1].placement % 2:
@@ -41,7 +42,7 @@ def get_cm_per_pixel(corners):
                 return VectorUtils.get_length(sorted_list[0].center, sorted_list[1].center) / width
             else:
                 """Udregner ud fra diagonalen"""
-                return VectorUtils.get_length(sorted_list[0].center, sorted_list[1].center) / math.sqrt(math.pow(length, 2) + math.pow(width, 2))
+                return VectorUtils.get_length(sorted_list[0].center, sorted_list[1].center) / math.sqrt(math.pow(height, 2) + math.pow(width, 2))
 
     """Default value"""
     return 2.0

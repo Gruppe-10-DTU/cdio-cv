@@ -22,22 +22,14 @@ def main():
     cap = cv2.VideoCapture(1, cv2.CAP_DSHOW)
     CourtState.addProperties(model, cap)
     """
-    CourtState.startThread()
-
-    vip = None
-    egg = None
-    balls = []
-    corners = {}
-    goals = []
-
-    from time import sleep
-    sleep(10)
+    CourtState.initialize()
 
     corners = CourtState.getProperty(CourtProperty.CORNERS)
     corners = set_placements(corners)
     global pixel_per_cm
     pixel_per_cm = CornerUtils.get_cm_per_pixel(corners)
     robot = CourtState.getProperty(CourtProperty.ROBOT)
+    CourtState.startThread()
     """goals = calculate_goals(corners)"""
     balls = CourtState.getProperty(CourtProperty.BALLS)
     pathfinding = Pathfinding(balls, robot.center)
@@ -46,7 +38,7 @@ def main():
 
 def commandHandler(pathfinding):
     config = configparser.ConfigParser()
-    config.read('properties/config.ini')
+    config.read('config.ini')
     ip = config.get("ROBOT", "ip")
     with grpc.insecure_channel(ip) as channel:
         stub = protobuf_pb2_grpc.RobotStub(channel)
@@ -54,17 +46,21 @@ def commandHandler(pathfinding):
         while len(pathfinding.targets) > 0:
             robot = CourtState.getProperty(CourtProperty.ROBOT)
             target = pathfinding.get_closest(robot.center)
+            cv2.waitKey(1500)
 
             angle = VectorUtils.calculate_angle_clockwise(target.center, robot.front, robot.center)
-            tmp = round(angle)
+            angle = round(angle)
+            if angle > 180:
+                angle -= 360
+            cv2.waitKey(1500)
 
-            stub.Turn(protobuf_pb2.TurnRequest(degrees=tmp))
-            length = round(VectorUtils.get_length(target.center, robot.front))
+            stub.Turn(protobuf_pb2.TurnRequest(degrees=angle))
+            length = round(VectorUtils.get_length(target.center, robot.front) / pixel_per_cm)*0.9
 
-            stub.Move(protobuf_pb2.MoveRequest(direction=True, distance=int(length / pixel_per_cm), speed=70))
+            stub.Move(protobuf_pb2.MoveRequest(direction=True, distance=int(length), speed=70))
+            cv2.waitKey(15000)
 
             pathfinding.remove_target(target)
-            cv2.waitKey(15000)
 
 
 
