@@ -1,0 +1,106 @@
+import threading
+from time import sleep
+from enum import Enum
+from threading import Thread, Lock
+
+import cv2
+from ultralytics import YOLO
+
+from Pythoncode.model.Ball import Ball
+from Pythoncode.model.Corner import Corner
+from Pythoncode.model.Robot import Robot
+from Pythoncode.model.Vip import Vip
+from Pythoncode.model.coordinate import Coordinate
+
+
+class CourtProperty(Enum):
+    BALLS = 1
+    VIP = 2
+    CORNERS = 3
+    OBSTACLE = 4
+    EGG = 5
+    ROBOT = 6
+
+
+
+
+
+class CourtState(object):
+
+    model = None
+    cap = None
+    thread = None
+    lock = Lock()
+    items = {CourtProperty.BALLS: list, CourtProperty.ROBOT: Robot, CourtProperty.VIP: Vip,
+                  CourtProperty.CORNERS: list, CourtProperty.OBSTACLE: Coordinate}
+    ready = False
+
+    @classmethod
+    def addProperties(cls, model, cap):
+        CourtState.model = model
+        CourtState.cap = cap
+
+    @classmethod
+    def startThread(cls):
+        cls.thread = Thread(target=cls.updateObjects)
+        cls.thread.start()
+
+    @classmethod
+    def updateObjects(cls):
+        model = YOLO("model/best.pt")
+        # cap = cv2.VideoCapture('videos/with_egg.mp4')
+        cap = cv2.VideoCapture(1, cv2.CAP_DSHOW)
+        while True:
+            print("Updating models")
+            ret, frame = cap.read()
+            if ret:
+                results = model.track(frame, persist=True)
+                boxes = results[0].boxes.cpu()
+                # track_ids = results[0].boxes.id.int().cpu().tolist()
+
+                # Plot the tracks
+                # for box, track_id in zip(boxes, track_ids):
+                balls = []
+                corners = {}
+                vipItem = None
+                for box in boxes:
+                    if results[0].names[box.cls.item()] == "ball":
+                        x, y, w, h = box.xywh[0]
+                        current_id = int(box.id)
+                        balls.append(Ball(int(x), int(y), int(x) + int(w), int(y) + int(h), current_id))
+                    elif results[0].names[box.cls.item()] == "robot_front":
+                        x, y, w, h = box.xywh[0]
+                        robot_front = Coordinate(int(x), int(y))
+                    elif results[0].names[box.cls.item()] == "robot_body":
+                        x, y, w, h = box.xywh[0]
+                        robot_body = Coordinate(int(x), int(y))
+                    elif results[0].names[box.cls.item()] == "corner":
+                        x, y, w, h = box.xywh[0]
+                        current_id = int(box.id)
+                        corners[current_id] = Corner(int(x), int(y), int(x) + int(w), int(y) + int(h), current_id)
+                    elif results[0].names[box.cls.item()] == "obstacle":
+                        print("Cross")
+                    elif results[0].names[box.cls.item()] == "egg":
+                        print("Egg")
+                    elif results[0].names[box.cls.item()] == "orange_ball":
+                        x, y, w, h = box.xywh[0]
+                        current_id = int(box.id)
+
+                        vipItem = Vip(int(x), int(y), int(x) + int(w), int(y) + int(h), current_id)
+                with CourtState.lock:
+                    cls.items[CourtProperty.VIP] = vipItem
+                    cls.items[CourtProperty.ROBOT] = Robot(robot_body, robot_front)
+                    cls.items[CourtProperty.BALLS] = balls
+                    cls.items[CourtProperty.CORNERS] = corners
+                    cls.ready = True
+                frame_ = results[0].plot()
+                frame2 = cv2.resize(frame_, (620, 480))
+
+                cv2.imshow("YOLO", frame2)
+                cv2.waitKey(100)
+
+    @classmethod
+    def getProperty(cls, property_name: CourtProperty):
+        with cls.lock:
+            return cls.items[property_name]
+

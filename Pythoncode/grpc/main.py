@@ -9,13 +9,11 @@ def run():
         stub.StopMovement(protobuf_pb2.Empty())
         stub.Turn(protobuf_pb2.TurnRequest(degrees=-90))
 
-        stub.Move(protobuf_pb2.MoveRequest(direction=False, speed=100, distance=50))
+        """
 
-        stub.Turn(protobuf_pb2.TurnRequest(degrees=90))
 
         """
 
-        """
 
     print("Move forward request sent")
 
