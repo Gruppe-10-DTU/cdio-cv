@@ -54,12 +54,12 @@ func main() {
 
 func (s *robotServer) Move(_ context.Context, request *pbuf.MoveRequest) (*pbuf.Status, error) {
 	//fmt.Printf("Received move command ... \n")
-	leftMotor, err := ev3dev.TachoMotorFor("ev3-ports:outA", "lego-ev3-l-motor")
+	leftMotor, err := peripherherals.GetMotor("left")
 	if err != nil {
 		errMsg := "Couldn't get reference for left motor"
 		return &pbuf.Status{ErrCode: false, Message: &errMsg}, err
 	}
-	rightMotor, err := ev3dev.TachoMotorFor("ev3-ports:outD", "lego-ev3-l-motor")
+	rightMotor, err := peripherherals.GetMotor("right")
 	if err != nil {
 		errMsg := "Couldn't get reference for right motor"
 		return &pbuf.Status{ErrCode: false, Message: &errMsg}, err
@@ -161,13 +161,13 @@ func (s *robotServer) Move(_ context.Context, request *pbuf.MoveRequest) (*pbuf.
 }
 
 func (s *robotServer) Turn(_ context.Context, request *pbuf.TurnRequest) (*pbuf.Status, error) {
-	leftMotor, err := ev3dev.TachoMotorFor("ev3-ports:outA", "lego-ev3-l-motor")
+	leftMotor, err := peripherherals.GetMotor("left")
 	if err != nil {
 		errMsg := "Error getting left motor"
 		return &pbuf.Status{ErrCode: false, Message: &errMsg}, err
 	}
 
-	rightMotor, err := ev3dev.TachoMotorFor("ev3-ports:outD", "lego-ev3-l-motor")
+	rightMotor, err := peripherherals.GetMotor("right")
 	if err != nil {
 		errMsg := "Error getting right motor"
 		return &pbuf.Status{ErrCode: false, Message: &errMsg}, err
