@@ -29,8 +29,8 @@ def calculate_endpoint_outcode(box: Rectangle, coordinate: Coordinate):
 
 
 def line_hits_rectangle(box: Rectangle, c1: Coordinate, c2: Coordinate):
-    start = calculate_endpoint_outcode(box, Coordinate(c1.x, c1.y))
-    end = calculate_endpoint_outcode(box, Coordinate(c2.x, c2.y))
+    start = calculate_endpoint_outcode(box, c1)
+    end = calculate_endpoint_outcode(box, c2)
 
     does_clip = False
     run = True
@@ -62,10 +62,10 @@ def line_hits_rectangle(box: Rectangle, c1: Coordinate, c2: Coordinate):
             if outside == start:
                 c1.x = x
                 c1.y = y
-                start = calculate_endpoint_outcode(box, Coordinate(c1.x, c1.y))
+                start = calculate_endpoint_outcode(box, c1)
             else:
                 c2.x = x
                 c2.y = y
-                end = calculate_endpoint_outcode(box, Coordinate(c2.x, c2.y))
+                end = calculate_endpoint_outcode(box, c2)
 
     return does_clip
