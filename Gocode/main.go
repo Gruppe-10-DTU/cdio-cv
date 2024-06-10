@@ -1,7 +1,7 @@
 package main
 
 import (
-	external "Gocode/peripherals"
+	peripherherals "Gocode/peripherals"
 	pbuf "Gocode/proto"
 	"fmt"
 	"github.com/ev3go/ev3dev"
@@ -74,7 +74,7 @@ func (s *robotServer) Move(_ context.Context, request *pbuf.MoveRequest) (*pbuf.
 
 	leftMotor.SetStopAction(BRAKE)
 	rightMotor.SetStopAction(BRAKE)
-	external.ResetGyros()
+	peripherherals.ResetGyros()
 
 	direction := 0.0
 	distance := int(request.Distance)
@@ -104,7 +104,7 @@ func (s *robotServer) Move(_ context.Context, request *pbuf.MoveRequest) (*pbuf.
 	}
 
 	integral, lastError := 0.0, 0.0
-	target, gyroCount, gErr := external.GetGyroValue()
+	target, gyroCount, gErr := peripherherals.GetGyroValue()
 	if gyroCount == 0 || gErr != nil {
 		rightMotor.Command(RESET)
 		leftMotor.Command(RESET)
@@ -115,7 +115,7 @@ func (s *robotServer) Move(_ context.Context, request *pbuf.MoveRequest) (*pbuf.
 	leftMotor.Command(DIR)
 	rightMotor.Command(DIR)
 	for distance > pos {
-		deg, gyroCount, gErr := external.GetGyroValue()
+		deg, gyroCount, gErr := peripherherals.GetGyroValue()
 		if gyroCount == 0 || gErr != nil {
 			rightMotor.Command(RESET)
 			leftMotor.Command(RESET)
@@ -136,7 +136,7 @@ func (s *robotServer) Move(_ context.Context, request *pbuf.MoveRequest) (*pbuf.
 
 		time.Sleep(5 * time.Millisecond)
 
-		if !external.BothMotorsRunning() {
+		if !peripherherals.BothMotorsRunning() {
 			rightMotor.Command(RESET)
 			leftMotor.Command(RESET)
 			errMsg := "Both motors aren't running"
@@ -181,7 +181,7 @@ func (s *robotServer) Turn(_ context.Context, request *pbuf.TurnRequest) (*pbuf.
 
 	leftMotor.SetStopAction(BRAKE)
 	rightMotor.SetStopAction(BRAKE)
-	external.ResetGyros()
+	peripherherals.ResetGyros()
 
 	direction := 0.0
 	speed := 100.0
@@ -217,14 +217,14 @@ func (s *robotServer) Turn(_ context.Context, request *pbuf.TurnRequest) (*pbuf.
 		forwardMotor.SetDutyCycleSetpoint(power)
 		backwardMotor.SetDutyCycleSetpoint(-power)
 		time.Sleep(5 * time.Millisecond)
-		if !external.BothMotorsRunning() {
+		if !peripherherals.BothMotorsRunning() {
 			rightMotor.Command(RESET)
 			leftMotor.Command(RESET)
 			errMsg := "Both motors aren't running"
 			return &pbuf.Status{ErrCode: false, Message: &errMsg}, err
 		}
 
-		gyroDeg, gyroCount, gErr := external.GetGyroValue()
+		gyroDeg, gyroCount, gErr := peripherherals.GetGyroValue()
 		if gyroCount == 0 {
 			rightMotor.Command(RESET)
 			leftMotor.Command(RESET)
