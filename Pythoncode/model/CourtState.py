@@ -34,6 +34,7 @@ class CourtState(object):
     items = {CourtProperty.BALLS: list, CourtProperty.ROBOT: Robot, CourtProperty.VIP: Vip,
                   CourtProperty.CORNERS: list, CourtProperty.OBSTACLE: Coordinate}
     ready = False
+    plot = None
 
     @classmethod
     def addProperties(cls, model, cap):
@@ -98,7 +99,6 @@ class CourtState(object):
                 print("Robot blev ikke fundet, indtast værdier selv")
                 frame_ = results[0].plot()
                 """frame2 = cv2.resize(frame_, (620, 480))"""
-                frame2 = frame_
                 height, width, channels = frame2.shape
                 for x in range(0, width - 1, 20):
                     cv2.line(frame2, (x, 0), (x, height), (255, 0, 0), 1, 1)
@@ -122,18 +122,12 @@ class CourtState(object):
                 cls.items[CourtProperty.BALLS] = balls
                 cls.items[CourtProperty.CORNERS] = corners
                 cls.ready = True
-            frame_ = results[0].plot()
-            frame2 = cv2.resize(frame_, (620, 480))
-
-            cv2.imshow("YOLO", frame2)
-
+                cls.plot = results[0].plot()
 
     @classmethod
     def updateObjects(cls):
         model = cls.model
         cap = cls.cap
-        cv2.destroyAllWindows()
-        cv2.namedWindow("YOLO", cv2.WINDOW_NORMAL)
 
         while True:
             print("Updating models")
@@ -150,9 +144,10 @@ class CourtState(object):
                 robot = None
                 vipItem = None
                 for box in boxes:
+                    current_id = int(box.id)
+
                     if results[0].names[box.cls.item()] == "ball":
                         x, y, w, h = box.xywh[0]
-                        current_id = int(box.id)
                         balls.append(Ball(int(x), int(y), int(x) + int(w), int(y) + int(h), current_id))
                     elif results[0].names[box.cls.item()] == "robot_front":
                         x, y, w, h = box.xywh[0]
@@ -162,7 +157,6 @@ class CourtState(object):
                         robot_body = Coordinate(int(x), int(y))
                     elif results[0].names[box.cls.item()] == "corner":
                         x, y, w, h = box.xywh[0]
-                        current_id = int(box.id)
                         corners[current_id] = Corner(int(x), int(y), int(x) + int(w), int(y) + int(h), current_id)
                     elif results[0].names[box.cls.item()] == "obstacle":
                         print("Cross")
@@ -170,8 +164,6 @@ class CourtState(object):
                         print("Egg")
                     elif results[0].names[box.cls.item()] == "orange_ball":
                         x, y, w, h = box.xywh[0]
-                        current_id = int(box.id)
-
                         vipItem = Vip(int(x), int(y), int(x) + int(w), int(y) + int(h), current_id)
                 try:
                     robot = Robot(robot_body, robot_front)
@@ -185,14 +177,13 @@ class CourtState(object):
                     cls.items[CourtProperty.BALLS] = balls
                     cls.items[CourtProperty.CORNERS] = corners
                     cls.ready = True
-                frame_ = results[0].plot()
-                frame2 = cv2.resize(frame_, (620, 480))
+                    cls.plot = results[0].plot()
 
-                cv2.imshow("YOLO", frame2)
-                cv2.waitKey(100)
+
 
     @classmethod
     def getProperty(cls, property_name: CourtProperty):
         with cls.lock:
-            return cls.items[property_name]
+            item = cls.items[property_name]
+        return item
 
