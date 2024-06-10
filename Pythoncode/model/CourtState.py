@@ -97,7 +97,7 @@ class CourtState(object):
                     vipItem = Vip(int(x), int(y), int(x) + int(w), int(y) + int(h), current_id)
             if robot_body is None or robot_front is None:
                 print("Robot blev ikke fundet, indtast værdier selv")
-                frame_ = results[0].plot()
+                frame2 = results[0].plot()
                 """frame2 = cv2.resize(frame_, (620, 480))"""
                 height, width, channels = frame2.shape
                 for x in range(0, width - 1, 20):
