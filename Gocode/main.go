@@ -224,6 +224,7 @@ func (s *robotServer) Turn(_ context.Context, request *pbuf.TurnRequest) (*pbuf.
 		}
 
 		gyroDeg, gyroCount, gErr := getGyroValue()
+
 		if gyroCount == 0 {
 			rightMotor.Command(RESET)
 			leftMotor.Command(RESET)
@@ -289,14 +290,19 @@ func getGyroValue() (float64, int, error) {
 
 	gyro2, err2 := ev3dev.SensorFor("ev3-ports:in4", "lego-ev3-gyro")
 	if err != nil && err2 != nil {
+	    fmt.Printf("Error on both\r\n")
 		return 0, 0, err
 	} else if err != nil {
 		tmp, _ := gyro2.Value(0)
 		pos2, _ := strconv.ParseFloat(tmp, 32)
+        fmt.Printf("Error on one\r\n")
+
 		return pos2, 1, nil
 	} else if err2 != nil {
 		tmp, _ := gyro1.Value(0)
 		pos1, _ := strconv.ParseFloat(tmp, 32)
+        fmt.Printf("Error on two\r\n")
+
 		return pos1, 1, nil
 	}
 	tmp, _ := gyro1.Value(62535)

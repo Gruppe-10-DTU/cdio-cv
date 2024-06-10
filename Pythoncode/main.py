@@ -1,3 +1,4 @@
+import configparser
 
 import grpc
 from ultralytics import YOLO
@@ -44,7 +45,10 @@ def main():
 
 
 def commandHandler(pathfinding):
-    with grpc.insecure_channel("192.168.53.19:50051") as channel:
+    config = configparser.ConfigParser()
+    config.read('properties/config.ini')
+    ip = config.get("ROBOT", "ip")
+    with grpc.insecure_channel(ip) as channel:
         stub = protobuf_pb2_grpc.RobotStub(channel)
 
         while len(pathfinding.targets) > 0:
