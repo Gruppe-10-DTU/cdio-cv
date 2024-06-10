@@ -136,7 +136,7 @@ func (s *robotServer) Move(_ context.Context, request *pbuf.MoveRequest) (*pbuf.
 
 		time.Sleep(5 * time.Millisecond)
 
-		if !bothMotorsRunning() {
+		if !external.BothMotorsRunning() {
 			rightMotor.Command(RESET)
 			leftMotor.Command(RESET)
 			errMsg := "Both motors aren't running"
@@ -217,7 +217,7 @@ func (s *robotServer) Turn(_ context.Context, request *pbuf.TurnRequest) (*pbuf.
 		forwardMotor.SetDutyCycleSetpoint(power)
 		backwardMotor.SetDutyCycleSetpoint(-power)
 		time.Sleep(5 * time.Millisecond)
-		if !bothMotorsRunning() {
+		if !external.BothMotorsRunning() {
 			rightMotor.Command(RESET)
 			leftMotor.Command(RESET)
 			errMsg := "Both motors aren't running"
@@ -284,20 +284,4 @@ func (s *robotServer) Stats(_ context.Context, request *pbuf.Status) (*pbuf.Stat
 	/* TODO */
 
 	return &pbuf.Status{ErrCode: true}, nil
-}
-
-func bothMotorsRunning() bool {
-	leftMotor, err := ev3dev.TachoMotorFor("ev3-ports:outA", "lego-ev3-l-motor")
-	if err != nil {
-		return false
-	}
-
-	rightMotor, err := ev3dev.TachoMotorFor("ev3-ports:outD", "lego-ev3-l-motor")
-	if err != nil {
-		return false
-	}
-	leftRunning, _ := leftMotor.State()
-	rightRunning, _ := rightMotor.State()
-	//fmt.Printf("left: %s\tright: %s\n", leftRunning, rightRunning)
-	return (leftRunning == ev3dev.Running || leftRunning == ev3dev.Ramping) && (rightRunning == ev3dev.Running || rightRunning == ev3dev.Ramping)
 }
