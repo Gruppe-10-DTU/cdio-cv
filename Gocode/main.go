@@ -184,7 +184,7 @@ func (s *robotServer) Turn(_ context.Context, request *pbuf.TurnRequest) (*pbuf.
 	peripherherals.ResetGyros()
 
 	direction := 0.0
-	speed := 100.0
+	speed := 90.0
 	var forwardMotor *ev3dev.TachoMotor
 	var backwardMotor *ev3dev.TachoMotor
 	if request.Degrees < 0 {
