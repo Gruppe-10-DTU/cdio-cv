@@ -10,15 +10,21 @@ from Pythoncode.model.coordinate import Coordinate
 class TestPathfinding(TestCase):
     #Test to see if path without obstruction will be selected.
     def test_pathfind_with_obstacle_clipping(self):
-        list_balls = [Ball(21,23 , 23, 29, 1), Ball(2,100,2,110,2), Ball(50, 10, 10, 70, 3)]
-        start = Coordinate(100, 100)
+        list_balls = [Ball(21,23 , 23, 29, 1), Ball(2,100,2,100,2),Ball(50, 10, 10, 70, 3)]
+        start = Coordinate(1, 1)
         pathfinding = Pathfinding(targets=list_balls, start=start, obstacle=Rectangle(Coordinate(20, 20), Coordinate(30,30)))
 
         ball = pathfinding.get_closest(start)
         self.assertEqual(ball.id,2)
         pathfinding.remove_target(ball)
+
         ball = pathfinding.get_closest(start)
         self.assertEqual(ball.id,3)
+        pathfinding.remove_target(ball)
+
+        ball = pathfinding.get_closest(start)
+        self.assertEqual(ball.id,1)
+
 
 
     def test_pathfind(self):
