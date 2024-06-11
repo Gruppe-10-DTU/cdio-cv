@@ -65,6 +65,7 @@ service Robot {
   rpc Vacuum(VacuumPower) returns (Status) {}
   rpc Stats(Status) returns (Status) {}
   rpc StopMovement(Empty) returns(Status) {}
+  rpc CelebrateVictory(Empty) returns(Status) {}
 }
 
 

@@ -285,3 +285,44 @@ func (s *robotServer) Stats(_ context.Context, request *pbuf.Status) (*pbuf.Stat
 
 	return &pbuf.Status{ErrCode: true}, nil
 }
+
+func (s *robotServer) CelebrateVictory(_ context.Context, request *pbuf.Empty) (*pbuf.Status, error) {
+	leftMotor, _ := peripherherals.GetMotor("left")
+	rightMotor, _ := peripherherals.GetMotor("right")
+
+	leftMotor.Command(RESET)
+	rightMotor.Command(RESET)
+	peripherherals.ResetGyros()
+	wiggle := 100
+	rotation := 360.0
+	direction := 1.0
+	cycles := 4
+	leftMotor.Command(DIR)
+	rightMotor.Command(DIR)
+	for cycles > 0 {
+		peripherherals.ResetGyros()
+		i := 5
+		for i > 0 {
+			leftMotor.SetDutyCycleSetpoint(wiggle)
+			rightMotor.SetDutyCycleSetpoint(-wiggle)
+			wiggle *= -1
+			i -= 1
+			time.Sleep(250 * time.Millisecond)
+		}
+		peripherherals.ResetGyros()
+		deg, _, _ := peripherherals.GetGyroValue()
+		for deg*direction < rotation {
+			speed := 100 * int(direction)
+			leftMotor.SetDutyCycleSetpoint(speed)
+			rightMotor.SetDutyCycleSetpoint(-speed)
+			deg, _, _ = peripherherals.GetGyroValue()
+			time.Sleep(5 * time.Millisecond)
+		}
+		direction *= -1
+		cycles -= 1
+	}
+	leftMotor.Command(RESET)
+	rightMotor.Command(RESET)
+	msg := "What"
+	return &pbuf.Status{ErrCode: true, Message: &msg}, nil
+}
