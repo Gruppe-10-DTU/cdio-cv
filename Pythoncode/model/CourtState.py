@@ -1,8 +1,6 @@
-import threading
-from time import sleep
-from enum import Enum
-from threading import Thread, Lock
 
+from enum import Enum
+import uuid
 import cv2
 from ultralytics import YOLO
 
@@ -21,30 +19,13 @@ class CourtProperty(Enum):
     EGG = 5
     ROBOT = 6
 
-
-
-
-
 class CourtState(object):
 
     model = None
     cap = None
-    thread = None
-    lock = Lock()
+
     items = {CourtProperty.BALLS: list, CourtProperty.ROBOT: Robot, CourtProperty.VIP: Vip,
                   CourtProperty.CORNERS: list, CourtProperty.OBSTACLE: Coordinate}
-    ready = False
-    plot = None
-
-    @classmethod
-    def addProperties(cls, model, cap):
-        CourtState.model = model
-        CourtState.cap = cap
-
-    @classmethod
-    def startThread(cls):
-        cls.thread = Thread(target=cls.updateObjects)
-        cls.thread.start()
 
     @classmethod
     def initialize(cls):
@@ -54,11 +35,17 @@ class CourtState(object):
 
         # cap = cv2.VideoCapture('videos/with_egg.mp4')
         cap = cv2.VideoCapture(1, cv2.CAP_DSHOW)
+        width = 1920
+        height = 1080
+
+        cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
+        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
         cls.cap = cap
 
         ret, frame = cap.read()
+
         if ret:
-            results = model.track(frame, persist=True)
+            results = model.track(frame, persist=True, conf=0.8)
             boxes = results[0].boxes.cpu()
             # track_ids = results[0].boxes.id.int().cpu().tolist()
 
@@ -115,75 +102,71 @@ class CourtState(object):
 
             robot = Robot(robot_body, robot_front)
 
-            with cls.lock:
-                cls.items[CourtProperty.VIP] = vipItem
-                if robot is not None:
-                    cls.items[CourtProperty.ROBOT] = robot
-                cls.items[CourtProperty.BALLS] = balls
-                cls.items[CourtProperty.CORNERS] = corners
-                cls.ready = True
-                cls.plot = results[0].plot()
+
+            cls.items[CourtProperty.VIP] = vipItem
+            if robot is not None:
+                cls.items[CourtProperty.ROBOT] = robot
+            cls.items[CourtProperty.BALLS] = balls
+            cls.items[CourtProperty.CORNERS] = corners
+            cv2.imwrite(str(uuid.uuid4()), results[0].plot())
 
     @classmethod
     def updateObjects(cls):
         model = cls.model
         cap = cls.cap
 
-        while True:
-            print("Updating models")
-            ret, frame = cap.read()
-            if ret:
-                results = model.track(frame, persist=True)
-                boxes = results[0].boxes.cpu()
-                # track_ids = results[0].boxes.id.int().cpu().tolist()
+        print("Updating models")
+        ret, frame = cap.read()
+        if ret:
+            results = model.track(frame, persist=True, conf=0.8)
+            boxes = results[0].boxes.cpu()
+            # track_ids = results[0].boxes.id.int().cpu().tolist()
 
-                # Plot the tracks
-                # for box, track_id in zip(boxes, track_ids):
-                balls = []
-                corners = {}
+            # Plot the tracks
+            # for box, track_id in zip(boxes, track_ids):
+            balls = []
+            corners = {}
+            robot = None
+            robot_body = None
+            robot_front = None
+            vipItem = None
+            for box in boxes:
+                current_id = int(box.id)
+
+                if results[0].names[box.cls.item()] == "ball":
+                    x, y, w, h = box.xywh[0]
+                    balls.append(Ball(int(x), int(y), int(x) + int(w), int(y) + int(h), current_id))
+                elif results[0].names[box.cls.item()] == "robot_front":
+                    x, y, w, h = box.xywh[0]
+                    robot_front = Coordinate(int(x), int(y))
+                elif results[0].names[box.cls.item()] == "robot_body":
+                    x, y, w, h = box.xywh[0]
+                    robot_body = Coordinate(int(x), int(y))
+                elif results[0].names[box.cls.item()] == "corner":
+                    x, y, w, h = box.xywh[0]
+                    corners[current_id] = Corner(int(x), int(y), int(x) + int(w), int(y) + int(h), current_id)
+                elif results[0].names[box.cls.item()] == "obstacle":
+                    print("Cross")
+                elif results[0].names[box.cls.item()] == "egg":
+                    print("Egg")
+                elif results[0].names[box.cls.item()] == "orange_ball":
+                    x, y, w, h = box.xywh[0]
+                    vipItem = Vip(int(x), int(y), int(x) + int(w), int(y) + int(h), current_id)
+            try:
+                robot = Robot(robot_body, robot_front)
+            except:
+                if robot_body is None:
+                    print("Body blev ikke fundet")
+                if robot_front is None:
+                    print("Front blev ikke fundet")
                 robot = None
-                vipItem = None
-                for box in boxes:
-                    current_id = int(box.id)
-
-                    if results[0].names[box.cls.item()] == "ball":
-                        x, y, w, h = box.xywh[0]
-                        balls.append(Ball(int(x), int(y), int(x) + int(w), int(y) + int(h), current_id))
-                    elif results[0].names[box.cls.item()] == "robot_front":
-                        x, y, w, h = box.xywh[0]
-                        robot_front = Coordinate(int(x), int(y))
-                    elif results[0].names[box.cls.item()] == "robot_body":
-                        x, y, w, h = box.xywh[0]
-                        robot_body = Coordinate(int(x), int(y))
-                    elif results[0].names[box.cls.item()] == "corner":
-                        x, y, w, h = box.xywh[0]
-                        corners[current_id] = Corner(int(x), int(y), int(x) + int(w), int(y) + int(h), current_id)
-                    elif results[0].names[box.cls.item()] == "obstacle":
-                        print("Cross")
-                    elif results[0].names[box.cls.item()] == "egg":
-                        print("Egg")
-                    elif results[0].names[box.cls.item()] == "orange_ball":
-                        x, y, w, h = box.xywh[0]
-                        vipItem = Vip(int(x), int(y), int(x) + int(w), int(y) + int(h), current_id)
-                try:
-                    robot = Robot(robot_body, robot_front)
-                except:
-                    print("Robot blev ikke fundet")
-                    robot = None
-                with cls.lock:
-                    cls.items[CourtProperty.VIP] = vipItem
-                    if robot is not None:
-                        cls.items[CourtProperty.ROBOT] = robot
-                    cls.items[CourtProperty.BALLS] = balls
-                    cls.items[CourtProperty.CORNERS] = corners
-                    cls.ready = True
-                    cls.plot = results[0].plot()
-
-
+            cls.items[CourtProperty.VIP] = vipItem
+            if robot is not None:
+                cls.items[CourtProperty.ROBOT] = robot
+            cls.items[CourtProperty.BALLS] = balls
+            cls.items[CourtProperty.CORNERS] = corners
+            cv2.imwrite(str(uuid.uuid4()), results[0].plot())
 
     @classmethod
     def getProperty(cls, property_name: CourtProperty):
-        with cls.lock:
-            item = cls.items[property_name]
-        return item
-
+        return cls.items[property_name]
