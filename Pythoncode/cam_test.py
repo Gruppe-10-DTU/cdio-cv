@@ -14,3 +14,7 @@ while cap.isOpened():
         results = model.track(frame, persist=True)
         annotated_frame = results[0].plot()
         cv2.imshow("YOLO", annotated_frame)
+        if cv2.waitKey(1) & 0xFF == ord("q"):
+            break
+    else:
+        break
