@@ -24,3 +24,4 @@ def calculate_angle_clockwise(coordinate1: Coordinate, coordinate2: Coordinate, 
     other = vector2.y * vector1.x - vector2.x * vector1.y
     arctan2 = math.atan2(other, dotproduct)
     return math.degrees(arctan2)
+
