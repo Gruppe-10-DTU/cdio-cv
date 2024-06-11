@@ -6,12 +6,23 @@ import cv2
 
 from Pythoncode.Pathfinding import VectorUtils, CornerUtils
 from Pythoncode.Pathfinding.Pathfinding import Pathfinding
+from Pythoncode.grpc.protobuf_pb2_grpc import Robot
+from Pythoncode.model.Ball import Ball
+from Pythoncode.model.Corner import Corner
+from Pythoncode.model.CourtState import CourtState, CourtProperty
+
+from Pythoncode.grpc.gRPC_Class import gRPC_Class
+from Pythoncode.model.Ball import Ball
+from Pythoncode.model.Robot import Robot
+from Pythoncode.model.Vip import Vip
 from Pythoncode.model.CourtState import CourtState, CourtProperty
 
 from Pythoncode.grpc import protobuf_pb2_grpc, protobuf_pb2
 
 from Pythoncode.Pathfinding.CornerUtils import set_placements, calculate_goals
 
+import Pythoncode.model
+from Pythoncode.model.coordinate import Coordinate
 
 
 pixel_per_cm = 2.0
