@@ -29,11 +29,11 @@ class drive_points:
             if drive_point == self.last:
                 continue
             tmp_distance = point.distance(drive_point)
+            if tmp_distance < 5 * self.scale:
+                self.last = drive_point
             if tmp_distance > 5 * self.scale and tmp_distance < distance:
                 distance = tmp_distance
                 closest = drive_point
-            elif tmp_distance < 5 * self.scale:
-                self.last = drive_point
         return closest
 
     def get_closest_drive_point_vector(self, point) -> Vector:
