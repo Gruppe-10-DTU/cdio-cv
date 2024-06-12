@@ -55,20 +55,20 @@ class CourtState(object):
             corners = {}
             robot = None
             vipItem = None
-            robot_body = None
-            robot_front = None
+            r_body = None
+            r_front = None
 
-            for box in boxes:
+        for box in boxes:
                 if results[0].names[box.cls.item()] == "ball":
                     x, y, w, h = box.xywh[0]
                     current_id = int(box.id)
                     balls.append(Ball(int(x), int(y), int(x) + int(w), int(y) + int(h), current_id))
-                elif results[0].names[box.cls.item()] == "robot_front":
+                elif results[0].names[box.cls.item()] == "r_front":
                     x, y, w, h = box.xywh[0]
-                    robot_front = Coordinate(int(x), int(y))
-                elif results[0].names[box.cls.item()] == "robot_body":
+                    r_front = Coordinate(int(x), int(y))
+                elif results[0].names[box.cls.item()] == "r_body":
                     x, y, w, h = box.xywh[0]
-                    robot_body = Coordinate(int(x), int(y))
+                    r_body = Coordinate(int(x), int(y))
                 elif results[0].names[box.cls.item()] == "corner":
                     x, y, w, h = box.xywh[0]
                     current_id = int(box.id)
@@ -82,7 +82,7 @@ class CourtState(object):
                     current_id = int(box.id)
 
                     vipItem = Vip(int(x), int(y), int(x) + int(w), int(y) + int(h), current_id)
-            if robot_body is None or robot_front is None:
+            if r_body is None or r_front is None:
                 print("Robot blev ikke fundet, indtast værdier selv")
                 frame2 = results[0].plot()
                 """frame2 = cv2.resize(frame_, (620, 480))"""
@@ -92,15 +92,15 @@ class CourtState(object):
                 for y in range(0, height - 1, 20):
                     cv2.line(frame2, (0, y), (width, y), (255, 0, 0), 1, 1)
                 cv2.imshow("YOLO", frame2)
-                if robot_body is None:
+                if r_body is None:
                     print("Indtast center af robottens body (det store X). Først x, så y:")
-                    robot_body = Coordinate(float(input()), float(input()))
+                    r_body = Coordinate(float(input()), float(input()))
 
-                if robot_front is None:
+                if r_front is None:
                     print("Indtast center af robotten front (cirklen). Først x, så y:")
-                    robot_front = Coordinate(float(input()), float(input()))
+                    r_front = Coordinate(float(input()), float(input()))
 
-            robot = Robot(robot_body, robot_front)
+            robot = Robot(r_body, r_front)
 
 
             cls.items[CourtProperty.VIP] = vipItem
@@ -127,8 +127,6 @@ class CourtState(object):
             balls = []
             corners = {}
             robot = None
-            robot_body = None
-            robot_front = None
             vipItem = None
             for box in boxes:
                 current_id = int(box.id)
@@ -136,12 +134,12 @@ class CourtState(object):
                 if results[0].names[box.cls.item()] == "ball":
                     x, y, w, h = box.xywh[0]
                     balls.append(Ball(int(x), int(y), int(x) + int(w), int(y) + int(h), current_id))
-                elif results[0].names[box.cls.item()] == "robot_front":
+                elif results[0].names[box.cls.item()] == "r_front":
                     x, y, w, h = box.xywh[0]
-                    robot_front = Coordinate(int(x), int(y))
-                elif results[0].names[box.cls.item()] == "robot_body":
+                    r_front = Coordinate(int(x), int(y))
+                elif results[0].names[box.cls.item()] == "r_body":
                     x, y, w, h = box.xywh[0]
-                    robot_body = Coordinate(int(x), int(y))
+                    r_body = Coordinate(int(x), int(y))
                 elif results[0].names[box.cls.item()] == "corner":
                     x, y, w, h = box.xywh[0]
                     corners[current_id] = Corner(int(x), int(y), int(x) + int(w), int(y) + int(h), current_id)
@@ -153,11 +151,11 @@ class CourtState(object):
                     x, y, w, h = box.xywh[0]
                     vipItem = Vip(int(x), int(y), int(x) + int(w), int(y) + int(h), current_id)
             try:
-                robot = Robot(robot_body, robot_front)
+                robot = Robot(r_body, r_front)
             except:
-                if robot_body is None:
+                if r_body is None:
                     print("Body blev ikke fundet")
-                if robot_front is None:
+                if r_front is None:
                     print("Front blev ikke fundet")
                 robot = None
             cls.items[CourtProperty.VIP] = vipItem

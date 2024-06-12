@@ -72,6 +72,7 @@ def drive_function(stub, target):
     stub.Turn(protobuf_pb2.TurnRequest(degrees=angle))
     length = round(VectorUtils.get_length(target.center, robot.front) / pixel_per_cm) * 0.9
 
+    cv2.waitKey(1500)
     stub.Move(protobuf_pb2.MoveRequest(direction=True, distance=int(length), speed=70))
     cv2.waitKey(1500)
 
