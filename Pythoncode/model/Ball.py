@@ -1,5 +1,4 @@
 from Pythoncode.model.coordinate import Coordinate
-from Pythoncode.Pathfinding import VectorUtils
 from Pythoncode.model.Vector import Vector
 
 
