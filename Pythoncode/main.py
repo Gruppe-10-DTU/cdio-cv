@@ -66,6 +66,7 @@ def drive_function(stub, target):
     length = round(VectorUtils.get_length(target.center, robot.front) / pixel_per_cm) * 0.9
 
     cv2.waitKey(1500)
+    stub.Vacuum(protobuf_pb2.VacuumPower(True))
     stub.Move(protobuf_pb2.MoveRequest(direction=True, distance=int(length), speed=70))
 
 
