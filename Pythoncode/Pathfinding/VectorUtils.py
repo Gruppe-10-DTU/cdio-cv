@@ -17,10 +17,11 @@ def get_vector_length(vector: Vector) -> float:
     return length
 
 
-def calculate_angle_clockwise(coordinate1: Coordinate, coordinate2: Coordinate, center: Coordinate) -> float:
-    vector2 = get_vector(center, coordinate1)
-    vector1 = get_vector(center, coordinate2)
+def calculate_angle_clockwise(target: Coordinate, robot_front: Coordinate, center: Coordinate) -> float:
+    vector2 = get_vector(center, target)
+    vector1 = get_vector(center, robot_front)
     dotproduct = (vector1.x * vector2.x + vector1.y * vector2.y)
     other = vector2.y * vector1.x - vector2.x * vector1.y
     arctan2 = math.atan2(other, dotproduct)
     return math.degrees(arctan2)
+
