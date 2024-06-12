@@ -6,22 +6,29 @@ import cv2
 
 from Pythoncode.Pathfinding import VectorUtils, CornerUtils
 from Pythoncode.Pathfinding.Pathfinding import Pathfinding
+from time import sleep
+from Pythoncode.grpc.protobuf_pb2_grpc import Robot
+from Pythoncode.model.Ball import Ball
+from Pythoncode.model.Corner import Corner
+from Pythoncode.model.CourtState import CourtState, CourtProperty
+
+from Pythoncode.grpc.gRPC_Class import gRPC_Class
+from Pythoncode.model.Ball import Ball
+from Pythoncode.model.Robot import Robot
+from Pythoncode.model.Vip import Vip
 from Pythoncode.model.CourtState import CourtState, CourtProperty
 
 from Pythoncode.grpc import protobuf_pb2_grpc, protobuf_pb2
 
 from Pythoncode.Pathfinding.CornerUtils import set_placements, calculate_goals
 
+import Pythoncode.model
+from Pythoncode.model.coordinate import Coordinate
 
 
 pixel_per_cm = 2.0
 def main():
-    """
-    model = YOLO("model/best.pt")
-    # cap = cv2.VideoCapture('videos/with_egg.mp4')
-    cap = cv2.VideoCapture(1, cv2.CAP_DSHOW)
-    CourtState.addProperties(model, cap)
-    """
+
     CourtState.initialize()
 
     corners = CourtState.getProperty(CourtProperty.CORNERS)
@@ -29,7 +36,6 @@ def main():
     global pixel_per_cm
     pixel_per_cm = CornerUtils.get_cm_per_pixel(corners)
     robot = CourtState.getProperty(CourtProperty.ROBOT)
-    CourtState.startThread()
     """goals = calculate_goals(corners)"""
     balls = CourtState.getProperty(CourtProperty.BALLS)
     pathfinding = Pathfinding(balls, robot.center)
@@ -40,17 +46,26 @@ def commandHandler(pathfinding):
     config = configparser.ConfigParser()
     config.read('config.ini')
     ip = config.get("ROBOT", "ip")
-    cv2.imshow("YOLO", CourtState.plot)
+    CourtState.updateObjects()
+
     with grpc.insecure_channel(ip) as channel:
         stub = protobuf_pb2_grpc.RobotStub(channel)
         robot = CourtState.getProperty(CourtProperty.ROBOT)
         while len(pathfinding.targets) > 0:
+            success = True
             target = pathfinding.get_closest(robot.center)
             drive_function(stub, target)
-            pathfinding.remove_target(target)
+            sleep(1.5)
+            while success:
+                try:
+                    CourtState.updateObjects()
+                    success = False
+                except Exception as e:
+                    print("Robot not found")
+                    sleep(1)
             pathfinding.update_target(CourtState.getProperty(CourtProperty.BALLS))
-            cv2.imshow("YOLO", CourtState.plot)
 
+        print("Getting vip")
         target = CourtState.getProperty(CourtProperty.VIP)
         drive_function(stub, target)
 
@@ -58,15 +73,14 @@ def drive_function(stub, target):
     robot = CourtState.getProperty(CourtProperty.ROBOT)
 
     angle = VectorUtils.calculate_angle_clockwise(target.center, robot.front, robot.center)
-    if angle > 180:
-        angle -= 360
-    cv2.waitKey(1500)
+
+    cv2.waitKey(500)
     angle = round(angle, 3)
+    print("Turning " + str(angle))
     stub.Turn(protobuf_pb2.TurnRequest(degrees=angle))
     length = round(VectorUtils.get_length(target.center, robot.front) / pixel_per_cm) * 0.9
-
-    cv2.waitKey(1500)
-    stub.Vacuum(protobuf_pb2.VacuumPower(True))
+    print("Length: " + str(length))
+    cv2.waitKey(500)
     stub.Move(protobuf_pb2.MoveRequest(direction=True, distance=int(length), speed=70))
 
 
