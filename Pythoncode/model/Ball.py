@@ -1,5 +1,6 @@
 from Pythoncode.model.coordinate import Coordinate
 from Pythoncode.Pathfinding import VectorUtils
+from Pythoncode.model.Vector import Vector
 
 
 class Ball:
@@ -13,8 +14,8 @@ class Ball:
         self.center = Coordinate(x1 + (x2-x1)/2, y1 + (y2-y1)/2)
 
     def get_distance_to_wall(self, corner1, corner2):
-        wall = VectorUtils.get_vector(corner1.x1, corner1.y1, corner2.x1, corner2.y1)
+        wall = Vector(corner1.center, corner2.center)
         corner_corner = VectorUtils.get_length(wall)
-        c1_ball = VectorUtils.get_vector(corner1.x1, corner1.y1, self.center.x, self.center.y)
+        c1_ball = Vector(corner1.center, self.center)
 
         return abs(c1_ball.get_dot_product(wall))/abs(corner_corner)
