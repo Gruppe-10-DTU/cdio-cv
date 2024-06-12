@@ -14,8 +14,7 @@ class Ball:
         self.center = Coordinate(x1 + (x2-x1)/2, y1 + (y2-y1)/2)
 
     def get_distance_to_wall(self, corner1, corner2):
-        wall = Vector(corner1.center, corner2.center)
-        corner_corner = VectorUtils.get_length(wall)
-        c1_ball = Vector(corner1.center, self.center)
-
+        wall = Vector(corner2.center.x - corner1.center.x, corner2.center.y - corner1.center.y)
+        corner_corner = wall.length()
+        c1_ball = Vector(self.center.x - corner1.center.x, self.center.y - corner1.center.y)
         return abs(c1_ball.get_dot_product(wall))/abs(corner_corner)
