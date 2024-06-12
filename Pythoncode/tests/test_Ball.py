@@ -12,7 +12,7 @@ class TestBall(TestCase):
         self.assertEquals(ball.center.y, 30.0)
     
     def test_distance_to_wall(self):
-        ball = Ball(65, 35, , 55, 45, 1)
+        ball = Ball(65, 35, 55, 45, 1)
         corner1 = Corner(5, 5, 15, 15)
         corner2 = Corner(95, 5, 105, 15)
         distance = ball.get_distance_to_wall(corner1, corner2)
