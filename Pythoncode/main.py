@@ -6,6 +6,7 @@ import cv2
 
 from Pythoncode.Pathfinding import VectorUtils, CornerUtils
 from Pythoncode.Pathfinding.Pathfinding import Pathfinding
+from Pythoncode.model.Ball import Ball
 from Pythoncode.model.CourtState import CourtState, CourtProperty
 
 from Pythoncode.grpc import protobuf_pb2_grpc, protobuf_pb2
@@ -47,7 +48,6 @@ def commandHandler(pathfinding):
         while len(pathfinding.targets) > 0:
             target = pathfinding.get_closest(robot.center)
             drive_function(stub, target)
-            pathfinding.remove_target(target)
             pathfinding.update_target(CourtState.getProperty(CourtProperty.BALLS))
             cv2.imshow("YOLO", CourtState.plot)
 
@@ -57,13 +57,13 @@ def commandHandler(pathfinding):
 def drive_function(stub, target):
     robot = CourtState.getProperty(CourtProperty.ROBOT)
 
-    angle = VectorUtils.calculate_angle_clockwise(target.center, robot.front, robot.center)
+    angle = VectorUtils.calculate_angle_clockwise(target, robot.front, robot.center)
     if angle > 180:
         angle -= 360
     cv2.waitKey(1500)
     angle = round(angle, 3)
     stub.Turn(protobuf_pb2.TurnRequest(degrees=angle))
-    length = round(VectorUtils.get_length(target.center, robot.front) / pixel_per_cm) * 0.9
+    length = round(VectorUtils.get_length(target, robot.front) / pixel_per_cm) * 0.9
 
     cv2.waitKey(1500)
     stub.Vacuum(protobuf_pb2.VacuumPower(True))
