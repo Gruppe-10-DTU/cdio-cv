@@ -167,6 +167,6 @@ class CourtState(object):
             cv2.imwrite(str(uuid.uuid4()), results[0].plot())
 
 
-@classmethod
-def getProperty(cls, property_name: CourtProperty):
-    return cls.items[property_name]
+    @classmethod
+    def getProperty(cls, property_name: CourtProperty):
+        return cls.items[property_name]
