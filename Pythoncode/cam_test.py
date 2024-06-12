@@ -10,6 +10,7 @@ height = 1080
 
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
+cap.set(cv2.CAP_PROP_AUTOFOCUS, 0)
 
 while cap.isOpened():
     ret, frame = cap.read()

@@ -54,6 +54,7 @@ class CourtState(object):
 
         # cap = cv2.VideoCapture('videos/with_egg.mp4')
         cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+        cap.set(cv2.CAP_PROP_AUTOFOCUS, 0)
         cls.cap = cap
 
         ret, frame = cap.read()
