@@ -2,7 +2,6 @@ from unittest import TestCase
 
 from Pythoncode.model.Ball import Ball
 from Pythoncode.model.Corner import Corner
-from Pythoncode.model.Vector import Vector
 
 
 class TestBall(TestCase):
