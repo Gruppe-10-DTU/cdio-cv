@@ -22,6 +22,7 @@ class TestPathfinding(TestCase):
         list_balls.pop()
         ball = pathfinding.get_closest(start)
         self.assertTrue(ball is None)
+        self.assertTrue(len(list_balls) is 1)
 
 
     def test_pathfind(self):
