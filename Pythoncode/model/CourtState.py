@@ -58,7 +58,7 @@ class CourtState(object):
             r_body = None
             r_front = None
 
-        for box in boxes:
+            for box in boxes:
                 if results[0].names[box.cls.item()] == "ball":
                     x, y, w, h = box.xywh[0]
                     current_id = int(box.id)
@@ -80,8 +80,9 @@ class CourtState(object):
                 elif results[0].names[box.cls.item()] == "orange_ball":
                     x, y, w, h = box.xywh[0]
                     current_id = int(box.id)
-
                     vipItem = Vip(int(x), int(y), int(x) + int(w), int(y) + int(h), current_id)
+
+
             if r_body is None or r_front is None:
                 print("Robot blev ikke fundet, indtast værdier selv")
                 frame2 = results[0].plot()
@@ -165,6 +166,7 @@ class CourtState(object):
             cls.items[CourtProperty.CORNERS] = corners
             cv2.imwrite(str(uuid.uuid4()), results[0].plot())
 
-    @classmethod
-    def getProperty(cls, property_name: CourtProperty):
-        return cls.items[property_name]
+
+@classmethod
+def getProperty(cls, property_name: CourtProperty):
+    return cls.items[property_name]
