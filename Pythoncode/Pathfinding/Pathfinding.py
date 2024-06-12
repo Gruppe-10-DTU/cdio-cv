@@ -16,7 +16,7 @@ class Pathfinding:
         self.start = start
         self.obstacle = obstacle
 
-    def get_closest(self, point: Coordinate, drive_points: list) -> Coordinate:
+    def get_closest(self, point: Coordinate) -> Coordinate:
         closest_distance = math.inf
         m = None
         for target in self.targets:
@@ -27,12 +27,11 @@ class Pathfinding:
                     closest_distance = distance
                     m = target
         if m is None:
-            for drive_point in drive_points:
-                distance = math.sqrt(math.pow(drive_point.x - point.x,2) + math.pow(drive_point.y - point.y,2))
-                if closest_distance > distance:
-                    closest_distance = distance
-                    m = drive_point
+            m = self.drive_to_drive_point()
         return m
+
+    def drive_to_drive_point(self) -> Coordinate:
+        """TODO: IMPLEMENT, WAIT FOR PAC's CODE"""
 
     def update_target(self, targets):
         self.targets = targets

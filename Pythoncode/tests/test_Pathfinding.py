@@ -8,11 +8,11 @@ from Pythoncode.model.coordinate import Coordinate
 
 
 class TestPathfinding(TestCase):
-    #Test to see if path without obstruction will be selected.
+    """Just an outline for now. Have to wait for PAC to finish his code with drive_points so that I can test optimally."""
     def test_pathfind_with_obstacle_clipping(self):
         list_balls = [Ball(21,23 , 23, 29, 1), Ball(2,100,2,100,2),Ball(50, 10, 10, 70, 3)]
         start = Coordinate(1, 1)
-        drive_points = [Coordinate(45,45)]
+        drive_points = [Coordinate(45,45), Coordinate(100,100)]
         pathfinding = Pathfinding(targets=list_balls, start=start, obstacle=Rectangle(Coordinate(20, 20), Coordinate(30,30)))
 
         ball = pathfinding.get_closest(start,drive_points)
