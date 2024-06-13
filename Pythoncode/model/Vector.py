@@ -17,14 +17,14 @@ class Vector:
         arctan2 = math.atan2(other, dotproduct)
         return math.degrees(arctan2)
 
-    def add(self, other) -> Vector:
-        return Vector(self.x + other.x, self.y + other.y)
+    def add(self, other):
+        return self.__class__(self.x + other.x, self.y + other.y)
 
-    def scale(self, scalar) -> Vector:
-        return Vector(self.x * scalar, self.y * scalar)
+    def scale(self, scalar):
+        return self.__class__(self.x * scalar, self.y * scalar)
 
-    def invert(self) -> Vector:
-        return Vector(-self.x, -self.y)
+    def invert(self):
+        return self.__class__(-self.x, -self.y)
 
-    def scale_to_length(self, length) -> Vector:
+    def scale_to_length(self, length):
         return self.scale(length / self.length())
