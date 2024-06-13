@@ -1,4 +1,5 @@
 import configparser
+import math
 
 import grpc
 from ultralytics import YOLO
@@ -23,6 +24,8 @@ from Pythoncode.grpc import protobuf_pb2_grpc, protobuf_pb2
 
 from Pythoncode.Pathfinding.CornerUtils import set_placements, calculate_goals
 
+from Pythoncode.Pathfinding.drive_points import *
+
 import Pythoncode.model
 from Pythoncode.model.coordinate import Coordinate
 
@@ -40,6 +43,7 @@ def main():
     """goals = calculate_goals(corners)"""
     balls = CourtState.getProperty(CourtProperty.BALLS)
     pathfinding = Pathfinding(balls, robot.center)
+
     commandHandler(pathfinding)
 
 
@@ -72,17 +76,41 @@ def commandHandler(pathfinding):
 
 def drive_function(stub, target):
     robot = CourtState.getProperty(CourtProperty.ROBOT)
-
-    angle = VectorUtils.calculate_angle_clockwise(target.center, robot.front, robot.center)
-
+    corner = False
     cv2.waitKey(500)
-    angle = round(angle, 3)
-    print("Turning " + str(angle))
-    stub.Turn(protobuf_pb2.TurnRequest(degrees=angle))
-    length = round(VectorUtils.get_length(target.center, robot.front) / pixel_per_cm) * 0.9
-    print("Length: " + str(length))
-    cv2.waitKey(500)
-    stub.Move(protobuf_pb2.MoveRequest(direction=True, distance=int(length), speed=70))
+    """Almost positive this is a stupid solution."""
+    for corner in CourtState.getProperty(CourtProperty.CORNERS):
+        corner = target.is_in_corner(corner)
+    if target.is_in_corner(corner):
+        print("Target is in corner. Moving to drive point closest to target.")
+        tmp_target = Pythoncode.Pathfinding.Pathfinding.drive_points.get_closest_drive_point(target)
+        tmp_angle = VectorUtils.calculate_angle_clockwise(tmp_target, robot.front, robot.center)
+        print("Turning" + str(tmp_angle))
+        stub.Turn(protobuf_pb2.TurnRequest(degrees=tmp_angle))
+        tmp_length = round(VectorUtils.get_length(tmp_target, robot.front)/pixel_per_cm*0.9)
+        print("Length: " + str(tmp_length))
+        stub.MoveRequest(protobuf_pb2.MoveRequest(direction=True,distance=int(tmp_length),speed=70))
+
+        cv2.waitKey(500)
+        angle = VectorUtils.calculate_angle_clockwise(target.center, robot.front, robot.center)
+        angle = round(angle, 3)
+        print("Turning " + str(angle))
+        stub.Turn(protobuf_pb2.TurnRequest(degrees=angle))
+        length = round(VectorUtils.get_length(target.center, robot.front) / pixel_per_cm) * 0.9
+        print("Length: " + str(length))
+        cv2.waitKey(500)
+        stub.Move(protobuf_pb2.MoveRequest(direction=True, distance=int(length), speed=70))
+        stub.Move(protobuf_pb2.MoveRequest(direction=False,distance=int(length), speed=50))
+    else:
+        cv2.waitKey(500)
+        angle = VectorUtils.calculate_angle_clockwise(target.center, robot.front, robot.center)
+        angle = round(angle, 3)
+        print("Turning " + str(angle))
+        stub.Turn(protobuf_pb2.TurnRequest(degrees=angle))
+        length = round(VectorUtils.get_length(target.center, robot.front) / pixel_per_cm) * 0.9
+        print("Length: " + str(length))
+        cv2.waitKey(500)
+        stub.Move(protobuf_pb2.MoveRequest(direction=True, distance=int(length), speed=70))
 
 
 if __name__ == '__main__':

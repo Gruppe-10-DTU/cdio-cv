@@ -22,7 +22,7 @@ class drive_points:
     def get_drive_points(self):
         return self.drive_points
 
-    def get_closest_drive_point(self, point) -> Coordinate:
+    def get_closest_drive_point(self, point: Coordinate) -> Coordinate:
         closest = None
         distance = None
         for drive_point in self.drive_points:
