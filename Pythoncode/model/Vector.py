@@ -16,3 +16,15 @@ class Vector:
         other = other.get_dot_product(self)
         arctan2 = math.atan2(other, dotproduct)
         return math.degrees(arctan2)
+
+    def add(self, other) -> Vector:
+        return Vector(self.x + other.x, self.y + other.y)
+
+    def scale(self, scalar) -> Vector:
+        return Vector(self.x * scalar, self.y * scalar)
+
+    def invert(self) -> Vector:
+        return Vector(-self.x, -self.y)
+
+    def scale_to_length(self, length) -> Vector:
+        return self.scale(length / self.length())
