@@ -77,13 +77,20 @@ def commandHandler(pathfinding):
 def drive_function(stub, target):
     robot = CourtState.getProperty(CourtProperty.ROBOT)
     cv2.waitKey(500)
+    """This should handle if we cannot see a ball, and move the robot towards the next drive point."""
     if target is None:
+        print("Target is None. Moving to drive point...")
+        angle = VectorUtils.calculate_angle_clockwise(target.center, robot.front, robot.center)
+        angle = round(angle, 3)
+        print("Turning " + str(angle))
+        stub.Turn(protobuf_pb2.TurnRequest(degrees=angle))
         target = Pythoncode.Pathfinding.Pathfinding.drive_points.get_closest_drive_point(target)
         length = round(VectorUtils.get_length(target, robot.front) / pixel_per_cm * 0.9)
+        cv2.waitKey(500)
+        print("Length: " + str(length))
         stub.MoveRequest(protobuf_pb2.MoveRequest(direction=True,distance=int(length),speed=70))
     else:
         goto_target(stub=stub,target=target,robot_front=robot.front,robot_center=robot.center)
-    return
 
 def goto_target(stub, target, robot_front, robot_center):
     in_corner = False
@@ -118,9 +125,6 @@ def goto_target(stub, target, robot_front, robot_center):
         print("Length: " + str(length))
         cv2.waitKey(500)
         stub.Move(protobuf_pb2.MoveRequest(direction=True, distance=int(length), speed=70))
-
-    return
-
 
 if __name__ == '__main__':
     main()
