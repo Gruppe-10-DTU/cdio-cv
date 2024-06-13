@@ -18,3 +18,10 @@ class TestBall(TestCase):
         distance = ball.get_distance_to_wall(corner1, corner2)
         self.assertEqual(distance, 3.0)
         
+    def test_is_in_corner(self):
+        ball = Ball(4.5, 3.5, 5.5, 4.5, 1)
+        corner1 = Corner(0.5, 0.5, 1.5, 1.5, 2)
+        self.assertTrue(ball.is_in_corner(corner1))
+
+        ball = Ball(20, 20, 20, 20, 1)
+        self.assertFalse(ball.is_in_corner(corner1))
