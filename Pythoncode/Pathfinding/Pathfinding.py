@@ -30,8 +30,5 @@ class Pathfinding:
                     m = target
         return m
 
-    def drive_to_drive_point(self, point: Coordinate) -> Coordinate:
-        return drive_points.get_closest_drive_point(point)
-
     def update_target(self, targets):
         self.targets = targets
