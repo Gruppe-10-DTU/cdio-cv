@@ -78,7 +78,7 @@ def drive_function(stub, target):
     robot = CourtState.getProperty(CourtProperty.ROBOT)
     corner = False
     cv2.waitKey(500)
-    """Almost positive this is a stupid solution."""
+    """"This is a _temporary_ way to move the robot to target. In future, it should probably be its own function."""
     for corner in CourtState.getProperty(CourtProperty.CORNERS):
         corner = target.is_in_corner(corner)
     if target.is_in_corner(corner):
@@ -90,7 +90,6 @@ def drive_function(stub, target):
         tmp_length = round(VectorUtils.get_length(tmp_target, robot.front)/pixel_per_cm*0.9)
         print("Length: " + str(tmp_length))
         stub.MoveRequest(protobuf_pb2.MoveRequest(direction=True,distance=int(tmp_length),speed=70))
-
         cv2.waitKey(500)
         angle = VectorUtils.calculate_angle_clockwise(target.center, robot.front, robot.center)
         angle = round(angle, 3)
@@ -111,6 +110,7 @@ def drive_function(stub, target):
         print("Length: " + str(length))
         cv2.waitKey(500)
         stub.Move(protobuf_pb2.MoveRequest(direction=True, distance=int(length), speed=70))
+    return
 
 
 if __name__ == '__main__':
