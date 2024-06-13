@@ -8,6 +8,7 @@ from Pythoncode.Pathfinding.VectorUtils import *
 from Pythoncode.Pathfinding.CornerUtils import *
 from Pythoncode.model.Corner import *
 from Pythoncode.Pathfinding.CornerUtils import *
+from Pythoncode.Pathfinding.drive_points import drive_points
 
 
 class Pathfinding:
@@ -27,11 +28,11 @@ class Pathfinding:
                     closest_distance = distance
                     m = target
         if m is None:
-            m = self.drive_to_drive_point()
+            m = self.drive_to_drive_point(point)
         return m
 
-    def drive_to_drive_point(self) -> Coordinate:
-        """TODO: IMPLEMENT, WAIT FOR PAC's CODE"""
+    def drive_to_drive_point(self,point) -> Coordinate:
+        return drive_points.get_closest_drive_point(point)
 
     def update_target(self, targets):
         self.targets = targets
