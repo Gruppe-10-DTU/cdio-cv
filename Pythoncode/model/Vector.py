@@ -1,9 +1,14 @@
 import math
+from Pythoncode.model.coordinate import Coordinate
 
 class Vector:
     def __init__(self, x, y):
-        self.x = x
-        self.y = y
+        if isinstance(x, (int, float)) and isinstance(y, (int, float)):
+            self.x = x
+            self.y = y
+        elif isinstance(x, Coordinate) and isinstance(y, Coordinate):
+            self.x = y.x - x.x
+            self.y = y.y - x.y
     
     def get_dot_product(self, other) -> float:
         return self.x * other.y - self.y * other.x
