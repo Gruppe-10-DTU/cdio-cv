@@ -32,12 +32,14 @@ from Pythoncode.model.coordinate import Coordinate
 
 pixel_per_cm = 2.0
 def main():
+    config = configparser.ConfigParser()
+    config.read('../config.ini')
 
     CourtState.initialize()
 
     corners = CourtState.getProperty(CourtProperty.CORNERS)
     global pixel_per_cm
-    pixel_per_cm = CornerUtils.get_cm_per_pixel(corners)
+    pixel_per_cm = CornerUtils.get_cm_per_pixel(corners, config)
     robot = CourtState.getProperty(CourtProperty.ROBOT)
     """goals = calculate_goals(corners)"""
     balls = CourtState.getProperty(CourtProperty.BALLS)
@@ -67,6 +69,7 @@ def commandHandler(pathfinding):
                 except Exception as e:
                     print("Robot not found")
                     sleep(1)
+
             pathfinding.update_target(CourtState.getProperty(CourtProperty.BALLS))
 
         print("Getting vip")

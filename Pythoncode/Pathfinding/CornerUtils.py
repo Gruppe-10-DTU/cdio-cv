@@ -20,15 +20,13 @@ def set_placements(corners):
         corners[top_right_most[1][1].id].set_placement(Placement.BOTTOM_RIGHT)
     return corners
 
-def get_cm_per_pixel(corners):
+def get_cm_per_pixel(corners, config):
     list = []
     for key, value in corners.items():
         list.append(value)
     sorted_list = sorted(list, key=lambda c: c.placement.value)
 
-    config = configparser.ConfigParser()
-    config.read('config.ini')
-    print(config.sections())
+
     height = float(config.get('MAP', 'height'))
     width = float(config.get('MAP', 'width'))
     match len(sorted_list):
