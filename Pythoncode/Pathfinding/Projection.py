@@ -4,8 +4,6 @@ import numpy as np
 
 from Pythoncode.model.coordinate import Coordinate
 
-CAMERA_HEIGHT = 4
-
 class Projection:
     def __init__(self, camera: Coordinate, height: float):
         self.camera = camera

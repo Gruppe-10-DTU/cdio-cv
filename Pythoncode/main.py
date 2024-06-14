@@ -65,6 +65,7 @@ def commandHandler(pathfinding):
                 except Exception as e:
                     print("Robot not found")
                     sleep(1)
+
             pathfinding.update_target(CourtState.getProperty(CourtProperty.BALLS))
 
         print("Getting vip")
