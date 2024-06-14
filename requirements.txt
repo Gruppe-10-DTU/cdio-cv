@@ -4,3 +4,4 @@ ultralytics~=8.1.42
 torchvision~=0.17.1
 grpcio~=1.62.1
 torch~=2.2.2
+numpy==1.26.4

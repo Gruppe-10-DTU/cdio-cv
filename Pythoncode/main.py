@@ -83,20 +83,11 @@ def drive_function(stub, target):
     """This should handle if we cannot see a ball, and move the robot towards the next drive point."""
     if target is None:
         print("Target is None. Moving to drive point...")
-        angle = VectorUtils.calculate_angle_clockwise(target, robot.front, robot.center)
-        angle = round(angle, 3)
-        print("Turning " + str(angle))
-        stub.Turn(protobuf_pb2.TurnRequest(degrees=angle))
-        target = Pythoncode.Pathfinding.Pathfinding.drive_points.get_closest_drive_point(target)
-        length = round(VectorUtils.get_length(target, robot.front) / pixel_per_cm * 0.9)
-        cv2.waitKey(500)
-        print("Length: " + str(length))
-        stub.MoveRequest(protobuf_pb2.MoveRequest(direction=True,distance=int(length),speed=70))
+        target = Pathfinding.drive_points.get_closest_drive_point(target)
 
-    else:
-        goto_target(stub=stub,target=target,robot_front=robot.front,robot_center=robot.center)
+    goto_target(stub=stub,target=target,robot_front=robot.front,robot_center=robot.center)
 
-def goto_target(stub, target, robot_front, robot_center):
+def goto_target(stub, target, robot):
     in_corner = False
     for corner in CourtState.getProperty(CourtProperty.CORNERS).items():
         in_corner = corner[1].is_in_corner(target)

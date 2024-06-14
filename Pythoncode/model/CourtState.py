@@ -63,11 +63,11 @@ class CourtState(object):
                 balls.append(Ball(int(x), int(y), int(x) + int(w), int(y) + int(h), current_id))
             elif results[0].names[box.cls.item()] == "r_front":
                 x, y, w, h = box.xywh[0]
-                robot_front = Coordinate((int(x) + ( int(w) -int(x))/ 2) , (int(y) + (int(h)-int(y))/2))
+                robot_front = Coordinate(int(x) + int(w)/2, int(y) + int(h)/2)
                 robot_front = projection.projection_from_coordinate(target = robot_front, height = 9.8)
             elif results[0].names[box.cls.item()] == "r_body":
                 x, y, w, h = box.xywh[0]
-                robot_body = Coordinate((int(x) + ( int(w) -int(x))/ 2) , (int(y) + (int(h)-int(y))/2))
+                robot_body = Coordinate(int(x) + int(w)/2, int(y) + int(h)/2)
                 robot_body = projection.projection_from_coordinate(target = robot_body, height = 22.5)
 
             elif results[0].names[box.cls.item()] == "corner":
@@ -152,11 +152,11 @@ class CourtState(object):
                 balls.append(Ball(int(x), int(y), int(x) + int(w), int(y) + int(h), current_id))
             elif results[0].names[box.cls.item()] == "r_front":
                 x, y, w, h = box.xywh[0]
-                robot_front = Coordinate((int(x) + ( int(w) -int(x))/ 2) , (int(y) + (int(h)-int(y))/2))
+                robot_front = Coordinate(int(x) + int(w)/2, int(y) + int(h)/2)
                 robot_front = projection.projection_from_coordinate(target=robot_front, height=9.8)
             elif results[0].names[box.cls.item()] == "r_body":
                 x, y, w, h = box.xywh[0]
-                robot_body = Coordinate((int(x) + ( int(w) -int(x))/ 2) , (int(y) + (int(h)-int(y))/2))
+                robot_body = Coordinate(int(x) + int(w)/2, int(y) + int(h)/2)
                 robot_body = projection.projection_from_coordinate(target=robot_body, height=22.5)
             elif results[0].names[box.cls.item()] == "corner":
                 x, y, w, h = box.xywh[0]
