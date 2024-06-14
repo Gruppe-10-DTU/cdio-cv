@@ -103,6 +103,7 @@ def drive(stub, robot, target, backup=False):
     stub.Move(protobuf_pb2.MoveRequest(direction=True, distance=int(length), speed=70))
 
     if backup:
+        print("Backing up "+str(length))
         stub.Move(protobuf_pb2.MoveRequest(direction=False, distance=int(length), speed=70))
 
 
