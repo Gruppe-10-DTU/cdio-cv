@@ -67,5 +67,3 @@ def calculate_goals(corners) -> list:
             goals.append(Goal(x1 + (x2 - x1) / 2, y1 + (y2 - y1) / 2))
 
     return goals
-
-

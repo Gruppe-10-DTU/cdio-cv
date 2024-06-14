@@ -8,6 +8,7 @@ from ultralytics import YOLO
 
 from Pythoncode.model.Ball import Ball
 from Pythoncode.model.Corner import Corner
+from Pythoncode.model.Rectangle import Rectangle
 from Pythoncode.model.Robot import Robot
 from Pythoncode.model.Vip import Vip
 from Pythoncode.model.coordinate import Coordinate
@@ -53,16 +54,17 @@ class CourtState(object):
         vipItem = None
         robot_body = None
         robot_front = None
+        obstacle = None
 
         for box in boxes:
             if results[0].names[box.cls.item()] == "ball":
                 x, y, w, h = box.xywh[0]
                 current_id = int(box.id)
                 balls.append(Ball(int(x), int(y), int(x) + int(w), int(y) + int(h), current_id))
-            elif results[0].names[box.cls.item()] == "robot_front":
+            elif results[0].names[box.cls.item()] == "r_front":
                 x, y, w, h = box.xywh[0]
                 robot_front = Coordinate(int(x), int(y))
-            elif results[0].names[box.cls.item()] == "robot_body":
+            elif results[0].names[box.cls.item()] == "r_body":
                 x, y, w, h = box.xywh[0]
                 robot_body = Coordinate(int(x), int(y))
             elif results[0].names[box.cls.item()] == "corner":
@@ -70,7 +72,8 @@ class CourtState(object):
                 current_id = int(box.id)
                 corners[current_id] = Corner(int(x), int(y), int(x) + int(w), int(y) + int(h), current_id)
             elif results[0].names[box.cls.item()] == "obstacle":
-                print("Cross")
+                x0, y0, x1, y1 = box.xyxy[0]
+                obstacle = Rectangle(Coordinate(x0, y0), Coordinate(x1, y1))
             elif results[0].names[box.cls.item()] == "egg":
                 print("Egg")
             elif results[0].names[box.cls.item()] == "orange_ball":
@@ -91,7 +94,6 @@ class CourtState(object):
             if robot_body is None:
                 print("Indtast center af robottens body (det store X). Først x, så y:")
                 robot_body = Coordinate(float(input()), float(input()))
-
             if robot_front is None:
                 print("Indtast center af robotten front (cirklen). Først x, så y:")
                 robot_front = Coordinate(float(input()), float(input()))
@@ -104,6 +106,7 @@ class CourtState(object):
             cls.items[CourtProperty.ROBOT] = robot
         cls.items[CourtProperty.BALLS] = balls
         cls.items[CourtProperty.CORNERS] = corners
+        cls.items[CourtProperty.OBSTACLE] = obstacle
         cv2.imwrite(str(uuid.uuid4()), results[0].plot())
 
     @classmethod
@@ -122,14 +125,13 @@ class CourtState(object):
         vipItem = None
         for box in boxes:
             current_id = int(box.id)
-
             if results[0].names[box.cls.item()] == "ball":
                 x, y, w, h = box.xywh[0]
                 balls.append(Ball(int(x), int(y), int(x) + int(w), int(y) + int(h), current_id))
-            elif results[0].names[box.cls.item()] == "robot_front":
+            elif results[0].names[box.cls.item()] == "r_front":
                 x, y, w, h = box.xywh[0]
                 robot_front = Coordinate(int(x), int(y))
-            elif results[0].names[box.cls.item()] == "robot_body":
+            elif results[0].names[box.cls.item()] == "r_body":
                 x, y, w, h = box.xywh[0]
                 robot_body = Coordinate(int(x), int(y))
             elif results[0].names[box.cls.item()] == "corner":
@@ -162,7 +164,7 @@ class CourtState(object):
     def frameThread(cls):
 
         # cap = cv2.VideoCapture('videos/with_egg.mp4')
-        cap = cv2.VideoCapture(1, cv2.CAP_DSHOW)
+        cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
         width = 1920
         height = 1080
 

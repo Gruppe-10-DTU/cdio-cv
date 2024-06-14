@@ -36,13 +36,12 @@ def main():
     CourtState.initialize()
 
     corners = CourtState.getProperty(CourtProperty.CORNERS)
-    corners = set_placements(corners)
     global pixel_per_cm
     pixel_per_cm = CornerUtils.get_cm_per_pixel(corners)
     robot = CourtState.getProperty(CourtProperty.ROBOT)
     """goals = calculate_goals(corners)"""
     balls = CourtState.getProperty(CourtProperty.BALLS)
-    pathfinding = Pathfinding(balls, robot.center)
+    pathfinding = Pathfinding(balls, robot.center, CourtState.getProperty(CourtProperty.OBSTACLE))
 
     commandHandler(pathfinding)
 
@@ -79,8 +78,9 @@ def drive_function(stub, target):
     cv2.waitKey(500)
     """This should handle if we cannot see a ball, and move the robot towards the next drive point."""
     if target is None:
+        """"
         print("Target is None. Moving to drive point...")
-        angle = VectorUtils.calculate_angle_clockwise(target.center, robot.front, robot.center)
+        angle = VectorUtils.calculate_angle_clockwise(target, robot.front, robot.center)
         angle = round(angle, 3)
         print("Turning " + str(angle))
         stub.Turn(protobuf_pb2.TurnRequest(degrees=angle))
@@ -89,13 +89,15 @@ def drive_function(stub, target):
         cv2.waitKey(500)
         print("Length: " + str(length))
         stub.MoveRequest(protobuf_pb2.MoveRequest(direction=True,distance=int(length),speed=70))
+        """
+        stub.Move(protobuf_pb2.MoveRequest(direction=False, distance=int(30), speed=70))
     else:
         goto_target(stub=stub,target=target,robot_front=robot.front,robot_center=robot.center)
 
 def goto_target(stub, target, robot_front, robot_center):
     in_corner = False
-    for corner in CourtState.getProperty(CourtProperty.CORNERS):
-        in_corner = target.is_in_corner(corner)
+    for corner in CourtState.getProperty(CourtProperty.CORNERS).items():
+        in_corner = corner[1].is_in_corner(target)
     if in_corner:
         print("Target is in corner. Moving to drive point closest to target.")
         tmp_target = Pythoncode.Pathfinding.Pathfinding.drive_points.get_closest_drive_point(target)
@@ -104,24 +106,24 @@ def goto_target(stub, target, robot_front, robot_center):
         stub.Turn(protobuf_pb2.TurnRequest(degrees=tmp_angle))
         tmp_length = round(VectorUtils.get_length(tmp_target, robot_front) / pixel_per_cm * 0.9)
         print("Length: " + str(tmp_length))
-        stub.MoveRequest(protobuf_pb2.MoveRequest(direction=True, distance=int(tmp_length), speed=70))
+        stub.Move(protobuf_pb2.MoveRequest(direction=True, distance=int(tmp_length), speed=70))
         cv2.waitKey(500)
-        angle = VectorUtils.calculate_angle_clockwise(target.center, robot_front, robot_center)
+        angle = VectorUtils.calculate_angle_clockwise(target, robot_front, robot_center)
         angle = round(angle, 3)
         print("Turning " + str(angle))
         stub.Turn(protobuf_pb2.TurnRequest(degrees=angle))
-        length = round(VectorUtils.get_length(target.center, robot_front) / pixel_per_cm) * 0.9
+        length = round(VectorUtils.get_length(target, robot_front) / pixel_per_cm) * 0.9
         print("Length: " + str(length))
         cv2.waitKey(500)
         stub.Move(protobuf_pb2.MoveRequest(direction=True, distance=int(length), speed=70))
         stub.Move(protobuf_pb2.MoveRequest(direction=False, distance=int(length), speed=50))
     else:
         cv2.waitKey(500)
-        angle = VectorUtils.calculate_angle_clockwise(target.center, robot_front, robot_center)
+        angle = VectorUtils.calculate_angle_clockwise(target, robot_front, robot_center)
         angle = round(angle, 3)
         print("Turning " + str(angle))
         stub.Turn(protobuf_pb2.TurnRequest(degrees=angle))
-        length = round(VectorUtils.get_length(target.center, robot_front) / pixel_per_cm) * 0.9
+        length = round(VectorUtils.get_length(target, robot_front) / pixel_per_cm) * 0.9
         print("Length: " + str(length))
         cv2.waitKey(500)
         stub.Move(protobuf_pb2.MoveRequest(direction=True, distance=int(length), speed=70))

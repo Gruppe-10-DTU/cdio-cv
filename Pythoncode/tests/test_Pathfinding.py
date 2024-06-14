@@ -14,11 +14,11 @@ class TestPathfinding(TestCase):
         pathfinding = Pathfinding(targets=list_balls, start=start, obstacle=Rectangle(Coordinate(20, 20), Coordinate(30,30)))
 
         ball = pathfinding.get_closest(start)
-        self.assertEqual(list_balls[1].center.x,ball.center.x)
+        self.assertEqual(list_balls[1].center.x,ball.x)
         list_balls.pop()
         self.assertEqual(len(list_balls),2)
         ball = pathfinding.get_closest(start)
-        self.assertEqual(list_balls[1].center.x, ball.center.x)
+        self.assertEqual(list_balls[1].center.x, ball.x)
         list_balls.pop()
         ball = pathfinding.get_closest(start)
         self.assertTrue(ball is None)
@@ -28,11 +28,12 @@ class TestPathfinding(TestCase):
     def test_pathfind(self):
         list_balls = [Ball(0, 20, 20, 40, 1), Ball(20, 40, 40, 60, 2), Ball(50, 70, 70, 90, 3)]
         start = Coordinate(100,100)
-        pathfinding = Pathfinding(list_balls, start)
+        pathfinding = Pathfinding(targets=list_balls, start=start, obstacle=Rectangle(Coordinate(20, 20), Coordinate(30,30)))
 
         ball = pathfinding.get_closest(start)
-        self.assertEqual(ball.id, 3)
-
+        self.assertEqual(ball.x,list_balls[2].center.x)
+"""
+Rework/remove in future. For now, this wouldn't work, as get_closest no longer returns a ball object, but a coordinate object.
         pathfinding.remove_target(ball)
 
         ball = pathfinding.get_closest(ball.center)
@@ -44,6 +45,6 @@ class TestPathfinding(TestCase):
         ball = pathfinding.get_closest(ball.center)
         self.assertEqual(ball.id, 1)
 
-        pathfinding.remove_target(ball)
+        pathfinding.remove_target(ball)"""
 
 

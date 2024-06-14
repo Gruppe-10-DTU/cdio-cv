@@ -27,7 +27,7 @@ class Pathfinding:
             if not clips:
                 if closest_distance > distance:
                     closest_distance = distance
-                    m = target
+                    m = target.center
         return m
 
     def update_target(self, targets):

@@ -21,7 +21,4 @@ class Ball:
         c1_ball = Vector(self.center.x - corner1.center.x, self.center.y - corner1.center.y)
         return abs(c1_ball.get_dot_product(wall))/abs(corner_corner)
 
-    def is_in_corner(self, corner):
-        if self.center.x < corner.center.x+10 or self.center.y < corner.center.y+10:
-            return True
-        return False
+
