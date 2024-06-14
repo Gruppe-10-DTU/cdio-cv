@@ -30,12 +30,15 @@ def calculate_endpoint_outcode(box: Rectangle, coordinate: Coordinate):
     return outcode
 
 
-def line_hits_rectangle(box: Rectangle, c1: Coordinate, c2: Coordinate):
-    c1_copy = copy.deepcopy(c1)
-    c2_copy = copy.deepcopy(c2)
+def line_hits_rectangle(box: Rectangle, begin: Coordinate, to: Coordinate):
+    if box.c1.x <= to.x <= box.c2.x and box.c1.y <= to.y <= box.c2.y:
+        return False
 
-    start = calculate_endpoint_outcode(box, c1_copy)
-    end = calculate_endpoint_outcode(box, c2_copy)
+    c1 = copy.deepcopy(begin)
+    c2 = copy.deepcopy(to)
+
+    start = calculate_endpoint_outcode(box, c1)
+    end = calculate_endpoint_outcode(box, c2)
 
     does_clip = False
     run = True
@@ -52,25 +55,25 @@ def line_hits_rectangle(box: Rectangle, c1: Coordinate, c2: Coordinate):
             y = 0
 
             if outside & TOP:
-                x = c1_copy.x + (c2_copy.x - c1_copy.x) * (box.c2.y - c1_copy.y) / (c2_copy.y - c1_copy.y)
+                x = c1.x + (c2.x - c1.x) * (box.c2.y - c1.y) / (c2.y - c1.y)
                 y = box.c2.y
             elif outside & BOTTOM:
-                x = c1_copy.x + (c2_copy.x - c1_copy.x) * (box.c1.y - c1_copy.y) / (c2_copy.y - c1_copy.y)
+                x = c1.x + (c2.x - c1.x) * (box.c1.y - c1.y) / (c2.y - c1.y)
                 y = box.c1.y
             elif outside & LEFT:
-                y = c1_copy.y + (c2_copy.y - c1_copy.y) * (box.c1.x - c1_copy.x) / (c2_copy.x - c1_copy.x)
+                y = c1.y + (c2.y - c1.y) * (box.c1.x - c1.x) / (c2.x - c1.x)
                 x = box.c1.x
             elif outside & RIGHT:
-                y = c1_copy.y + (c2_copy.y - c1_copy.y) * (box.c2.x - c1_copy.x) / (c2_copy.x - c1_copy.x)
+                y = c1.y + (c2.y - c1.y) * (box.c2.x - c1.x) / (c2.x - c1.x)
                 x = box.c2.x
 
             if outside == start:
-                c1_copy.x = x
-                c1_copy.y = y
-                start = calculate_endpoint_outcode(box, c1_copy)
+                c1.x = x
+                c1.y = y
+                start = calculate_endpoint_outcode(box, c1)
             else:
-                c2_copy.x = x
-                c2_copy.y = y
-                end = calculate_endpoint_outcode(box, c2_copy)
+                c2.x = x
+                c2.y = y
+                end = calculate_endpoint_outcode(box, c2)
 
     return does_clip

@@ -41,7 +41,7 @@ class Test(TestCase):
 
         self.assertFalse(clipped)
 
-    def test_line_does_clip_inside(self):
+    def test_line_does_not_clip_inside(self):
         box = Rectangle(Coordinate(10, 10), Coordinate(20, 20))
 
         x0 = 11
@@ -51,4 +51,4 @@ class Test(TestCase):
 
         clipped = line_hits_rectangle(box, Coordinate(x0, y0), Coordinate(x1, y1))
 
-        self.assertTrue(clipped)
+        self.assertFalse(clipped)
