@@ -8,7 +8,7 @@ from Pythoncode.Pathfinding.VectorUtils import *
 from Pythoncode.Pathfinding.CornerUtils import *
 from Pythoncode.model.Corner import *
 from Pythoncode.Pathfinding.CornerUtils import *
-from Pythoncode.Pathfinding.drive_points import drive_points
+
 
 
 
