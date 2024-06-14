@@ -49,3 +49,21 @@ class Test(TestCase):
         angle = VectorUtils.calculate_angle_clockwise(coordinate1, coordinate2, center)
 
         self.assertEqual(180, abs(angle))
+
+    def test_calculate_angle_45(self):
+        center = Coordinate(0, 0)
+        front = Coordinate(1, 1)
+        target = Coordinate(1, 0)
+
+        angle = VectorUtils.calculate_angle_clockwise(target, front, center)
+
+        self.assertEqual(-45, angle)
+
+    def test_calculate_angle_negative_45(self):
+        center = Coordinate(0, 0)
+        front = Coordinate(1, 1)
+        target = Coordinate(0, 1)
+
+        angle = VectorUtils.calculate_angle_clockwise(target, front, center)
+
+        self.assertEqual(45, angle)

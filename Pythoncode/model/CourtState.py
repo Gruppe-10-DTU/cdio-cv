@@ -32,15 +32,13 @@ class CourtState(object):
 
     @classmethod
     def initialize(cls):
-        model = YOLO("model/best.pt")
+        model = YOLO("../model/best.pt")
         cls.model = model
 
-        thread = threading.Thread(target=cls.frameThread)
-        thread.start()
-
         sleep(5.0)
-
-        frame = cls.getFrame()
+        frame = None
+        while frame is None:
+            frame = cls.getFrame()
         results = model.track(frame, persist=True, conf=0.8)
         boxes = results[0].boxes.cpu()
         # track_ids = results[0].boxes.id.int().cpu().tolist()
@@ -78,38 +76,34 @@ class CourtState(object):
                 current_id = int(box.id)
                 vipItem = Vip(int(x), int(y), int(x) + int(w), int(y) + int(h), current_id)
 
-        if robot_body is None or robot_front is None:
-            print("Robot blev ikke fundet, indtast værdier selv")
-            frame2 = results[0].plot()
-            """frame2 = cv2.resize(frame_, (620, 480))"""
-            height, width, channels = frame2.shape
-            for x in range(0, width - 1, 20):
-                cv2.line(frame2, (x, 0), (x, height), (255, 0, 0), 1, 1)
-            for y in range(0, height - 1, 20):
-                cv2.line(frame2, (0, y), (width, y), (255, 0, 0), 1, 1)
-            cv2.imshow("YOLO", frame2)
-            if robot_body is None:
-                print("Indtast center af robottens body (det store X). Først x, så y:")
-                robot_body = Coordinate(float(input()), float(input()))
-
-            if robot_front is None:
-                print("Indtast center af robotten front (cirklen). Først x, så y:")
-                robot_front = Coordinate(float(input()), float(input()))
-
         robot = Robot(robot_body, robot_front)
-
 
         cls.items[CourtProperty.VIP] = vipItem
         if robot is not None:
             cls.items[CourtProperty.ROBOT] = robot
         cls.items[CourtProperty.BALLS] = balls
         cls.items[CourtProperty.CORNERS] = corners
-        cv2.imwrite(str(uuid.uuid4()), results[0].plot())
+
+    @classmethod
+    def setupCam(cls):
+        # cap = cv2.VideoCapture('videos/with_egg.mp4')
+        cap = cv2.VideoCapture(1, cv2.CAP_DSHOW)
+        width = 1920
+        height = 1080
+        cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
+        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
+        cap.set(cv2.CAP_PROP_AUTOFOCUS, 0)  # turn the autofocus off
+        cls.cap = cap
+
+        thread = threading.Thread(target=cls.frameThread)
+        thread.start()
 
     @classmethod
     def updateObjects(cls):
         model = cls.model
-        frame = cls.getFrame()
+        frame = None
+        while frame is None:
+            frame = cls.getFrame()
         results = model.track(frame, persist=True, conf=0.8)
         boxes = results[0].boxes.cpu()
         # track_ids = results[0].boxes.id.int().cpu().tolist()
@@ -119,6 +113,8 @@ class CourtState(object):
         balls = []
         corners = {}
         robot = None
+        robot_body = None
+        robot_front = None
         vipItem = None
         for box in boxes:
             current_id = int(box.id)
@@ -144,6 +140,7 @@ class CourtState(object):
                 vipItem = Vip(int(x), int(y), int(x) + int(w), int(y) + int(h), current_id)
 
         if robot_body is None or robot_front is None:
+            print("robot not found!")
             raise Exception('Robot not found')
 
         cls.items[CourtProperty.VIP] = vipItem
@@ -160,26 +157,12 @@ class CourtState(object):
 
     @classmethod
     def frameThread(cls):
-
-        # cap = cv2.VideoCapture('videos/with_egg.mp4')
-        cap = cv2.VideoCapture(1, cv2.CAP_DSHOW)
-        width = 1920
-        height = 1080
-
-        cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
-        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
-        cap.set(cv2.CAP_PROP_AUTOFOCUS, 0)  # turn the autofocus off
-
-        cls.cap = cap
         while True:
-            ret, frame = cap.read()
-            if ret:
-                with cls.lock:
-                    cls.frame = frame
-
+            with cls.lock:
+                ret = cls.cap.grab()
 
     @classmethod
     def getFrame(cls):
         with cls.lock:
-            if cls.frame is not None:
-                return cls.frame
+            _, frame = cls.cap.retrieve()
+        return frame
