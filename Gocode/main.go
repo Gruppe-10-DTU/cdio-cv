@@ -184,7 +184,7 @@ func (s *robotServer) Turn(_ context.Context, request *pbuf.TurnRequest) (*pbuf.
 	peripherherals.ResetGyros()
 
 	direction := 0.0
-	speed := 90.0
+	speed := 80.0
 	var forwardMotor *ev3dev.TachoMotor
 	var backwardMotor *ev3dev.TachoMotor
 	if request.Degrees < 0 {
@@ -205,18 +205,27 @@ func (s *robotServer) Turn(_ context.Context, request *pbuf.TurnRequest) (*pbuf.
 
 	forwardMotor.Command(DIR)
 	backwardMotor.Command(DIR)
-
-	for degrees > pos {
+	overshot := false
+	oscillationCount := 5
+	for math.Abs(degrees-pos) > 1.0 || oscillationCount > 0 {
+		if degrees < pos {
+			overshot = true
+		} else {
+			overshot = false
+		}
 		dynSpeed := Kp*(degrees-pos) + Kd*(pos-lastPos)
 		lastPos = pos
 		if speed > dynSpeed {
-			power = int(math.Max(dynSpeed, 40.0))
+			power = int(math.Max(dynSpeed, 15.0))
 		} else {
 			power = int(speed)
 		}
+		if overshot {
+			power *= -1
+		}
 		forwardMotor.SetDutyCycleSetpoint(power)
 		backwardMotor.SetDutyCycleSetpoint(-power)
-		time.Sleep(10 * time.Millisecond)
+		time.Sleep(20 * time.Millisecond)
 		if !peripherherals.BothMotorsRunning() {
 			rightMotor.Command(RESET)
 			leftMotor.Command(RESET)
@@ -232,6 +241,9 @@ func (s *robotServer) Turn(_ context.Context, request *pbuf.TurnRequest) (*pbuf.
 			return &pbuf.Status{ErrCode: false, Message: &errMsg}, gErr
 		}
 		pos = gyroDeg * direction
+		if math.Abs(degrees-pos) < 1.5 {
+			oscillationCount -= 1
+		}
 		fmt.Printf("Heading: %f\n", gyroDeg)
 	}
 	leftMotor.Command(STOP)
