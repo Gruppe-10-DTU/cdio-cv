@@ -2,6 +2,7 @@ import configparser
 from unittest import TestCase
 
 from Pythoncode.Pathfinding import CornerUtils
+from Pythoncode.Pathfinding.CornerUtils import get_corners_as_list
 from Pythoncode.model.Corner import Placement, Corner
 
 
@@ -29,6 +30,8 @@ class Test(TestCase):
         corners[4].set_placement(Placement.BOTTOM_RIGHT)
 
         corners = CornerUtils.set_placements(corners)
-        count = CornerUtils.get_cm_per_pixel(corners, config)
+
+        list = get_corners_as_list(corners)
+        count = CornerUtils.get_cm_per_pixel(list, config)
         self.assertEqual(180/120, count)
 

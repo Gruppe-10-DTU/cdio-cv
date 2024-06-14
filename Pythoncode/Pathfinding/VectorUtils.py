@@ -23,5 +23,5 @@ def calculate_angle_clockwise(target: Coordinate, robot_front: Coordinate, cente
     dotproduct = (vector1.x * vector2.x + vector1.y * vector2.y)
     other = vector2.y * vector1.x - vector2.x * vector1.y
     arctan2 = math.atan2(other, dotproduct)
-    return math.degrees(arctan2)
+    return round(math.degrees(arctan2),3)
 

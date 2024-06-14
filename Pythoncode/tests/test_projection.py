@@ -21,6 +21,14 @@ class TestProjection(TestCase):
         self.assertEqual(0.04, target.x)
         self.assertEqual(0.04, target.y)
 
+    def test_projection_from_tall_item_weird_height(self):
+        projection = Projection(Coordinate(4, 4), 100)
+        target = Coordinate(0, 0)
+
+        projection.projection_from_coordinate(target, 6)
+        self.assertEqual(0.04*6, target.x)
+        self.assertEqual(0.04*6, target.y)
+
     def test_projection_from_tall_item_inverse(self):
         projection = Projection(Coordinate(4, 4), 100)
         target = Coordinate(8, 8)

@@ -31,8 +31,8 @@ def calculate_endpoint_outcode(box: Rectangle, coordinate: Coordinate):
 
 
 def line_hits_rectangle(box: Rectangle, begin: Coordinate, to: Coordinate):
-    #if box.c1.x <= to.x <= box.c2.x and box.c1.y <= to.y <= box.c2.y:
-    #    return False
+    if box.c1.x <= to.x <= box.c2.x and box.c1.y <= to.y <= box.c2.y:
+        return False
 
     c1 = copy.deepcopy(begin)
     c2 = copy.deepcopy(to)
