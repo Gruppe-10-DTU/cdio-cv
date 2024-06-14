@@ -5,12 +5,10 @@ on:
     branches: [ "master" ]
     paths:
       - Pythoncode/**
-      - ./**.py
   pull_request:
     branches: [ "master" ]
     paths:
       - Pythoncode/**
-      - ./**.py
 
 jobs:
   build:
