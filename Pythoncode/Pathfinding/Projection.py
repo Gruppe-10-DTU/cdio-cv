@@ -1,4 +1,3 @@
-
 from Pythoncode.model.coordinate import Coordinate
 import numpy as np
 
