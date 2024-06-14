@@ -33,3 +33,6 @@ class Vector:
 
     def scale_to_length(self, length):
         return self.scale(length / self.length())
+
+    def orthogonal(self):
+        return Vector(self.y, -self.x)
