@@ -25,6 +25,19 @@ def get_corners_as_list(corners):
         list.append(value)
     return sorted(list, key=lambda c: c.placement.value)
 
+def get_next(corner, corners):
+    if corner.placement == 1:
+        return corners[2]
+    elif corner.placement == 2:
+        return corners[0]
+    elif corner.placement == 3:
+        return corners[3]
+    elif corner.placement == 4:
+        return corners[1]
+    return None
+
+
+
 def get_cm_per_pixel(corners, config):
     height = float(config.get('MAP', 'height'))
     width = float(config.get('MAP', 'width'))
