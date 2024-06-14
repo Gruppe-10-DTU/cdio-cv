@@ -33,7 +33,8 @@ from Pythoncode.model.coordinate import Coordinate
 pixel_per_cm = 2.0
 def main():
     config = configparser.ConfigParser()
-    config.read('../config.ini')
+    config.read('config.ini')
+    CourtState.setupCam()
 
     CourtState.initialize()
 

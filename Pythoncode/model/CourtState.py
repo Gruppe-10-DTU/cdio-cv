@@ -7,6 +7,7 @@ import cv2
 from ultralytics import YOLO
 
 from Pythoncode.Pathfinding.CornerUtils import set_placements
+from Pythoncode.Pathfinding.Projection import Projection
 from Pythoncode.model.Ball import Ball
 from Pythoncode.model.Corner import Corner
 from Pythoncode.model.Rectangle import Rectangle
@@ -36,7 +37,7 @@ class CourtState(object):
     def initialize(cls):
         model = YOLO("../model/best.pt")
         cls.model = model
-
+        projection = Projection(Coordinate(965.5, 643.0), 164.5)
         sleep(5.0)
         frame = None
         while frame is None:
@@ -63,9 +64,12 @@ class CourtState(object):
             elif results[0].names[box.cls.item()] == "r_front":
                 x, y, w, h = box.xywh[0]
                 robot_front = Coordinate(int(x), int(y))
+                robot_front = projection.projection_from_coordinate(target = robot_front, height = 9.8)
             elif results[0].names[box.cls.item()] == "r_body":
                 x, y, w, h = box.xywh[0]
                 robot_body = Coordinate(int(x), int(y))
+                robot_body = projection.projection_from_coordinate(target = robot_body, height = 22.5)
+
             elif results[0].names[box.cls.item()] == "corner":
                 x, y, w, h = box.xywh[0]
                 current_id = int(box.id)
@@ -139,6 +143,8 @@ class CourtState(object):
         robot_body = None
         robot_front = None
         vipItem = None
+        projection = Projection(Coordinate(965.5, 643.0), 164.5)
+
         for box in boxes:
             current_id = int(box.id)
             if results[0].names[box.cls.item()] == "ball":
@@ -147,9 +153,11 @@ class CourtState(object):
             elif results[0].names[box.cls.item()] == "r_front":
                 x, y, w, h = box.xywh[0]
                 robot_front = Coordinate(int(x), int(y))
+                robot_front = projection.projection_from_coordinate(target=robot_front, height=9.8)
             elif results[0].names[box.cls.item()] == "r_body":
                 x, y, w, h = box.xywh[0]
                 robot_body = Coordinate(int(x), int(y))
+                robot_body = projection.projection_from_coordinate(target=robot_body, height=22.5)
             elif results[0].names[box.cls.item()] == "corner":
                 x, y, w, h = box.xywh[0]
                 corners[current_id] = Corner(int(x), int(y), int(x) + int(w), int(y) + int(h), current_id)
@@ -164,13 +172,13 @@ class CourtState(object):
         if robot_body is None or robot_front is None:
             print("robot not found!")
             raise Exception('Robot not found')
-
+        robot = Robot(robot_body, robot_front)
         cls.items[CourtProperty.VIP] = vipItem
         if robot is not None:
             cls.items[CourtProperty.ROBOT] = robot
         cls.items[CourtProperty.BALLS] = balls
         """cls.items[CourtProperty.CORNERS] = corners"""
-        cv2.imshow("YOLO", results[0].plot())
+        """        cv2.imshow("YOLO", results[0].plot())"""
 
 
     @classmethod
