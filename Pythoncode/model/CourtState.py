@@ -6,6 +6,7 @@ from time import sleep
 import cv2
 from ultralytics import YOLO
 
+from Pythoncode.Pathfinding.CornerUtils import set_placements
 from Pythoncode.model.Ball import Ball
 from Pythoncode.model.Corner import Corner
 from Pythoncode.model.Rectangle import Rectangle
@@ -99,8 +100,7 @@ class CourtState(object):
                 robot_front = Coordinate(float(input()), float(input()))
 
         robot = Robot(robot_body, robot_front)
-
-
+        corners = set_placements(corners)
         cls.items[CourtProperty.VIP] = vipItem
         if robot is not None:
             cls.items[CourtProperty.ROBOT] = robot
@@ -152,7 +152,7 @@ class CourtState(object):
         if robot is not None:
             cls.items[CourtProperty.ROBOT] = robot
         cls.items[CourtProperty.BALLS] = balls
-        cls.items[CourtProperty.CORNERS] = corners
+        """cls.items[CourtProperty.CORNERS] = corners"""
         cv2.imshow("YOLO", results[0].plot())
 
 

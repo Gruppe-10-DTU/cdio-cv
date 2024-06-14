@@ -7,6 +7,7 @@ from enum import Enum
 
 
 class Corner:
+
     def __init__(self, x1, y1, x2, y2, tracking_id):
         self.x1 = x1
         self.x2 = x2
