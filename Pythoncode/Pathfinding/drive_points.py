@@ -6,7 +6,7 @@ from Pythoncode.Pathfinding import CornerUtils
 PRECICION = 5 # drive point tolereance
 WALL_DISTANCE = 20 # wall clearance
 
-class drive_points:
+class Drive_points:
     def __init__(self, corners, mapscale):
         self.corners = sorted(corners, key=lambda corner: corner.placement.value)
         self.scale = mapscale
@@ -28,26 +28,22 @@ class drive_points:
                     drive_points.append(top_left)
                     top_center = self.__calculate_center_drive_point(top_left, top_wall)
                     drive_points.append(top_center)
-                    break
                 case Placement.TOP_RIGHT:
                     top_right = self.__calculate_corner_drive_point(corner, top_wall.invert(), right_wall)
                     drive_points.append(top_right)
                     right_center = self.__calculate_center_drive_point(top_right, right_wall)
                     drive_points.append(right_center)
-                    break
                 case Placement.BOTTOM_LEFT:
                     bottom_left = self.__calculate_corner_drive_point(corner, left_wall.invert(), bottom_wall)
                     drive_points.append(bottom_left)
                     left_center = self.__calculate_center_drive_point(bottom_left, left_wall.invert())
                     drive_points.append(left_center)
-                    break
                 case Placement.BOTTOM_RIGHT:
                     bottom_right = self.__calculate_corner_drive_point(corner, right_wall.invert(), bottom_wall.invert())
                     drive_points.append(bottom_right)
                     bottom_center = self.__calculate_center_drive_point(bottom_right, bottom_wall.invert())
                     drive_points.append(bottom_center)
-                    break
-        return self.drive_points
+        return drive_points
 
         
     def get_drive_points(self):
@@ -55,16 +51,17 @@ class drive_points:
 
     def get_closest_drive_point(self, point) -> Coordinate:
         closest = None
-        distance = None
+        distance = float('inf')
         for drive_point in self.drive_points:
             if drive_point == self.last:
                 continue
-            tmp_distance = point.distance(drive_point)
+            tmp_distance = Vector(point,drive_point).length()
             if tmp_distance < PRECICION * self.scale:
-                self.last = drive_point
+                current = drive_point
             if tmp_distance > PRECICION * self.scale and tmp_distance < distance:
                 distance = tmp_distance
                 closest = drive_point
+        self.last = current
         return closest
 
     def get_closest_drive_point_vector(self, point) -> Vector:
