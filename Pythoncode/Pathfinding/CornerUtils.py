@@ -1,7 +1,7 @@
 import math
 
 from Pythoncode.Pathfinding import VectorUtils
-from Pythoncode.model.Corner import Placement
+from Pythoncode.model.Corner import Placement, Corner
 from Pythoncode.model.Goal import Goal
 
 
@@ -19,23 +19,24 @@ def set_placements(corners):
         corners[top_right_most[1][1].id].set_placement(Placement.BOTTOM_RIGHT)
     return corners
 
+
 def get_corners_as_list(corners):
     list = []
     for key, value in corners.items():
         list.append(value)
     return sorted(list, key=lambda c: c.placement.value)
 
-def get_next(corner, corners):
-    if corner.placement == 1:
+
+def get_next(corner, corners) -> Corner | None:
+    if Placement.TOP_LEFT == corner.placement:
         return corners[2]
-    elif corner.placement == 2:
+    elif Placement.BOTTOM_LEFT == corner.placement:
         return corners[0]
-    elif corner.placement == 3:
+    elif Placement.TOP_RIGHT == corner.placement:
         return corners[3]
-    elif corner.placement == 4:
+    elif Placement.BOTTOM_RIGHT == corner.placement:
         return corners[1]
     return None
-
 
 
 def get_cm_per_pixel(corners, config):
@@ -52,10 +53,12 @@ def get_cm_per_pixel(corners, config):
                 return VectorUtils.get_length(corners[0].center, corners[1].center) / width
             else:
                 """Udregner ud fra diagonalen"""
-                return VectorUtils.get_length(corners[0].center, corners[1].center) / math.sqrt(math.pow(height, 2) + math.pow(width, 2))
+                return VectorUtils.get_length(corners[0].center, corners[1].center) / math.sqrt(
+                    math.pow(height, 2) + math.pow(width, 2))
 
     """Default value"""
     return 2.0
+
 
 def calculate_goals(corners) -> list:
     goals = []
