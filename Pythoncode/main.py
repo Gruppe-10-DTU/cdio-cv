@@ -82,7 +82,6 @@ def drive_function(stub, target):
     cv2.waitKey(500)
     """This should handle if we cannot see a ball, and move the robot towards the next drive point."""
     if target is None:
-        """"
         print("Target is None. Moving to drive point...")
         angle = VectorUtils.calculate_angle_clockwise(target, robot.front, robot.center)
         angle = round(angle, 3)
@@ -93,8 +92,7 @@ def drive_function(stub, target):
         cv2.waitKey(500)
         print("Length: " + str(length))
         stub.MoveRequest(protobuf_pb2.MoveRequest(direction=True,distance=int(length),speed=70))
-        """
-        stub.Move(protobuf_pb2.MoveRequest(direction=False, distance=int(30), speed=70))
+
     else:
         goto_target(stub=stub,target=target,robot_front=robot.front,robot_center=robot.center)
 

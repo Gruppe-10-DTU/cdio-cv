@@ -63,11 +63,11 @@ class CourtState(object):
                 balls.append(Ball(int(x), int(y), int(x) + int(w), int(y) + int(h), current_id))
             elif results[0].names[box.cls.item()] == "r_front":
                 x, y, w, h = box.xywh[0]
-                robot_front = Coordinate(int(x), int(y))
+                robot_front = Coordinate((int(x) + ( int(w) -int(x))/ 2) , (int(y) + (int(h)-int(y))/2))
                 robot_front = projection.projection_from_coordinate(target = robot_front, height = 9.8)
             elif results[0].names[box.cls.item()] == "r_body":
                 x, y, w, h = box.xywh[0]
-                robot_body = Coordinate(int(x), int(y))
+                robot_body = Coordinate((int(x) + ( int(w) -int(x))/ 2) , (int(y) + (int(h)-int(y))/2))
                 robot_body = projection.projection_from_coordinate(target = robot_body, height = 22.5)
 
             elif results[0].names[box.cls.item()] == "corner":
@@ -114,7 +114,7 @@ class CourtState(object):
     @classmethod
     def setupCam(cls):
         # cap = cv2.VideoCapture('videos/with_egg.mp4')
-        cap = cv2.VideoCapture(1, cv2.CAP_DSHOW)
+        cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
         width = 1920
         height = 1080
         cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
@@ -152,11 +152,11 @@ class CourtState(object):
                 balls.append(Ball(int(x), int(y), int(x) + int(w), int(y) + int(h), current_id))
             elif results[0].names[box.cls.item()] == "r_front":
                 x, y, w, h = box.xywh[0]
-                robot_front = Coordinate(int(x), int(y))
+                robot_front = Coordinate((int(x) + ( int(w) -int(x))/ 2) , (int(y) + (int(h)-int(y))/2))
                 robot_front = projection.projection_from_coordinate(target=robot_front, height=9.8)
             elif results[0].names[box.cls.item()] == "r_body":
                 x, y, w, h = box.xywh[0]
-                robot_body = Coordinate(int(x), int(y))
+                robot_body = Coordinate((int(x) + ( int(w) -int(x))/ 2) , (int(y) + (int(h)-int(y))/2))
                 robot_body = projection.projection_from_coordinate(target=robot_body, height=22.5)
             elif results[0].names[box.cls.item()] == "corner":
                 x, y, w, h = box.xywh[0]
@@ -178,7 +178,7 @@ class CourtState(object):
             cls.items[CourtProperty.ROBOT] = robot
         cls.items[CourtProperty.BALLS] = balls
         """cls.items[CourtProperty.CORNERS] = corners"""
-        """        cv2.imshow("YOLO", results[0].plot())"""
+        cv2.imshow("YOLO", results[0].plot())
 
 
     @classmethod

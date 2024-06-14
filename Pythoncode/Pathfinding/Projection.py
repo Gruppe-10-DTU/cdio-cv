@@ -12,8 +12,7 @@ class Projection:
     def projection_from_coordinate(self, target: Coordinate, height: float) -> Coordinate:
         v = np.array([self.camera.x - target.x, self.camera.y - target.y, self.height])
         normalize = v * (height / v[2])
-        difference = normalize * height
-        target.x += difference[0]
-        target.y += difference[1]
+        target.x += normalize[0]
+        target.y += normalize[1]
 
         return target
