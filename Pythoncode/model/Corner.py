@@ -1,8 +1,13 @@
+import math
+
+from Pythoncode.Pathfinding import VectorUtils
+from Pythoncode.model.Vector import Vector
 from Pythoncode.model.coordinate import Coordinate
 from enum import Enum
 
 
 class Corner:
+
     def __init__(self, x1, y1, x2, y2, tracking_id):
         self.x1 = x1
         self.x2 = x2
@@ -16,6 +21,10 @@ class Corner:
         if isinstance(placement, Placement):
             self.placement = placement
 
+    def is_in_corner(self, target: Coordinate):
+        if math.floor(VectorUtils.get_vector(target, self.center).length()) <= 10:
+            return True
+        return False
 
 class Placement(Enum):
     TOP_LEFT = 1

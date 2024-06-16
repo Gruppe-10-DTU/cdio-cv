@@ -17,4 +17,3 @@ class TestBall(TestCase):
         corner2 = Corner(7.5, 0.5, 8.5, 1.5, 3)
         distance = ball.get_distance_to_wall(corner1, corner2)
         self.assertEqual(distance, 3.0)
-        

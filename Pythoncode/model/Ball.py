@@ -1,3 +1,6 @@
+import math
+
+from Pythoncode.model.Corner import Corner
 from Pythoncode.model.coordinate import Coordinate
 from Pythoncode.model.Vector import Vector
 
@@ -17,3 +20,5 @@ class Ball:
         corner_corner = wall.length()
         c1_ball = Vector(self.center.x - corner1.center.x, self.center.y - corner1.center.y)
         return abs(c1_ball.get_dot_product(wall))/abs(corner_corner)
+
+
