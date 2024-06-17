@@ -76,8 +76,9 @@ def drive_function(stub, target: Ball, drive_points):
     in_corner = False
     wall_close = False
     corners = CourtState.getProperty(CourtProperty.CORNERS)
+
     for i in range(len(corners)):
-        in_corner = corners[i].is_in_corner(target)
+        in_corner = corners[i].is_in_corner(target.center)
         wall_close = target.get_distance_to_wall(corners[i], CornerUtils.get_next(corners[i], corners)) < 6.0
         if in_corner or wall_close:
             print("Target is in corner. Moving to drive point closest to target.")
@@ -87,7 +88,7 @@ def drive_function(stub, target: Ball, drive_points):
             drive(stub, robot, target.center, True)
             return
     else:
-        drive(stub, robot, target)
+        drive(stub, robot, target.center)
         cv2.waitKey(500)
 
 

@@ -1,10 +1,10 @@
+import cv2
+from ultralytics import YOLO
 import threading
 from enum import Enum
 
 from threading import Lock
 from time import sleep
-import cv2
-from ultralytics import YOLO
 
 from Pythoncode.Pathfinding.CornerUtils import set_placements, get_corners_as_list
 from Pythoncode.Pathfinding.Projection import Projection
@@ -39,7 +39,6 @@ class CourtState(object):
     def initialize(cls):
         model = YOLO("../model/best.pt")
         cls.model = model
-        cls.setupCam()
         cls.projections = Projection(Coordinate(965.5, 643.0), 164.5)
         sleep(5.0)
         frame = None
