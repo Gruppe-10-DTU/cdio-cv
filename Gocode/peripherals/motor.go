@@ -18,17 +18,20 @@ func GetMotor(inp string) (*ev3dev.TachoMotor, error) {
 }
 
 func BothMotorsRunning() bool {
-	leftMotor, err := ev3dev.TachoMotorFor("ev3-ports:outA", "lego-ev3-l-motor")
+	leftMotor, err := GetMotor("left")
 	if err != nil {
 		return false
 	}
 
-	rightMotor, err := ev3dev.TachoMotorFor("ev3-ports:outD", "lego-ev3-l-motor")
+	rightMotor, err := GetMotor("right")
 	if err != nil {
 		return false
 	}
-	leftRunning, _ := leftMotor.State()
-	rightRunning, _ := rightMotor.State()
-	//fmt.Printf("left: %s\tright: %s\n", leftRunning, rightRunning)
-	return (leftRunning == ev3dev.Running || leftRunning == ev3dev.Ramping) && (rightRunning == ev3dev.Running || rightRunning == ev3dev.Ramping)
+	leftState, _ := leftMotor.State()
+	rightState, _ := rightMotor.State()
+	leftString := leftState.String()
+	rightString := rightState.String()
+	leftMotorRunning := strings.Contains(leftString, "running") || strings.Contains(leftString, "ramping")
+	rightMotorRunning := strings.Contains(rightString, "running") || strings.Contains(rightString, "ramping")
+	return leftMotorRunning && rightMotorRunning
 }
