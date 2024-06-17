@@ -72,8 +72,8 @@ func (s *robotServer) Move(_ context.Context, request *pbuf.MoveRequest) (*pbuf.
 	leftMotor.Command(RESET)
 	rightMotor.Command(RESET)
 
-	leftMotor.SetStopAction(BRAKE)
-	rightMotor.SetStopAction(BRAKE)
+	leftMotor.SetStopAction(HOLD)
+	rightMotor.SetStopAction(HOLD)
 	peripherherals.ResetGyros()
 
 	direction := 0.0
@@ -117,8 +117,8 @@ func (s *robotServer) Move(_ context.Context, request *pbuf.MoveRequest) (*pbuf.
 	for distance > pos {
 		deg, gyroCount, gErr := peripherherals.GetGyroValue()
 		if gyroCount == 0 || gErr != nil {
-			rightMotor.Command(RESET)
-			leftMotor.Command(RESET)
+			rightMotor.Command(STOP)
+			leftMotor.Command(STOP)
 			errMsg := "Error reading gyro values"
 			return &pbuf.Status{ErrCode: false, Message: &errMsg}, gErr
 		}
@@ -137,8 +137,8 @@ func (s *robotServer) Move(_ context.Context, request *pbuf.MoveRequest) (*pbuf.
 		time.Sleep(10 * time.Millisecond)
 
 		if !peripherherals.BothMotorsRunning() {
-			rightMotor.Command(RESET)
-			leftMotor.Command(RESET)
+			rightMotor.Command(STOP)
+			leftMotor.Command(STOP)
 			errMsg := "Both motors aren't running"
 			return &pbuf.Status{ErrCode: false, Message: &errMsg}, nil
 		}
@@ -152,10 +152,10 @@ func (s *robotServer) Move(_ context.Context, request *pbuf.MoveRequest) (*pbuf.
 	leftMotor.Command(STOP)
 	rightMotor.Command(STOP)
 
-	time.Sleep(5 * time.Millisecond)
+	time.Sleep(50 * time.Millisecond)
 
-	leftMotor.Command(RESET)
-	rightMotor.Command(RESET)
+	leftMotor.Command(STOP)
+	rightMotor.Command(STOP)
 
 	return &pbuf.Status{ErrCode: true}, nil
 }
@@ -179,12 +179,12 @@ func (s *robotServer) Turn(_ context.Context, request *pbuf.TurnRequest) (*pbuf.
 	leftMotor.Command(RESET)
 	rightMotor.Command(RESET)
 
-	leftMotor.SetStopAction(BRAKE)
-	rightMotor.SetStopAction(BRAKE)
+	leftMotor.SetStopAction(HOLD)
+	rightMotor.SetStopAction(HOLD)
 	peripherherals.ResetGyros()
 
 	direction := 0.0
-	speed := 90.0
+	speed := 85.0
 	var forwardMotor *ev3dev.TachoMotor
 	var backwardMotor *ev3dev.TachoMotor
 	if request.Degrees < 0 {
@@ -205,33 +205,45 @@ func (s *robotServer) Turn(_ context.Context, request *pbuf.TurnRequest) (*pbuf.
 
 	forwardMotor.Command(DIR)
 	backwardMotor.Command(DIR)
-
-	for degrees > pos {
+	overshot := false
+	oscillationCount := 5
+	for math.Abs(degrees-pos) > 1.0 || oscillationCount > 0 {
+		if degrees < pos {
+			overshot = true
+		} else {
+			overshot = false
+		}
 		dynSpeed := Kp*(degrees-pos) + Kd*(pos-lastPos)
 		lastPos = pos
 		if speed > dynSpeed {
-			power = int(math.Max(dynSpeed, 40.0))
+			power = int(math.Max(dynSpeed, 15.0))
 		} else {
 			power = int(speed)
 		}
+		if overshot {
+			power *= -1
+		}
 		forwardMotor.SetDutyCycleSetpoint(power)
 		backwardMotor.SetDutyCycleSetpoint(-power)
-		time.Sleep(10 * time.Millisecond)
+		time.Sleep(20 * time.Millisecond)
 		if !peripherherals.BothMotorsRunning() {
-			rightMotor.Command(RESET)
-			leftMotor.Command(RESET)
+			rightMotor.Command(STOP)
+			leftMotor.Command(STOP)
 			errMsg := "Both motors aren't running"
 			return &pbuf.Status{ErrCode: false, Message: &errMsg}, err
 		}
 
 		gyroDeg, gyroCount, gErr := peripherherals.GetGyroValue()
 		if gyroCount == 0 {
-			rightMotor.Command(RESET)
-			leftMotor.Command(RESET)
+			rightMotor.Command(STOP)
+			leftMotor.Command(STOP)
 			errMsg := "Error reading gyro values"
 			return &pbuf.Status{ErrCode: false, Message: &errMsg}, gErr
 		}
 		pos = gyroDeg * direction
+		if math.Abs(degrees-pos) < 1.5 {
+			oscillationCount -= 1
+		}
 		fmt.Printf("Heading: %f\n", gyroDeg)
 	}
 	leftMotor.Command(STOP)
@@ -239,8 +251,8 @@ func (s *robotServer) Turn(_ context.Context, request *pbuf.TurnRequest) (*pbuf.
 
 	time.Sleep(5 * time.Millisecond)
 
-	leftMotor.Command(RESET)
-	rightMotor.Command(RESET)
+	leftMotor.Command(STOP)
+	rightMotor.Command(STOP)
 	return &pbuf.Status{ErrCode: true}, nil
 }
 
@@ -272,10 +284,10 @@ func (s *robotServer) StopMovement(_ context.Context, request *pbuf.Empty) (*pbu
 		errMsg := "Error getting right motor"
 		return &pbuf.Status{ErrCode: false, Message: &errMsg}, err
 	}
-	rightMotor.Command(RESET)
-	leftMotor.Command(RESET)
 	rightMotor.Command(STOP)
 	leftMotor.Command(STOP)
+	rightMotor.Command(RESET)
+	leftMotor.Command(RESET)
 
 	return &pbuf.Status{ErrCode: true}, nil
 }

@@ -1,3 +1,5 @@
+import copy
+
 from Pythoncode.model.Rectangle import Rectangle
 from Pythoncode.model.coordinate import Coordinate
 
@@ -28,7 +30,13 @@ def calculate_endpoint_outcode(box: Rectangle, coordinate: Coordinate):
     return outcode
 
 
-def line_hits_rectangle(box: Rectangle, c1: Coordinate, c2: Coordinate):
+def line_hits_rectangle(box: Rectangle, begin: Coordinate, to: Coordinate):
+    #if box.c1.x <= to.x <= box.c2.x and box.c1.y <= to.y <= box.c2.y:
+    #    return False
+
+    c1 = copy.deepcopy(begin)
+    c2 = copy.deepcopy(to)
+
     start = calculate_endpoint_outcode(box, c1)
     end = calculate_endpoint_outcode(box, c2)
 
