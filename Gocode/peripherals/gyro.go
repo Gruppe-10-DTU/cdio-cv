@@ -1,7 +1,6 @@
 package peripherals
 
 import (
-	"fmt"
 	"github.com/ev3go/ev3dev"
 	"strconv"
 	"time"
@@ -14,76 +13,24 @@ func ResetGyros() {
 	if err1 != nil && err2 != nil {
 		return
 	} else if err1 != nil {
+		gyro2.SetMode("GYRO-CAL")
+		time.Sleep(10 * time.Millisecond)
 		gyro2.SetMode("GYRO-ANG")
-		direct, err := gyro2.Direct(666)
-		if err != nil {
-			fmt.Printf("Gyro 2 open: %s\n", err)
-			return
-		}
-		_, err = direct.Write([]byte("\x88"))
-		if err != nil {
-			fmt.Printf("Gyro 2 write: %s\n", err)
-			return
-		}
-		err = direct.Close()
-		if err != nil {
-			fmt.Printf("Gyro 2 close: %s\n", err)
-			return
-		}
 		return
 	} else if err2 != nil {
+		gyro1.SetMode("GYRO-CAL")
+		time.Sleep(10 * time.Millisecond)
 		gyro1.SetMode("GYRO-ANG")
-		direct, err := gyro1.Direct(777)
-		if err != nil {
-			fmt.Printf("Gyro 1 open: %s\n", err)
-			return
-		}
-		_, err = direct.Write([]byte("\x88"))
-		if err != nil {
-			fmt.Printf("Gyro 1 write: %s\n", err)
-			return
-		}
-		err = direct.Close()
-		if err != nil {
-			fmt.Printf("Gyro 1 close: %s\n", err)
-			return
-		}
+		gyro1.SetMode("GYRO-ANG")
 		return
 	}
+	gyro1.SetMode("GYRO-CAL")
+	gyro2.SetMode("GYRO-CAL")
+
+	time.Sleep(10 * time.Millisecond)
+
 	gyro1.SetMode("GYRO-ANG")
 	gyro2.SetMode("GYRO-ANG")
-
-	direct, err := gyro1.Direct(777)
-	if err != nil {
-		fmt.Printf("Gyro 1 open: %s\n", err)
-		return
-	}
-	_, err = direct.Write([]byte("\x88"))
-	if err != nil {
-		fmt.Printf("Gyro 1 write: %s\n", err)
-		return
-	}
-	err = direct.Close()
-	if err != nil {
-		fmt.Printf("Gyro 1 close: %s\n", err)
-		return
-	}
-	direct, err = gyro2.Direct(666)
-	if err != nil {
-		fmt.Printf("Gyro 2 open: %s\n", err)
-		return
-	}
-	_, err = direct.Write([]byte("\x88"))
-	if err != nil {
-		fmt.Printf("Gyro 2 write: %s\n", err)
-		return
-	}
-	err = direct.Close()
-	if err != nil {
-		fmt.Printf("Gyro 2 close: %s\n", err)
-		return
-	}
-	//time.Sleep(250 * time.Millisecond)
 
 	gyro1.SetPollRate(5 * time.Millisecond)
 	gyro2.SetPollRate(5 * time.Millisecond)
@@ -132,6 +79,6 @@ func GetGyroValue() (float64, int, error) {
 	if pErr != nil {
 		return 0, 0, pErr
 	}
-	fmt.Printf("Current gyro values: %f / %f", pos1, pos2)
+	//fmt.Printf("Current gyro values: %f / %f", pos1, pos2)
 	return (pos1 + pos2) / 2.0, 2, nil
 }
