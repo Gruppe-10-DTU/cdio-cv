@@ -59,7 +59,7 @@ class CourtState(object):
                 y = int(y)
                 w = int(w)
                 h = int(h)
-                corner = Corner(x, y, x + w, y + h, current_id)
+                corner = Corner(x, y, w, h, current_id)
                 #corner.center = cls.projections.projection_from_coordinate(corner.center, 7.2)
                 corners[current_id] = corner
                 current_id += 1
