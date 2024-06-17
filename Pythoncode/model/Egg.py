@@ -14,31 +14,11 @@ class Egg:
         self.buffer_c1 = None
         self.buffer_c2 = None
 
-        buffer_dist = 4
-        buffer_radius = 3
+        buffer_dist = 2
 
-        direction = get_vector(rectangle.center,self.center)
+        self.buffer_center = Coordinate(buffer_dist * self.center.x + (1-buffer_dist)*rectangle.center.x, buffer_dist * self.center.y + (1-buffer_dist)*rectangle.center.y)
 
-        if direction.x == 0:
-            if direction.y < 0:
-                self.buffer_center = Coordinate(self.center.x, self.center.y - buffer_dist)
-            else:
-                self.buffer_center = Coordinate(self.center.x, self.center.y + buffer_dist)
-        elif direction.x < 0 :
-            if direction.y == 0:
-                self.buffer_center = Coordinate(self.center.x - buffer_dist, self.center.y)
-            elif direction.y < 0:
-                self.buffer_center = Coordinate(self.center.x - buffer_dist, self.center.y - buffer_dist)
-            else:
-                self.buffer_center = Coordinate(self.center.x - buffer_dist, self.center.y + buffer_dist)
-        else:
-            if direction.y == 0:
-                self.buffer_center = Coordinate(self.center.x + buffer_dist, self.center.y)
-            elif direction.y < 0:
-                self.buffer_center = Coordinate(self.center.x + buffer_dist, self.center.y - buffer_dist)
-            else:
-                self.buffer_center = Coordinate(self.center.x + buffer_dist, self.center.y + buffer_dist)
+        buffer_radius = round(get_vector_length(get_vector(rectangle.center, self.buffer_center)) / 2, 2)
 
-
-        self.buffer_c1 = Coordinate(self.buffer_center.x - buffer_radius, self.buffer_center.y + buffer_radius)
-        self.buffer_c2 = Coordinate(self.buffer_center.x + buffer_radius, self.buffer_center.y - buffer_radius)
+        self.buffer_c1 = Coordinate(round(self.buffer_center.x - buffer_radius, 2), round(self.buffer_center.y + buffer_radius, 2))
+        self.buffer_c2 = Coordinate(round(self.buffer_center.x + buffer_radius, 2), round(self.buffer_center.y - buffer_radius, 2))
