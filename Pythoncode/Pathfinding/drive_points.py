@@ -74,5 +74,5 @@ class Drive_points:
         return corner.center.add_vector(vec1.add(vec2))
 
     def __calculate_center_drive_point(self, corner_point, wall ) -> Coordinate:
-        vec = wall.scale_to_length((wall.length() / 2) - (WALL_DISTANCE * 2 * self.scale))
+        vec = wall.scale_to_length((wall.length() - (WALL_DISTANCE * 2 * self.scale)) / 2)
         return corner_point.add_vector(vec)
