@@ -71,7 +71,7 @@ def drive_function(stub, target: Ball, drive_points):
     """This should handle if we cannot see a ball, and move the robot towards the next drive point."""
     if target is None:
         print("Target is None. Moving to drive point...")
-        drive(stub, drive_points.get_closest_drive_point(robot.center), robot)
+        drive(stub, robot, drive_points.get_closest_drive_point(robot.center))
         return
 
 
@@ -83,7 +83,8 @@ def drive_function(stub, target: Ball, drive_points):
         wall_close = target.get_distance_to_wall(corners[i], CornerUtils.get_next(corners[i], corners)) < 6.0
         if in_corner or wall_close:
             print("Target is in corner. Moving to drive point closest to target.")
-            drive(stub, robot, drive_points.get_closest_drive_point(target.center))
+            drive_point = drive_points.get_closest_drive_point(target.center)
+            drive(stub, robot, drive_point)
 
             vector_center = Vector(robot.center, drive_point)
             length = vector_center.length() + VectorUtils.get_length(robot.front, robot.center)
@@ -94,6 +95,7 @@ def drive_function(stub, target: Ball, drive_points):
             drive(stub, robot, target.center, True)
             return
     else:
+        drive_points.last = None
         drive(stub, robot, target.center)
 
 

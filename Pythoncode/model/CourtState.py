@@ -54,9 +54,15 @@ class CourtState(object):
         for box in boxes:
 
             if results[0].names[box.cls.item()] == "corner":
-                x, y, w, h = map(int, box.xywh[0])
-                current_id = int(box.id)
-                corners[current_id] = Corner(x, y, x + w, y + h, current_id)
+                x, y, w, h = box.xyxy[0]
+                x = int(x)
+                y = int(y)
+                w = int(w)
+                h = int(h)
+                corner = Corner(x, y, x + w, y + h, current_id)
+                #corner.center = cls.projections.projection_from_coordinate(corner.center, 7.2)
+                corners[current_id] = corner
+                current_id += 1
 
         corners = set_placements(corners)
 
@@ -96,26 +102,36 @@ class CourtState(object):
         robot_front = None
         obstacle = None
         for box in boxes:
-            x, y, w, h = map(int, box.xywh[0])
-            current_id = int(box.id)
+            x, y, w, h = box.xyxy[0]
+            x = int(x)
+            y = int(y)
+            w = int(w)
+            h = int(h)
+            current_id = 0
+            item = box.cls.item()
+            frame = cv2.circle(frame, (x, y), radius=2, color=(255,255,255), thickness=1)
 
-            if results[0].names[box.cls.item()] == "ball":
+            if results[0].names[item] == "ball":
                 balls.append(Ball(int(x), int(y), int(x) + int(w), int(y) + int(h), current_id))
-            elif results[0].names[box.cls.item()] == "r_front":
-                robot_front = Coordinate(x + w / 2, y + h / 2)
+            elif results[0].names[item] == "r_front":
+                #robot_front = Coordinate(x,y)
+                robot_front = Coordinate(x + (w-x) / 2, y + (h-y)/2)
                 robot_front = projection.projection_from_coordinate(target=robot_front, height=9.8)
-            elif results[0].names[box.cls.item()] == "r_body":
-                robot_body = Coordinate(x + w / 2, y + h / 2)
+            elif results[0].names[item] == "r_body":
+                robot_body = Coordinate(x + (w-x) / 2, y + (h-y)/2)
+                #robot_body = Coordinate(x,y)
                 robot_body = projection.projection_from_coordinate(target=robot_body, height=22.5)
-            elif results[0].names[box.cls.item()] == "corner":
-                corners.append(Corner(x, y, x + w, y + h, current_id))
-            elif results[0].names[box.cls.item()] == "obstacle":
+            elif results[0].names[item] == "corner":
+                corner = Corner(x, y, w, h, current_id)
+                #corner.center = projection.projection_from_coordinate(corner.center, 7.2)
+                corners.append(corner)
+            elif results[0].names[item] == "obstacle":
                 x0, y0, x1, y1 = box.xyxy[0]
                 obstacle = Rectangle(Coordinate(x0, y0), Coordinate(x1, y1))
-            elif results[0].names[box.cls.item()] == "egg":
+            elif results[0].names[item] == "egg":
                 print("Egg")
-            elif results[0].names[box.cls.item()] == "orange_ball":
-                vipItem = Vip(x, y, x + w, y + h, current_id)
+            elif results[0].names[item] == "orange_ball":
+                vipItem = Vip(x, y, w, h, current_id)
 
         robot = Robot(robot_body, robot_front)
 
