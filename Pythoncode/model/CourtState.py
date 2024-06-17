@@ -118,7 +118,7 @@ class CourtState(object):
     @classmethod
     def setupCam(cls):
         # cap = cv2.VideoCapture('videos/with_egg.mp4')
-        cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+        cap = cv2.VideoCapture(1, cv2.CAP_DSHOW)
         width = 1920
         height = 1080
         cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
