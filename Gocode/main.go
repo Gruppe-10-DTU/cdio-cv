@@ -251,7 +251,7 @@ func (s *robotServer) Turn(_ context.Context, request *pbuf.TurnRequest) (*pbuf.
 			leftState, _ := leftMotor.State()
 			errMsg := "Turn failed: Both motors aren't running" +
 				"\n\tRight state: " + rightState.String() + "\tLeft state:" + leftState.String() +
-				"\n\tAngle: " + strconv.Itoa(int(pos)) + "/" + strconv.Itoa(int(degrees)) + "\n"
+				"\n\tAngle: " + strconv.FormatFloat(pos, 'g', -1, 32) + "/" + strconv.FormatFloat(degrees, 'g', -1, 32) + "\n"
 			fmt.Printf("%s", errMsg)
 			rightMotor.Command(STOP)
 			leftMotor.Command(STOP)
@@ -264,7 +264,7 @@ func (s *robotServer) Turn(_ context.Context, request *pbuf.TurnRequest) (*pbuf.
 			leftState, _ := leftMotor.State()
 			errMsg := "Turn failed: Error reading gyro" +
 				"\n\tRight state: " + rightState.String() + "\tLeft state:" + leftState.String() +
-				"\n\tAngle: " + strconv.Itoa(int(pos)) + "/" + strconv.Itoa(int(degrees)) + "\n"
+				"\n\tAngle: " + strconv.FormatFloat(pos, 'g', -1, 32) + "/" + strconv.FormatFloat(degrees, 'g', -1, 32) + "\n"
 			fmt.Printf("%s", errMsg)
 			rightMotor.Command(STOP)
 			leftMotor.Command(STOP)
@@ -282,7 +282,7 @@ func (s *robotServer) Turn(_ context.Context, request *pbuf.TurnRequest) (*pbuf.
 
 	leftMotor.Command(STOP)
 	rightMotor.Command(STOP)
-	statusMsg := "Finished turn of: " + strconv.Itoa(int(pos)) + "/" + strconv.Itoa(int(degrees)) + "\n"
+	statusMsg := "Finished turn of: " + strconv.FormatFloat(pos, 'g', -1, 32) + "/" + strconv.FormatFloat(degrees, 'g', -1, 32) + "\n"
 	fmt.Printf("%s", statusMsg)
 	return &pbuf.Status{ErrCode: true}, nil
 }
