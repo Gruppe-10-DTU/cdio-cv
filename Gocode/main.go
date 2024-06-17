@@ -44,7 +44,7 @@ func main() {
 	server := grpc.NewServer()
 	fmt.Printf("Created robotServer ...\n")
 	pbuf.RegisterRobotServer(server, &robotServer{})
-	fmt.Printf("Registered robotServer ...\n")
+	fmt.Printf("Registered robotServer ...\n\n")
 	err = server.Serve(listen)
 	if err != nil {
 		log.Fatalf("failed to serve: %v", err)
@@ -56,16 +56,19 @@ func (s *robotServer) Move(_ context.Context, request *pbuf.MoveRequest) (*pbuf.
 	//fmt.Printf("Received move command ... \n")
 	leftMotor, err := peripherherals.GetMotor("left")
 	if err != nil {
-		errMsg := "Couldn't get reference for left motor"
+		errMsg := "Move failed: Couldn't get reference for left motor\n"
+		fmt.Printf("%s", errMsg)
 		return &pbuf.Status{ErrCode: false, Message: &errMsg}, err
 	}
 	rightMotor, err := peripherherals.GetMotor("right")
 	if err != nil {
-		errMsg := "Couldn't get reference for right motor"
+		errMsg := "Move failed: Couldn't get reference for right motor\n"
+		fmt.Printf("%s", errMsg)
 		return &pbuf.Status{ErrCode: false, Message: &errMsg}, err
 	}
 	if leftMotor == rightMotor {
-		errMsg := "Motors are the same"
+		errMsg := "Move failed: Motors are the same\n"
+		fmt.Printf("%s", errMsg)
 		return &pbuf.Status{ErrCode: false, Message: &errMsg}, nil
 	}
 
@@ -108,18 +111,26 @@ func (s *robotServer) Move(_ context.Context, request *pbuf.MoveRequest) (*pbuf.
 	if gyroCount == 0 || gErr != nil {
 		rightMotor.Command(RESET)
 		leftMotor.Command(RESET)
-		errMsg := "Error reading target direction"
+		errMsg := "Move failed: Error reading target direction"
+		fmt.Printf("%s", errMsg)
 		return &pbuf.Status{ErrCode: false, Message: &errMsg}, gErr
 	}
 	pos := 0
 	leftMotor.Command(DIR)
 	rightMotor.Command(DIR)
+	leftMotor.SetPositionSetpoint(distance)
+	rightMotor.SetPositionSetpoint(distance)
 	for distance > pos {
 		deg, gyroCount, gErr := peripherherals.GetGyroValue()
 		if gyroCount == 0 || gErr != nil {
+			rightState, _ := rightMotor.State()
+			leftState, _ := leftMotor.State()
+			errMsg := "Move failed: Both motors aren't running" +
+				"\n\tRight state: " + rightState.String() + "\tLeft state:" + leftState.String() +
+				"\n\tDistance: " + string(rune(pos)) + "/" + string(rune(distance)) + "\n"
+			fmt.Printf("%s", errMsg)
 			rightMotor.Command(STOP)
 			leftMotor.Command(STOP)
-			errMsg := "Error reading gyro values"
 			return &pbuf.Status{ErrCode: false, Message: &errMsg}, gErr
 		}
 		gyroError := target - deg
@@ -137,16 +148,20 @@ func (s *robotServer) Move(_ context.Context, request *pbuf.MoveRequest) (*pbuf.
 		time.Sleep(10 * time.Millisecond)
 
 		if !peripherherals.BothMotorsRunning() {
+			rightState, _ := rightMotor.State()
+			leftState, _ := leftMotor.State()
+			errMsg := "Move failed: Both motors aren't running" +
+				"\n\tRight state: " + rightState.String() + "\tLeft state:" + leftState.String() +
+				"\n\tDistance: " + string(rune(pos)) + "/" + string(rune(distance)) + "\n"
+			fmt.Printf("%s", errMsg)
 			rightMotor.Command(STOP)
 			leftMotor.Command(STOP)
-			errMsg := "Both motors aren't running"
 			return &pbuf.Status{ErrCode: false, Message: &errMsg}, nil
 		}
 
 		pos1, _ := leftMotor.Position()
 		pos2, _ := rightMotor.Position()
 		pos = int(math.Max(float64(pos1)*direction, float64(pos2)*direction))
-		fmt.Printf("Heading: %f\tDistance: %d/%d\n", gyroError, pos, distance)
 	}
 
 	leftMotor.Command(STOP)
@@ -156,31 +171,35 @@ func (s *robotServer) Move(_ context.Context, request *pbuf.MoveRequest) (*pbuf.
 
 	leftMotor.Command(STOP)
 	rightMotor.Command(STOP)
-
+	statusMsg := "Finished move of: " + string(rune(pos)) + "/" + string(rune(distance)) + "\n"
+	fmt.Printf("%s", statusMsg)
 	return &pbuf.Status{ErrCode: true}, nil
 }
 
 func (s *robotServer) Turn(_ context.Context, request *pbuf.TurnRequest) (*pbuf.Status, error) {
 	leftMotor, err := peripherherals.GetMotor("left")
 	if err != nil {
-		errMsg := "Error getting left motor"
+		errMsg := "Turn failed: Error getting left motor\n"
+		fmt.Printf("%s", errMsg)
 		return &pbuf.Status{ErrCode: false, Message: &errMsg}, err
 	}
 
 	rightMotor, err := peripherherals.GetMotor("right")
 	if err != nil {
-		errMsg := "Error getting right motor"
+		errMsg := "Turn failed: Error getting right motor\n"
+		fmt.Printf("%s", errMsg)
 		return &pbuf.Status{ErrCode: false, Message: &errMsg}, err
 	}
 	if leftMotor == rightMotor {
-		errMsg := "Only one motor available"
+		errMsg := "Turn failed: Only one motor available\n"
+		fmt.Printf("%s", errMsg)
 		return &pbuf.Status{ErrCode: false, Message: &errMsg}, nil
 	}
 	leftMotor.Command(RESET)
 	rightMotor.Command(RESET)
 
-	leftMotor.SetStopAction(HOLD)
-	rightMotor.SetStopAction(HOLD)
+	leftMotor.SetStopAction(BRAKE)
+	rightMotor.SetStopAction(BRAKE)
 	peripherherals.ResetGyros()
 
 	direction := 0.0
@@ -216,7 +235,7 @@ func (s *robotServer) Turn(_ context.Context, request *pbuf.TurnRequest) (*pbuf.
 		dynSpeed := Kp*(degrees-pos) + Kd*(pos-lastPos)
 		lastPos = pos
 		if speed > dynSpeed {
-			power = int(math.Max(dynSpeed, 15.0))
+			power = int(math.Max(dynSpeed, 20.0))
 		} else {
 			power = int(speed)
 		}
@@ -227,24 +246,33 @@ func (s *robotServer) Turn(_ context.Context, request *pbuf.TurnRequest) (*pbuf.
 		backwardMotor.SetDutyCycleSetpoint(-power)
 		time.Sleep(20 * time.Millisecond)
 		if !peripherherals.BothMotorsRunning() {
+			rightState, _ := rightMotor.State()
+			leftState, _ := leftMotor.State()
+			errMsg := "Turn failed: Both motors aren't running" +
+				"\n\tRight state: " + rightState.String() + "\tLeft state:" + leftState.String() +
+				"\n\tAngle: " + string(rune(pos)) + "/" + string(rune(degrees)) + "\n"
+			fmt.Printf("%s", errMsg)
 			rightMotor.Command(STOP)
 			leftMotor.Command(STOP)
-			errMsg := "Both motors aren't running"
 			return &pbuf.Status{ErrCode: false, Message: &errMsg}, err
 		}
 
 		gyroDeg, gyroCount, gErr := peripherherals.GetGyroValue()
 		if gyroCount == 0 {
+			rightState, _ := rightMotor.State()
+			leftState, _ := leftMotor.State()
+			errMsg := "Turn failed: Error reading gyro" +
+				"\n\tRight state: " + rightState.String() + "\tLeft state:" + leftState.String() +
+				"\n\tAngle: " + string(rune(pos)) + "/" + string(rune(degrees)) + "\n"
+			fmt.Printf("%s", errMsg)
 			rightMotor.Command(STOP)
 			leftMotor.Command(STOP)
-			errMsg := "Error reading gyro values"
-			return &pbuf.Status{ErrCode: false, Message: &errMsg}, gErr
+			return &pbuf.Status{ErrCode: false}, gErr
 		}
 		pos = gyroDeg * direction
 		if math.Abs(degrees-pos) < 1.5 {
 			oscillationCount -= 1
 		}
-		fmt.Printf("Heading: %f\n", gyroDeg)
 	}
 	leftMotor.Command(STOP)
 	rightMotor.Command(STOP)
@@ -253,6 +281,8 @@ func (s *robotServer) Turn(_ context.Context, request *pbuf.TurnRequest) (*pbuf.
 
 	leftMotor.Command(STOP)
 	rightMotor.Command(STOP)
+	statusMsg := "Finished turn of: " + string(rune(pos)) + "/" + string(rune(degrees)) + "\n"
+	fmt.Printf("%s", statusMsg)
 	return &pbuf.Status{ErrCode: true}, nil
 }
 
