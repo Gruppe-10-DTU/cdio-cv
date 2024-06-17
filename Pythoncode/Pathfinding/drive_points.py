@@ -3,7 +3,7 @@ from Pythoncode.model.Corner import Placement
 from Pythoncode.model.Vector import Vector
 from Pythoncode.Pathfinding import CornerUtils
 
-PRECICION = 5 # drive point tolereance
+PRECICION = 1 # drive point tolereance
 WALL_DISTANCE = 20 # wall clearance
 
 class Drive_points:
@@ -51,6 +51,7 @@ class Drive_points:
 
     def get_closest_drive_point(self, point: Coordinate) -> Coordinate:
         closest = None
+        current = None
         distance = float('inf')
         for drive_point in self.drive_points:
             if drive_point == self.last:

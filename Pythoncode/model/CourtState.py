@@ -6,6 +6,7 @@ from enum import Enum
 from threading import Lock
 from time import sleep
 
+from Pythoncode.Pathfinding import drive_points
 from Pythoncode.Pathfinding.CornerUtils import set_placements, get_corners_as_list
 from Pythoncode.Pathfinding.Projection import Projection
 from Pythoncode.model.Ball import Ball
@@ -39,17 +40,19 @@ class CourtState(object):
     def initialize(cls):
         model = YOLO("../model/best.pt")
         cls.model = model
-        cls.projections = Projection(Coordinate(965.5, 643.0), 164.5)
+        cls.projections = Projection(Coordinate(1423.5, 905.5), 156.7)
         sleep(5.0)
         frame = None
+        current_id = 0
         while frame is None:
             frame = cls.getFrame()
 
-        results = model.track(frame, persist=True, conf=0.8)
+        results = model.predict(frame, conf=0.5)
         corners = {}
         boxes = results[0].boxes.cpu()
 
         for box in boxes:
+
             if results[0].names[box.cls.item()] == "corner":
                 x, y, w, h = map(int, box.xywh[0])
                 current_id = int(box.id)
@@ -58,23 +61,31 @@ class CourtState(object):
         corners = set_placements(corners)
 
         cls.items[CourtProperty.CORNERS] = get_corners_as_list(corners)
-        cls.analyse_results(results)
+        cls.analyse_results(results, frame)
 
         cv2.imshow("YOLO", results[0].plot())
 
     @classmethod
-    def updateObjects(cls):
+    def updateObjects(cls,drive_points):
         model = cls.model
         frame = None
         while frame is None:
             frame = cls.getFrame()
-        results = model.track(frame, persist=True, conf=0.8)
+        results = model.predict(frame, conf=0.8)
+        img = cls.analyse_results(results, frame)
 
-        cls.analyse_results(results)
-        cv2.imshow("YOLO", results[0].plot())
+        for drive_point in drive_points:
+            img = cv2.circle(img,(int(drive_point.x), int(drive_point.y)),radius=5,color=(255,0,0),thickness=-1)
+        robot = cls.getProperty(CourtProperty.ROBOT)
+        img = cv2.circle(img, (int(robot.center.x), int(robot.center.y)), radius=5, color=(0, 255, 0), thickness=-1)
+        img = cv2.circle(img, (int(robot.front.x), int(robot.front.y)), radius=5, color=(0, 0, 255), thickness=-1)
+
+
+        cv2.imshow("YOLO",img)
+        cv2.waitKey()
 
     @classmethod
-    def analyse_results(cls, results):
+    def analyse_results(cls, results, frame):
         boxes = results[0].boxes.cpu()
         projection = cls.projections
         balls = []
@@ -114,10 +125,13 @@ class CourtState(object):
         cls.items[CourtProperty.BALLS] = balls
         cls.items[CourtProperty.OBSTACLE] = obstacle
 
+        return frame
+
     @classmethod
     def setupCam(cls):
         # cap = cv2.VideoCapture('videos/with_egg.mp4')
-        cap = cv2.VideoCapture(1, cv2.CAP_DSHOW)
+        cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+        cap.set(cv2.CAP_PROP_BUFFERSIZE,1)
         width = 1920
         height = 1080
         cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
