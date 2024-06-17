@@ -236,7 +236,7 @@ func (s *robotServer) Turn(_ context.Context, request *pbuf.TurnRequest) (*pbuf.
 		dynSpeed := Kp*(degrees-pos) + Kd*(pos-lastPos)
 		lastPos = pos
 		if speed > dynSpeed {
-			power = int(math.Max(dynSpeed, 20.0))
+			power = int(math.Max(dynSpeed, 25.0))
 		} else {
 			power = int(speed)
 		}
