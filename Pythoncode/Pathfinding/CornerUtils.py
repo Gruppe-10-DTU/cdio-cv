@@ -1,9 +1,8 @@
 import math
 
 from Pythoncode.Pathfinding import VectorUtils
-from Pythoncode.model.Corner import Placement
+from Pythoncode.model.Corner import Placement, Corner
 from Pythoncode.model.Goal import Goal
-import configparser
 
 
 def set_placements(corners):
@@ -20,30 +19,46 @@ def set_placements(corners):
         corners[top_right_most[1][1].id].set_placement(Placement.BOTTOM_RIGHT)
     return corners
 
-def get_cm_per_pixel(corners, config):
+
+def get_corners_as_list(corners):
     list = []
     for key, value in corners.items():
         list.append(value)
-    sorted_list = sorted(list, key=lambda c: c.placement.value)
+    return sorted(list, key=lambda c: c.placement.value)
 
 
+def get_next(corner, corners) -> Corner | None:
+    if Placement.TOP_LEFT == corner.placement:
+        return corners[2]
+    elif Placement.BOTTOM_LEFT == corner.placement:
+        return corners[0]
+    elif Placement.TOP_RIGHT == corner.placement:
+        return corners[3]
+    elif Placement.BOTTOM_RIGHT == corner.placement:
+        return corners[1]
+    return None
+
+
+def get_cm_per_pixel(corners, config):
     height = float(config.get('MAP', 'height'))
     width = float(config.get('MAP', 'width'))
-    match len(sorted_list):
+    match len(corners):
         case 4:
-            return VectorUtils.get_length(sorted_list[0].center, sorted_list[1].center) / height
+            return VectorUtils.get_length(corners[0].center, corners[1].center) / height
         case 3, 2:
 
-            if sorted_list[0].placement % 2 == sorted_list[1].placement % 2:
-                return VectorUtils.get_length(sorted_list[0].center, sorted_list[1].center) / width
-            elif sorted_list[0].placement % 2 == 1 and sorted_list[1].placement % 2 == 0:
-                return VectorUtils.get_length(sorted_list[0].center, sorted_list[1].center) / width
+            if corners[0].placement % 2 == corners[1].placement % 2:
+                return VectorUtils.get_length(corners[0].center, corners[1].center) / width
+            elif corners[0].placement % 2 == 1 and corners[1].placement % 2 == 0:
+                return VectorUtils.get_length(corners[0].center, corners[1].center) / width
             else:
                 """Udregner ud fra diagonalen"""
-                return VectorUtils.get_length(sorted_list[0].center, sorted_list[1].center) / math.sqrt(math.pow(height, 2) + math.pow(width, 2))
+                return VectorUtils.get_length(corners[0].center, corners[1].center) / math.sqrt(
+                    math.pow(height, 2) + math.pow(width, 2))
 
     """Default value"""
     return 2.0
+
 
 def calculate_goals(corners) -> list:
     goals = []

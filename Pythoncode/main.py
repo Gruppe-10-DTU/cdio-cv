@@ -1,36 +1,21 @@
 import configparser
-import math
-
-import grpc
-from ultralytics import YOLO
-import cv2
-
-from Pythoncode.Pathfinding import VectorUtils, CornerUtils
-from Pythoncode.Pathfinding.Pathfinding import Pathfinding
 from time import sleep
-from Pythoncode.grpc.protobuf_pb2_grpc import Robot
-from Pythoncode.model.Ball import Ball
-from Pythoncode.model.Corner import Corner
-from Pythoncode.model.CourtState import CourtState, CourtProperty
 
-from Pythoncode.grpc.gRPC_Class import gRPC_Class
-from Pythoncode.model.Ball import Ball
-from Pythoncode.model.Robot import Robot
-from Pythoncode.model.Vip import Vip
-from Pythoncode.model.Ball import Ball
-from Pythoncode.model.CourtState import CourtState, CourtProperty
-
-from Pythoncode.grpc import protobuf_pb2_grpc, protobuf_pb2
-
-from Pythoncode.Pathfinding.CornerUtils import set_placements, calculate_goals
-
-from Pythoncode.Pathfinding.drive_points import *
+import cv2
+import grpc
+import numpy
 
 import Pythoncode.model
-from Pythoncode.model.coordinate import Coordinate
-
+from Pythoncode.Pathfinding import VectorUtils
+from Pythoncode.Pathfinding.Pathfinding import Pathfinding
+from Pythoncode.Pathfinding.drive_points import *
+from Pythoncode.grpc import protobuf_pb2_grpc, protobuf_pb2
+from Pythoncode.model.Ball import Ball
+from Pythoncode.model.CourtState import CourtState, CourtProperty
 
 pixel_per_cm = 2.0
+
+
 def main():
     config = configparser.ConfigParser()
     config.read('config.ini')
@@ -44,82 +29,93 @@ def main():
     robot = CourtState.getProperty(CourtProperty.ROBOT)
     """goals = calculate_goals(corners)"""
     balls = CourtState.getProperty(CourtProperty.BALLS)
+    drive_points = Drive_points(corners, pixel_per_cm)
     pathfinding = Pathfinding(balls, robot.center, CourtState.getProperty(CourtProperty.OBSTACLE))
 
-    commandHandler(pathfinding)
+    commandHandler(pathfinding, drive_points)
 
 
-def commandHandler(pathfinding):
+def commandHandler(pathfinding, drive_points):
     config = configparser.ConfigParser()
     config.read('config.ini')
     ip = config.get("ROBOT", "ip")
-    CourtState.updateObjects()
+    CourtState.updateObjects(drive_points.drive_points)
 
     with grpc.insecure_channel(ip) as channel:
         stub = protobuf_pb2_grpc.RobotStub(channel)
         robot = CourtState.getProperty(CourtProperty.ROBOT)
-        while len(pathfinding.targets) > 0:
-            success = True
+        while len(pathfinding.targets) > 0 or True:
             target = pathfinding.get_closest(robot.center)
-            drive_function(stub, target)
-            sleep(1.5)
+
+            drive_function(stub, target, drive_points)
+            #sleep(1.5)
+            success = True
             while success:
                 try:
-                    CourtState.updateObjects()
+                    CourtState.updateObjects(drive_points.drive_points)
                     success = False
                 except Exception as e:
                     print("Robot not found")
                     sleep(1)
 
             pathfinding.update_target(CourtState.getProperty(CourtProperty.BALLS))
-
+            
         print("Getting vip")
         target = CourtState.getProperty(CourtProperty.VIP)
-        drive_function(stub, target)
+        drive_function(stub, target, drive_points)
 
-def drive_function(stub, target):
+
+def drive_function(stub, target: Ball, drive_points):
     robot = CourtState.getProperty(CourtProperty.ROBOT)
-    cv2.waitKey(500)
+    #sleep(0.5)
     """This should handle if we cannot see a ball, and move the robot towards the next drive point."""
     if target is None:
         print("Target is None. Moving to drive point...")
-        target = Pathfinding.drive_points.get_closest_drive_point(target)
+        drive(stub, robot, drive_points.get_closest_drive_point(robot.center))
+        return
 
-    goto_target(stub=stub,target=target,robot_front=robot.front,robot_center=robot.center)
 
-def goto_target(stub, target, robot):
-    in_corner = False
-    for corner in CourtState.getProperty(CourtProperty.CORNERS).items():
-        in_corner = corner[1].is_in_corner(target)
-    if in_corner:
-        print("Target is in corner. Moving to drive point closest to target.")
-        tmp_target = Pythoncode.Pathfinding.Pathfinding.drive_points.get_closest_drive_point(target)
-        tmp_angle = VectorUtils.calculate_angle_clockwise(tmp_target, robot_front, robot_center)
-        print("Turning" + str(tmp_angle))
-        stub.Turn(protobuf_pb2.TurnRequest(degrees=tmp_angle))
-        tmp_length = round(VectorUtils.get_length(tmp_target, robot_front) / pixel_per_cm * 0.9)
-        print("Length: " + str(tmp_length))
-        stub.Move(protobuf_pb2.MoveRequest(direction=True, distance=int(tmp_length), speed=70))
-        cv2.waitKey(500)
-        angle = VectorUtils.calculate_angle_clockwise(target, robot_front, robot_center)
-        angle = round(angle, 3)
-        print("Turning " + str(angle))
-        stub.Turn(protobuf_pb2.TurnRequest(degrees=angle))
-        length = round(VectorUtils.get_length(target, robot_front) / pixel_per_cm) * 0.9
-        print("Length: " + str(length))
-        cv2.waitKey(500)
-        stub.Move(protobuf_pb2.MoveRequest(direction=True, distance=int(length), speed=70))
-        stub.Move(protobuf_pb2.MoveRequest(direction=False, distance=int(length), speed=50))
+    wall_close = False
+    corners = CourtState.getProperty(CourtProperty.CORNERS)
+
+    for i in range(len(corners)):
+        in_corner = corners[i].is_in_corner(target.center)
+        wall_close = target.get_distance_to_wall(corners[i], CornerUtils.get_next(corners[i], corners)) < 6.0
+        if in_corner or wall_close:
+            print("Target is in corner. Moving to drive point closest to target.")
+            drive_point = drive_points.get_closest_drive_point(target.center)
+            drive(stub, robot, drive_point)
+
+            vector_center = Vector(robot.center, drive_point)
+            length = vector_center.length() + VectorUtils.get_length(robot.front, robot.center)
+            vector_front = vector_center.scale_to_length(length)
+            robot.center = robot.center.add_vector(vector_center)
+            robot.front = robot.center.add_vector(vector_front)
+            print("At drive point. Moving to target")
+            drive(stub, robot, target.center, True)
+            return
     else:
-        cv2.waitKey(500)
-        angle = VectorUtils.calculate_angle_clockwise(target, robot_front, robot_center)
-        angle = round(angle, 3)
-        print("Turning " + str(angle))
-        stub.Turn(protobuf_pb2.TurnRequest(degrees=angle))
-        length = round(VectorUtils.get_length(target, robot_front) / pixel_per_cm) * 0.9
-        print("Length: " + str(length))
-        cv2.waitKey(500)
-        stub.Move(protobuf_pb2.MoveRequest(direction=True, distance=int(length), speed=70))
+        drive_points.last = None
+        drive(stub, robot, target.center)
+
+
+
+
+def drive(stub, robot, target, backup=False):
+    angle = VectorUtils.calculate_angle_clockwise(target, robot.front, robot.center)
+
+    print("Turning " + str(angle))
+    turn = stub.Turn(protobuf_pb2.TurnRequest(degrees=numpy.float32(angle)))
+    print("Return value Turn: " + str(turn))
+    length = round((VectorUtils.get_length(target, robot.front) / pixel_per_cm) * 0.9, 3)
+    print("Length: " + str(int(length)))
+    move = stub.Move(protobuf_pb2.MoveRequest(direction=True, distance=int(length), speed=70))
+    print("Return value Move: " + str(move))
+    if backup:
+        print("Backing up "+str(length))
+        backed = stub.Move(protobuf_pb2.MoveRequest(direction=False, distance=int(length), speed=70))
+        print("Return value Backup: " + str(backed))
+
 
 if __name__ == '__main__':
     main()

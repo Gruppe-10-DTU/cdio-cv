@@ -1,5 +1,7 @@
 import math
 
+import numpy as np
+
 from Pythoncode.model.Vector import Vector
 from Pythoncode.model.coordinate import Coordinate
 
@@ -20,8 +22,10 @@ def get_vector_length(vector: Vector) -> float:
 def calculate_angle_clockwise(target: Coordinate, robot_front: Coordinate, center: Coordinate) -> float:
     vector2 = get_vector(center, target)
     vector1 = get_vector(center, robot_front)
+    vector1 = vector1.normalize()
+    vector2 = vector2.normalize()
     dotproduct = (vector1.x * vector2.x + vector1.y * vector2.y)
     other = vector2.y * vector1.x - vector2.x * vector1.y
-    arctan2 = math.atan2(other, dotproduct)
-    return math.degrees(arctan2)
+    arctan2 = math.degrees(math.atan2(other, dotproduct))
+    return round(arctan2, 3)
 

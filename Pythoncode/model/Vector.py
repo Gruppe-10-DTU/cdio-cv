@@ -16,6 +16,9 @@ class Vector:
     def length(self) -> float:
         return math.sqrt(math.pow(self.x, 2) + math.pow(self.y, 2))
 
+    def normalize(self):
+        length = Vector.length(self)
+        return self.__class__(self.x/length, self.y/length)
     def get_clockwise_angle(self, other) -> float:
         dotproduct = self.get_dot_product(other)
         other = other.get_dot_product(self)

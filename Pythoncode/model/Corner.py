@@ -22,7 +22,8 @@ class Corner:
             self.placement = placement
 
     def is_in_corner(self, target: Coordinate):
-        if math.floor(VectorUtils.get_vector(target, self.center).length()) <= 10:
+        leng = math.floor(VectorUtils.get_vector(target, self.center).length())
+        if leng <= 150:
             return True
         return False
 
