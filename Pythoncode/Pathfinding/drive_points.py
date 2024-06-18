@@ -3,8 +3,8 @@ from Pythoncode.model.Corner import Placement
 from Pythoncode.model.Vector import Vector
 from Pythoncode.Pathfinding import CornerUtils
 
-PRECICION = 1 # drive point tolereance
-WALL_DISTANCE = 20 # wall clearance
+PRECICION = 10 # drive point tolereance
+WALL_DISTANCE = 25 # wall clearance
 
 class Drive_points:
     def __init__(self, corners, mapscale):
