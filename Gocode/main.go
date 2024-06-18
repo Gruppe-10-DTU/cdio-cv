@@ -33,10 +33,12 @@ type robotServer struct {
 	pbuf.UnimplementedRobotServer
 }
 
+var vaccuumIsOn bool
+
 func main() {
 
 	//initializeRobotPeripherals()
-
+	vaccuumIsOn = false
 	listen, err := net.Listen("tcp", ":50051")
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
@@ -288,19 +290,24 @@ func (s *robotServer) Turn(_ context.Context, request *pbuf.TurnRequest) (*pbuf.
 }
 
 func (s *robotServer) Vacuum(_ context.Context, request *pbuf.VacuumPower) (*pbuf.Status, error) {
+	if request.Power == vaccuumIsOn {
+		return &pbuf.Status{ErrCode: true}, nil
+	}
 	vacuumMotor, err := ev3dev.TachoMotorFor("ev3-ports:outB", "lego-ev3-m-motor")
 	if err != nil {
 		errMsg := "Error getting vacuum motor"
 		return &pbuf.Status{ErrCode: false, Message: &errMsg}, err
 	}
 	vacuumMotor.Command(RESET)
-	target := int(float32(vacuumMotor.CountPerRot()) * 0.95)
-	vacuumMotor.SetSpeedSetpoint(800)
+	vacuumMotor.SetStopAction(HOLD)
+	target := 25
+	vacuumMotor.SetSpeedSetpoint(vacuumMotor.MaxSpeed())
 	if request.Power {
 		target *= -1
 	}
 	vacuumMotor.SetPositionSetpoint(target)
-	vacuumMotor.Command(ABS_POS)
+	vacuumMotor.Command(REL_POS)
+	vaccuumIsOn = request.Power
 	return &pbuf.Status{ErrCode: true}, err
 }
 
