@@ -167,7 +167,8 @@ class CourtState(object):
             elif results[0].names[item] == "egg":
                 print("Egg")
             elif results[0].names[item] == "orange_ball":
-                vipItem = Vip(x, y, w, h, current_id)
+                x0, y0, x1, y1 = box.xyxy[0]
+                vipItem = Vip(int(x0), int(y0), int(x1), int(y1), current_id)
         """"This is the true center of the robot post adjustment of top-hat."""
         true_c = Coordinate((robot_front.x + robot_body.x) / 2, (robot_front.y + robot_body.y) / 2)
         robot = Robot(true_c, robot_front)
@@ -176,6 +177,8 @@ class CourtState(object):
         cls.items[CourtProperty.VIP] = vipItem
         if robot is not None:
             cls.items[CourtProperty.ROBOT] = robot
+        if len(balls) == 0 and vipItem is not None:
+            balls.append(vipItem)
         cls.items[CourtProperty.BALLS] = balls
         cls.items[CourtProperty.OBSTACLE] = obstacle
 
