@@ -204,7 +204,12 @@ func (s *robotServer) Turn(_ context.Context, request *pbuf.TurnRequest) (*pbuf.
 	peripherherals.ResetGyros()
 
 	direction := 0.0
-	speed := 85.0
+	speed := 0.0
+	if request.Speed != nil {
+		speed = float64(*request.Speed)
+	} else {
+		speed = 80.0
+	}
 	var forwardMotor *ev3dev.TachoMotor
 	var backwardMotor *ev3dev.TachoMotor
 	if request.Degrees < 0 {
@@ -226,7 +231,7 @@ func (s *robotServer) Turn(_ context.Context, request *pbuf.TurnRequest) (*pbuf.
 	forwardMotor.Command(DIR)
 	backwardMotor.Command(DIR)
 	overshot := false
-	oscillationCount := 5
+	oscillationCount := 3
 	for math.Abs(degrees-pos) > 1.0 || oscillationCount > 0 {
 		if degrees < pos {
 			overshot = true
@@ -243,9 +248,13 @@ func (s *robotServer) Turn(_ context.Context, request *pbuf.TurnRequest) (*pbuf.
 		if overshot {
 			power *= -1
 		}
-		forwardMotor.SetDutyCycleSetpoint(power)
-		backwardMotor.SetDutyCycleSetpoint(-power)
-		time.Sleep(20 * time.Millisecond)
+		if oscillationCount >= 2 {
+			forwardMotor.SetDutyCycleSetpoint(power)
+			backwardMotor.SetDutyCycleSetpoint(-power)
+		} else {
+			forwardMotor.SetDutyCycleSetpoint(power)
+		}
+		time.Sleep(10 * time.Millisecond)
 		if !peripherherals.BothMotorsRunning() {
 			rightState, _ := rightMotor.State()
 			leftState, _ := leftMotor.State()
