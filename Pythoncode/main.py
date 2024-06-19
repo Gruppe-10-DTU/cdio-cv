@@ -30,7 +30,7 @@ def main():
     """goals = calculate_goals(corners)"""
     balls = CourtState.getProperty(CourtProperty.BALLS)
     drive_points = Drive_points(corners, pixel_per_cm)
-    pathfinding = Pathfinding(balls, robot.center, CourtState.getProperty(CourtProperty.OBSTACLE))
+    pathfinding = Pathfinding(balls, robot.center, CourtState.getProperty(CourtProperty.OBSTACLE), pixel_per_cm)
     commandHandler(pathfinding, drive_points)
 
 
