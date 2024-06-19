@@ -37,6 +37,7 @@ message TurnRequest {
   //Degrees determine how many degrees the robot should turn (either left or right, depending on which is fastest) relative to its current
   //facing position.
   float degrees = 1;
+  optional int32 speed = 2;
 }
 
 /*
