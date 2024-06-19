@@ -58,15 +58,16 @@ def get_cm_per_pixel(corners, balls, config):
                 corner_cm = VectorUtils.get_length(corners[0].center, corners[1].center) / math.sqrt(
                     math.pow(height, 2) + math.pow(width, 2))
     b_t = 0
-    for ball in balls:
-        b_w = ball.x2 - ball.x1
-        b_h = ball.y2 - ball.y1
-        b_cm = (b_w + b_h)/2
-        b_t += b_cm
-    b_avg = (b_t/len(balls))/4
-
+    if len(balls) != 0:
+        for ball in balls:
+            b_w = ball.x2 - ball.x1
+            b_h = ball.y2 - ball.y1
+            b_cm = (b_w + b_h)/2
+            b_t += b_cm
+        b_avg = (b_t/len(balls))/4
+        print("pixel to cm according to ball placement: " + str(b_avg))
     print("pixel to cm according to corner placement: " + str(corner_cm))
-    print("pixel to cm according to ball placement: " + str(b_avg))
+
 
     """Default value"""
     return corner_cm

@@ -94,7 +94,6 @@ class CourtState(object):
         frame = cls.frame
         results = model.predict(frame, conf=0.5)
         frame = results[0].plot()
-        cv2.imshow("YOLO", frame)
         if cv2.waitKey(3000) & 0xFF == ord('q'):
             return
         img = cls.analyse_results(results, frame)
@@ -105,9 +104,11 @@ class CourtState(object):
 
         #if target is not None:
         #    img = cv2.arrowedLine(img, (rbf.x, rbf.y), (target.center.x, target.center.y),
-                                  #color=(255, 192, 203), thickness=-1)
+        #color=(255, 192, 203), thickness=-1)
         #img = cv2.circle(img, (int(rbc[0][0][0]), int(rbc[0][0][1])), radius=5, color=(0, 255, 0), thickness=-1)
         #img = cv2.circle(img, (int(rbf[0][0][0]), int(rbf[0][0][1])), radius=5, color=(0, 0, 255), thickness=-1)
+        cv2.imshow("YOLO", img)
+
 
     @classmethod
     def analyse_results(cls, results, frame):
@@ -132,7 +133,7 @@ class CourtState(object):
             item = box.cls.item()
 
             uc = cv2.undistortImagePoints(numpy.array([[x, y]], dtype=numpy.float32), cls.mtx,
-                                           cls.dist)
+                                          cls.dist)
             color = (0, 255, 255)
             if results[0].names[item] == "ball":
                 color = (255, 255, 0)
