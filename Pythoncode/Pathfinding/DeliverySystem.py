@@ -1,96 +1,78 @@
-import configparser
-
-import cv2
-import grpc
-import pathfinding
-from pandas.conftest import ip
-
-from Pythoncode.main import drive_function, pixel_per_cm
+from Pythoncode.main import pixel_per_cm
 from Pythoncode.model.coordinate import Coordinate
-from Pythoncode.Pathfinding import VectorUtils, CornerUtils
-from Pythoncode.Pathfinding.Pathfinding import Pathfinding
-from time import sleep
-from Pythoncode.grpc.protobuf_pb2_grpc import Robot
-from Pythoncode.model.Ball import Ball
-from Pythoncode.model.Corner import Corner
+from Pythoncode.Pathfinding import VectorUtils, Collision
 from Pythoncode.model.CourtState import CourtState, CourtProperty
-from Pythoncode.grpc.gRPC_Class import gRPC_Class
-from Pythoncode.model.Ball import Ball
-from Pythoncode.model.Robot import Robot
-from Pythoncode.model.Vip import Vip
-from Pythoncode.model.CourtState import CourtState, CourtProperty
-from Pythoncode.grpc import protobuf_pb2_grpc, protobuf_pb2
-from Pythoncode.Pathfinding.CornerUtils import set_placements, calculate_goals
-from Pythoncode.main import drive_function
-from Pythoncode.main import commandHandler
-from Pythoncode.grpc.protobuf_pb2_grpc import Robot
-from Pythoncode.Pathfinding.VectorUtils import calculate_path
-
-config = configparser.ConfigParser()
-config.read('../config.ini')
-ip = config.get("ROBOT", "ip")
-with grpc.insecure_channel(ip) as channel:
-    stub = protobuf_pb2_grpc.RobotStub(channel)
-    stub.StopMovement(protobuf_pb2.Empty())
-    stub.Vacuum(protobuf_pb2.VacuumPower(power=True))
-    stub.Move(protobuf_pb2.MoveRequest(direction=True, distance=30, speed=60))
-    stub.Move(protobuf_pb2.MoveRequest(direction=False, distance=30, speed=60))
-    stub.Vacuum(protobuf_pb2.VacuumPower(power=False))
+from Pythoncode.model import Vector
+from Pythoncode.grpc import protobuf_pb2
 
 
-# 	1.	Navigate to the Delivery Point: Use pathfinding and vector utilities to move the robot to the delivery point.
-##  We need to determine the path from the current position to the delivery point. This involves a simple straight line
-##  if there are no obstacles and a more complex path when there are obstacles.
 
-# 	2.	Align the Mouthpiece: Adjust the robot’s orientation to align the mouthpiece with the delivery point’s opening.
-# 	3.	Turn off the Motor: Stop the motor to release the balls once aligned.
 
-#   1.	Path Calculation: Determine the path from the robot’s current position to the delivery point.
-# 	2.	Movement Execution: Move the robot along the calculated path.
-# 	3.	Alignment: Adjust the robot’s orientation to align with the delivery point.
-# 	4.	Delivery: Perform the action to deliver the balls
+def deliver_balls_to_goal(rpc, robot, drive_points, drive, big_goal=True):
+    obstacle = CourtState.getProperty(CourtProperty.OBSTACLE)
+    target_drive_point_index = 3 if big_goal else 7
+    target_drive_point = drive_points.get_drive_points()[target_drive_point_index]
+    # Drive to the target drive point
+    while Collision.line_hits_rectangle(obstacle, robot.center, target_drive_point):
+        route_point = drive_points.get_closest_drive_point(robot.center)
+        # Move using the supplied drive function (it the one from main)
+        drive(rpc, robot, route_point)
 
-def deliver_balls_to_goal(robot: RobotStub, delivery_point: Coordinate, motor_control):
-    current_position = robot.get_current_position()  # Assuming this method exists
-    path = calculate_path(current_position, delivery_point)
+        # Not sure if this is needed
+        CourtState.updateObjects(drive_points.drive_points, route_point)
+    
 
-    for driving_point in path:
-        drive_function(robot, driving_point)
-
-    alignment_successful = align_robot_with_delivery_point(robot, delivery_point)
+    delivery_point = calculate_delivery_point(robot, target_drive_point, drive_points, big_goal)
+    alignment_point = calculate_alignment_point(target_drive_point, delivery_point)
+    alignment_successful = align_robot_with_delivery_point(robot, alignment_point, delivery_point, rpc)
     if alignment_successful:
         # 3: Turn off the motor to release balls (done)
-
-
-        stub.Vacuum(False)
+        rpc.Vacuum(protobuf_pb2.VacuumPower(power=False))
         print("Balls delivered successfully!")
     else:
-        # Failed to align. Print error msg
+        # Failed to align. need to implement realignment
         print("Alignment failed. Cannot deliver balls.")
 
 
-def align_robot_with_delivery_point(robot: RobotStub, delivery_point: Coordinate) -> bool:
+def align_robot_with_delivery_point(robot, drive_point: Coordinate, delivery_point: Coordinate, rpc) -> bool:
+    while VectorUtils.get_length(robot.center, drive_point) > 1 * pixel_per_cm:
+        angle = VectorUtils.calculate_angle_clockwise(drive_point, robot.front, robot.center)
+        move_direction = True
+        # turn opposite and reverese if it is shorter
+        if angle > 90:
+            angle = angle - 180
+            move_direction = False
+        elif angle < -90:
+            angle = angle + 180
+            move_direction = False
+        # Slowly turn the robot and move it to the drive point
+        rpc.Turn(protobuf_pb2.TurnRequest(angle=angle, speed=25))
+        offset = VectorUtils.get_length(robot.center, delivery_point)
+        rpc.Move(protobuf_pb2.MoveRequest(direction=move_direction, distance=int(offset),speed=25))
+    # point the robot to the delivery point
+    angle = VectorUtils.calculate_angle_clockwise(delivery_point, robot.front, robot.center)
+    if angle > 3:
+        rpc.Turn(protobuf_pb2.TurnRequest(angle=angle, speed=25))
+    # Move the robot to the delivery point
+    delivery_distance = VectorUtils.get_length(robot.front, delivery_point) - 3 * pixel_per_cm
+    rpc.Move(protobuf_pb2.MoveRequest(direction=True, distance=int(delivery_distance), speed=25))
+    offset = VectorUtils.get_length(robot.front, delivery_point)
+    return offset < 4.0
 
-    current_position = robot.get_current_position()  # if this method doesn't exist, it needs to be created
-    robot_front = robot.get_front_position()  # if this method doesn't exist, it needs to be created
-    angle = calculate_angle_clockwise(delivery_point, robot_front, current_position)
-
-    if angle != 0:
-        robot.Turn(protobuf_pb2.TurnRequest(degrees=angle))
-        sleep(1)  # Wait for the robot to complete the turn
-
-    # Assuming the robot has a method to check its current angle
-    # and we compare it with the expected angle to determine if alignment is correct.
-    current_angle = robot.get_current_angle()  # Assuming this method exists
-    expected_angle = calculate_angle_clockwise(delivery_point, robot.get_front_position(), robot.get_current_position())
-
-    return abs(current_angle - expected_angle) < tolerance  # tolerance is a small value like 1 degree
 
 
-def drive_function(robot: RobotStub, target: Coordinate):
-    current_position = robot.get_current_position()  # # if this method doesn't exist, it needs to be created
-    distance = get_length(current_position, target)
-    robot.Move(protobuf_pb2.MoveRequest(direction=True, distance=int(distance), speed=70))
-    sleep(1)  # Wait for the robot to complete the move
+def calculate_delivery_point(robot, alignment_point, drive_points, big_goal):
+    helper_index = 2 if big_goal else 6
+    # Requires checking that the orthogonal is returned in the right direction
+    # otherwise just invert it
+    helper_vector = Vector(alignment_point, drive_points.get_drivepoints()[helper_index]).orthogonal().scale_to_length(25 * pixel_per_cm)
+    goal_point = alignment_point.add_vector(helper_vector)
+    drive_vector = Vector(robot.center, goal_point)
+    delivery_point = robot.center.add(drive_vector)
+    return delivery_point
 
-
+# Simply moved the point the robot lines up at a bit closer to the wall
+# to reduce driving distance
+def calculate_alignment_point(drive_point, delivery_point):
+    alignment_vector = Vector(drive_point, delivery_point).scale_to_length(5 * pixel_per_cm)
+    return drive_point.add_vector(alignment_vector)
