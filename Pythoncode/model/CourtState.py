@@ -1,4 +1,5 @@
 import cv2
+import numpy
 from ultralytics import YOLO
 import threading
 from enum import Enum
@@ -36,20 +37,30 @@ class CourtState(object):
     items = {CourtProperty.BALLS: list, CourtProperty.ROBOT: Robot, CourtProperty.VIP: Vip,
              CourtProperty.CORNERS: list, CourtProperty.OBSTACLE: Coordinate}
 
+    dist = None
+    mtx = None
+
     @classmethod
     def initialize(cls):
+        cls.mtx = numpy.loadtxt(
+            'C:/Users/asbpo/Desktop/DTU/Softwareteknologi/4.Semester/62410_CDIO-project/RobotProject/cdio-cv/Pythoncode/calibration/mtx.txt')
+        cls.dist = numpy.loadtxt(
+            'C:/Users/asbpo/Desktop/DTU/Softwareteknologi/4.Semester/62410_CDIO-project/RobotProject/cdio-cv/Pythoncode/calibration/dist.txt')
+
         model = YOLO("../model/best.pt")
         cls.model = model
-        cls.projections = Projection(Coordinate(1423.5, 905.5), 156.7)
+        cls.projections = Projection(Coordinate(1389.0, 830.5), 162.5)
         sleep(5.0)
         frame = None
         current_id = 0
         while frame is None:
-            frame = cls.getFrame()
+            cls.cap.grab()
+            _,frame = cls.cap.retrieve()
+
 
         results = model.predict(frame, conf=0.5)
         corners = {}
-        boxes = results[0].boxes.cpu()
+        boxes = results[0].boxes
 
         for box in boxes:
 
@@ -72,23 +83,32 @@ class CourtState(object):
         cv2.imshow("YOLO", results[0].plot())
 
     @classmethod
-    def updateObjects(cls,drive_points):
+    def updateObjects(cls,drive_points,target):
         model = cls.model
         frame = None
-        while frame is None:
-            frame = cls.getFrame()
-        results = model.predict(frame, conf=0.8)
-        img = cls.analyse_results(results, frame)
+        robot = cls.getProperty(CourtProperty.ROBOT)
 
+        while cls.frame is None:
+            sleep(0.05)
+
+        frame = cls.frame
+        results = model.predict(frame, conf=0.5)
+        frame = results[0].plot()
+        if cv2.waitKey(3000) & 0xFF == ord('q'):
+            return
+        img = cls.analyse_results(results, frame)
         for drive_point in drive_points:
             img = cv2.circle(img,(int(drive_point.x), int(drive_point.y)),radius=5,color=(255,0,0),thickness=-1)
-        robot = cls.getProperty(CourtProperty.ROBOT)
-        img = cv2.circle(img, (int(robot.center.x), int(robot.center.y)), radius=5, color=(0, 255, 0), thickness=-1)
-        img = cv2.circle(img, (int(robot.front.x), int(robot.front.y)), radius=5, color=(0, 0, 255), thickness=-1)
+        #rbf = cv2.undistortImagePoints(numpy.array([[robot.front.x,robot.front.y]], dtype=numpy.float32), cls.mtx, cls.dist)
+        #rbc = cv2.undistortImagePoints(numpy.array([[robot.center.x,robot.center.y]], dtype=numpy.float32), cls.mtx, cls.dist)
 
+        #if target is not None:
+        #    img = cv2.arrowedLine(img, (rbf.x, rbf.y), (target.center.x, target.center.y),
+        #color=(255, 192, 203), thickness=-1)
+        #img = cv2.circle(img, (int(rbc[0][0][0]), int(rbc[0][0][1])), radius=5, color=(0, 255, 0), thickness=-1)
+        #img = cv2.circle(img, (int(rbf[0][0][0]), int(rbf[0][0][1])), radius=5, color=(0, 0, 255), thickness=-1)
+        cv2.imshow("YOLO", img)
 
-        cv2.imshow("YOLO",img)
-        cv2.waitKey()
 
     @classmethod
     def analyse_results(cls, results, frame):
@@ -102,27 +122,43 @@ class CourtState(object):
         robot_front = None
         obstacle = None
         for box in boxes:
-            x, y, w, h = box.xyxy[0]
+            x, y, w, h = box.xywh[0]
             x = int(x)
             y = int(y)
             w = int(w)
             h = int(h)
+
             current_id = 0
+
             item = box.cls.item()
-            frame = cv2.circle(frame, (x, y), radius=2, color=(255,255,255), thickness=1)
+
+            uc = cv2.undistortImagePoints(numpy.array([[x, y]], dtype=numpy.float32), cls.mtx,
+                                          cls.dist)
+            color = (0, 255, 255)
+            if results[0].names[item] == "ball":
+                color = (255, 255, 0)
+            elif results[0].names[item] == "corner":
+                color = (100, 190, 255)
+            elif results[0].names[item] == "r_body":
+                color = (0, 255, 0)
+            elif results[0].names[item] == "r_front":
+                color = (0, 0, 255)
+            frame = cv2.circle(frame, (int(uc[0][0][0]), int(uc[0][0][1])), radius=5, color=color, thickness=-1)
 
             if results[0].names[item] == "ball":
-                balls.append(Ball(int(x), int(y), int(x) + int(w), int(y) + int(h), current_id))
+                x0, y0, x1, y1 = box.xyxy[0]
+                balls.append(Ball(int(x0), int(y0), int(x1), int(y1), current_id))
             elif results[0].names[item] == "r_front":
-                #robot_front = Coordinate(x,y)
-                robot_front = Coordinate(x + (w-x) / 2, y + (h-y)/2)
-                robot_front = projection.projection_from_coordinate(target=robot_front, height=9.8)
+                robot_front = Coordinate(x,y)
+                #robot_front = Coordinate(x + (w-x) / 2, y + (h-y)/2)
+                #robot_front = projection.projection_from_coordinate(target=robot_front, height=9.8)
             elif results[0].names[item] == "r_body":
-                robot_body = Coordinate(x + (w-x) / 2, y + (h-y)/2)
-                #robot_body = Coordinate(x,y)
-                robot_body = projection.projection_from_coordinate(target=robot_body, height=22.5)
+                #robot_body = Coordinate(x + (w-x) / 2, y + (h-y)/2)
+                robot_body = Coordinate(x,y)
+                #robot_body = projection.projection_from_coordinate(target=robot_body, height=22.5)
             elif results[0].names[item] == "corner":
-                corner = Corner(x, y, w, h, current_id)
+                x0, y0, x1, y1 = box.xyxy[0]
+                corner = Corner(int(x0), int(y0), int(x1), int(y1), current_id)
                 #corner.center = projection.projection_from_coordinate(corner.center, 7.2)
                 corners.append(corner)
             elif results[0].names[item] == "obstacle":
@@ -131,13 +167,18 @@ class CourtState(object):
             elif results[0].names[item] == "egg":
                 print("Egg")
             elif results[0].names[item] == "orange_ball":
-                vipItem = Vip(x, y, w, h, current_id)
+                x0, y0, x1, y1 = box.xyxy[0]
+                vipItem = Vip(int(x0), int(y0), int(x1), int(y1), current_id)
+        """"This is the true center of the robot post adjustment of top-hat."""
+        true_c = Coordinate((robot_front.x + robot_body.x) / 2, (robot_front.y + robot_body.y) / 2)
+        robot = Robot(true_c, robot_front)
 
-        robot = Robot(robot_body, robot_front)
 
         cls.items[CourtProperty.VIP] = vipItem
         if robot is not None:
             cls.items[CourtProperty.ROBOT] = robot
+        if len(balls) == 0 and vipItem is not None:
+            balls.append(vipItem)
         cls.items[CourtProperty.BALLS] = balls
         cls.items[CourtProperty.OBSTACLE] = obstacle
 
@@ -147,12 +188,13 @@ class CourtState(object):
     def setupCam(cls):
         # cap = cv2.VideoCapture('videos/with_egg.mp4')
         cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
-        cap.set(cv2.CAP_PROP_BUFFERSIZE,1)
-        width = 1920
-        height = 1080
+        cap.set(cv2.CAP_PROP_BUFFERSIZE, 3)
+        width = 1280
+        height = 720
         cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
         cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
         cap.set(cv2.CAP_PROP_AUTOFOCUS, 0)  # turn the autofocus off
+        cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*"MJPG"))
         cls.cap = cap
 
         thread = threading.Thread(target=cls.frameThread)
@@ -166,12 +208,18 @@ class CourtState(object):
 
     @classmethod
     def frameThread(cls):
-        while True:
+        ret = True
+        while ret:
             with cls.lock:
                 ret = cls.cap.grab()
+                _,cls.frame = cls.cap.retrieve()
+        print("ret: " + str(ret))
+
+
 
     @classmethod
     def getFrame(cls):
-        with cls.lock:
-            _, frame = cls.cap.retrieve()
+        #with cls.lock:
+        ret = cls.cap.grab()
+        _, frame = cls.cap.retrieve()
         return frame

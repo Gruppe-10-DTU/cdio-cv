@@ -16,7 +16,7 @@ class Pathfinding:
         closest_distance = math.inf
         m = None
         for target in self.targets:
-            distance = math.sqrt(math.pow(target.center.x - point.x, 2) + math.pow(target.center.y - point.y, 2))
+            distance = VectorUtils.get_length(target.center, point)
             clips = line_hits_rectangle(self.obstacle, point, target.center)
             if not clips and closest_distance > distance:
                 closest_distance = distance

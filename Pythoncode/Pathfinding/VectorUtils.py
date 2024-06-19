@@ -6,7 +6,7 @@ from Pythoncode.model.coordinate import Coordinate
 
 
 def get_length(point1: Coordinate, point2: Coordinate) -> float:
-    return math.sqrt(math.pow(point1.x - point2.x, 2) + math.pow(point1.y - point2.y, 2))
+    return math.sqrt(math.pow(point2.x - point1.x, 2) + math.pow(point2.y - point1.y, 2))
 
 
 def get_vector(coordinate1: Coordinate, coordinate2: Coordinate) -> Vector:
