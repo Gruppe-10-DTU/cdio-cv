@@ -3,6 +3,7 @@ from Pythoncode.model import Ball
 from Pythoncode.Pathfinding.CornerUtils import *
 from Pythoncode.model import Ball
 from Pythoncode.model.Corner import *
+from Pythoncode.model.Egg import Egg
 from Pythoncode.model.Rectangle import Rectangle
 
 
@@ -18,6 +19,7 @@ class Pathfinding:
         for target in self.targets:
             distance = VectorUtils.get_length(target.center, point)
             clips = line_hits_rectangle(self.obstacle, point, target.center)
+
             if not clips and closest_distance > distance:
                 closest_distance = distance
                 m = target
