@@ -39,25 +39,39 @@ def get_next(corner, corners) -> Corner | None:
     return None
 
 
-def get_cm_per_pixel(corners, config):
+def get_cm_per_pixel(corners, balls, config):
     height = float(config.get('MAP', 'height'))
     width = float(config.get('MAP', 'width'))
+    corner_cm = None
     match len(corners):
         case 4:
-            return VectorUtils.get_length(corners[0].center, corners[1].center) / height
+            corner_cm = (VectorUtils.get_length(corners[0].center, corners[1].center) / height +
+                         VectorUtils.get_length(corners[0].center, corners[2].center) / width)/ 2
         case 3, 2:
 
             if corners[0].placement % 2 == corners[1].placement % 2:
-                return VectorUtils.get_length(corners[0].center, corners[1].center) / width
+                corner_cm = VectorUtils.get_length(corners[0].center, corners[1].center) / width
             elif corners[0].placement % 2 == 1 and corners[1].placement % 2 == 0:
-                return VectorUtils.get_length(corners[0].center, corners[1].center) / width
+                corner_cm = VectorUtils.get_length(corners[0].center, corners[1].center) / width
             else:
                 """Udregner ud fra diagonalen"""
-                return VectorUtils.get_length(corners[0].center, corners[1].center) / math.sqrt(
+                corner_cm = VectorUtils.get_length(corners[0].center, corners[1].center) / math.sqrt(
                     math.pow(height, 2) + math.pow(width, 2))
+    b_t = 0
+    if len(balls) != 0:
+        for ball in balls:
+            b_w = ball.x2 - ball.x1
+            b_h = ball.y2 - ball.y1
+            b_cm = (b_w + b_h)/2
+            b_t += b_cm
+        b_avg = (b_t/len(balls))/4
+        print("pixel to cm according to ball placement: " + str(b_avg))
+        #return b_avg
+    print("pixel to cm according to corner placement: " + str(corner_cm))
+
 
     """Default value"""
-    return 2.0
+    return corner_cm
 
 
 def calculate_goals(corners) -> list:

@@ -3,8 +3,8 @@ from Pythoncode.model.Corner import Placement
 from Pythoncode.model.Vector import Vector
 from Pythoncode.Pathfinding import CornerUtils
 
-PRECICION = 1 # drive point tolereance
-WALL_DISTANCE = 20 # wall clearance
+PRECICION = 20 # drive point tolereance
+WALL_DISTANCE = 25 # wall clearance
 
 class Drive_points:
     def __init__(self, corners, mapscale):
@@ -25,24 +25,32 @@ class Drive_points:
             match corner.placement:
                 case Placement.TOP_LEFT:
                     top_left = self.__calculate_corner_drive_point(corner, top_wall, left_wall)
-                    drive_points.append(top_left)
+                    #drive_points.append(top_left)
                     top_center = self.__calculate_center_drive_point(top_left, top_wall)
-                    drive_points.append(top_center)
+                    #drive_points.append(top_center)
                 case Placement.TOP_RIGHT:
                     top_right = self.__calculate_corner_drive_point(corner, top_wall.invert(), right_wall)
-                    drive_points.append(top_right)
+                    #drive_points.append(top_right)
                     right_center = self.__calculate_center_drive_point(top_right, right_wall)
-                    drive_points.append(right_center)
+                    #drive_points.append(right_center)
                 case Placement.BOTTOM_LEFT:
                     bottom_left = self.__calculate_corner_drive_point(corner, left_wall.invert(), bottom_wall)
-                    drive_points.append(bottom_left)
+                    #drive_points.append(bottom_left)
                     left_center = self.__calculate_center_drive_point(bottom_left, left_wall.invert())
-                    drive_points.append(left_center)
+                    #drive_points.append(left_center)
                 case Placement.BOTTOM_RIGHT:
                     bottom_right = self.__calculate_corner_drive_point(corner, right_wall.invert(), bottom_wall.invert())
-                    drive_points.append(bottom_right)
+                    #drive_points.append(bottom_right)
                     bottom_center = self.__calculate_center_drive_point(bottom_right, bottom_wall.invert())
-                    drive_points.append(bottom_center)
+                    #drive_points.append(bottom_center)
+        drive_points.append(top_left)
+        drive_points.append(top_center)
+        drive_points.append(top_right)
+        drive_points.append(right_center)
+        drive_points.append(bottom_right)
+        drive_points.append(bottom_center)
+        drive_points.append(bottom_left)
+        drive_points.append(left_center)
         return drive_points
 
         
@@ -53,21 +61,30 @@ class Drive_points:
         closest = None
         current = None
         distance = float('inf')
-        for drive_point in self.drive_points:
-            if drive_point == self.last:
+        for i in range(len(self.drive_points)):
+            if self.drive_points[i] == self.last:
                 continue
-            tmp_distance = Vector(point,drive_point).length()
+            tmp_distance = Vector(point,self.drive_points[i]).length()
             if tmp_distance < PRECICION * self.scale:
-                current = drive_point
+                self.last = self.drive_points[i]
+                #current = self.drive_points[i]
+                return self.drive_points[(i+1)%8]
             if tmp_distance > PRECICION * self.scale and tmp_distance < distance:
                 distance = tmp_distance
-                closest = drive_point
+                closest = self.drive_points[i]
         self.last = current
         return closest
 
     def get_closest_drive_point_vector(self, point) -> Vector:
         end = self.get_closest_drive_point(point)
         return Vector(end.x - point.x, end.y - point.y)
+
+    def is_on_drive_point(self,point: Coordinate) -> bool:
+        for i in range(len(self.drive_points)):
+            tmp_distance = Vector(point,self.drive_points[i]).length()
+            if tmp_distance < PRECICION * self.scale:
+                return True
+        return False
 
     def __calculate_corner_drive_point(self, corner, wall1, wall2) -> Coordinate:
         vec1 = wall1.scale(WALL_DISTANCE * self.scale / wall1.length())
