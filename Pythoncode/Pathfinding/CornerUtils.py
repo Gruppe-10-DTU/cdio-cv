@@ -66,6 +66,7 @@ def get_cm_per_pixel(corners, balls, config):
             b_t += b_cm
         b_avg = (b_t/len(balls))/4
         print("pixel to cm according to ball placement: " + str(b_avg))
+        #return b_avg
     print("pixel to cm according to corner placement: " + str(corner_cm))
 
 

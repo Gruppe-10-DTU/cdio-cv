@@ -79,6 +79,13 @@ class Drive_points:
         end = self.get_closest_drive_point(point)
         return Vector(end.x - point.x, end.y - point.y)
 
+    def is_on_drive_point(self,point: Coordinate) -> bool:
+        for i in range(len(self.drive_points)):
+            tmp_distance = Vector(point,self.drive_points[i]).length()
+            if tmp_distance < PRECICION * self.scale:
+                return True
+        return False
+
     def __calculate_corner_drive_point(self, corner, wall1, wall2) -> Coordinate:
         vec1 = wall1.scale(WALL_DISTANCE * self.scale / wall1.length())
         vec2 = wall2.scale( WALL_DISTANCE * self.scale / wall2.length())

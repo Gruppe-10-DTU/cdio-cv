@@ -43,6 +43,7 @@ def commandHandler(pathfinding, drive_points):
     with grpc.insecure_channel(ip) as channel:
         stub = protobuf_pb2_grpc.RobotStub(channel)
         stub.Vacuum(protobuf_pb2.VacuumPower(power=True))
+        stub.Vacuum(protobuf_pb2.VacuumPower(power=True))
         robot = CourtState.getProperty(CourtProperty.ROBOT)
         while len(pathfinding.targets) > 0 or True:
             target = pathfinding.get_closest(robot.center)
@@ -79,19 +80,15 @@ def drive_function(stub, target: Ball, drive_points):
 
     for i in range(len(corners)):
         in_corner = corners[i].is_in_corner(target.center)
-        wall_close = target.get_distance_to_wall(corners[i], CornerUtils.get_next(corners[i], corners)) < 6.0
+        wall_close = target.get_distance_to_wall(corners[i], CornerUtils.get_next(corners[i], corners)) < 50.0
         if in_corner or wall_close:
             print("Target is in corner. Moving to drive point closest to target.")
             drive_point = drive_points.get_closest_drive_point(target.center)
+            if drive_points.is_on_drive_point(robot.center):
+                print("At drive point. Moving to target")
+                drive(stub, robot, target.center, True)
+                return
             drive(stub, robot, drive_point)
-
-            vector_center = Vector(robot.center, drive_point)
-            length = vector_center.length() + VectorUtils.get_length(robot.front, robot.center)
-            vector_front = vector_center.scale_to_length(length)
-            robot.center = robot.center.add_vector(vector_center)
-            robot.front = robot.center.add_vector(vector_front)
-            print("At drive point. Moving to target")
-            drive(stub, robot, target.center, True)
             return
     else:
         drive_points.last = None
@@ -106,11 +103,12 @@ def drive(stub, robot, target, backup=False):
     print("Turning " + str(angle))
     turn = stub.Turn(protobuf_pb2.TurnRequest(degrees=numpy.float32(angle)))
     print("Return value Turn: " + str(turn))
-    length = round(((VectorUtils.get_length(target, robot.front) / pixel_per_cm)*0.9), 3)
+    length = round((((((VectorUtils.get_length(target, robot.center))-(Vector(robot.front, robot.center).length())) / pixel_per_cm)+1)*0.95), 3)
     print("Length: " + str(int(length)))
     move = stub.Move(protobuf_pb2.MoveRequest(direction=True, distance=int(length), speed=70))
     print("Return value Move: " + str(move))
     if backup:
+        sleep(2)
         print("Backing up "+str(length))
         backed = stub.Move(protobuf_pb2.MoveRequest(direction=False, distance=int(length), speed=70))
         print("Return value Backup: " + str(backed))
