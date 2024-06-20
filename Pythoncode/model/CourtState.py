@@ -180,7 +180,7 @@ class CourtState(object):
         if obstacle is not None and egg is not None:
             egg.calculate_buffers(obstacle)
 
-            uc = cv2.undistortImagePoints(numpy.array([[egg.buffer_c1.x, egg.buffer_c1.y]], dtype=numpy.float32), cls.mtx,
+            uc = cv2.undistortImagePoints(numpy.array([[egg.buffer_center.x, egg.buffer_center.y]], dtype=numpy.float32), cls.mtx,
                                           cls.dist)
             color = (0, 255, 255)
 

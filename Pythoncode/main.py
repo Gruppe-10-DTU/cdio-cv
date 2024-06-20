@@ -78,7 +78,7 @@ def drive_function(stub, target: Ball, drive_points):
     wall_close = False
     corners = CourtState.getProperty(CourtProperty.CORNERS)
     egg = CourtState.getProperty(CourtProperty.EGG)
-    egg_close = egg.ball_inside_buffer(target)
+    egg_close = egg.ball_inside_buffer(target.center)
     print("Testing close to egg. Result = " + str(egg_close))
 
     for i in range(len(corners)):
