@@ -253,9 +253,10 @@ func (s *robotServer) Turn(_ context.Context, request *pbuf.TurnRequest) (*pbuf.
 			backwardMotor.SetDutyCycleSetpoint(-power)
 		} else {
 			forwardMotor.SetDutyCycleSetpoint(power)
+			backwardMotor.Command(STOP)
 		}
 		time.Sleep(10 * time.Millisecond)
-		if !peripherherals.BothMotorsRunning() {
+		if !peripherherals.BothMotorsRunning() && oscillationCount >= 2 {
 			rightState, _ := rightMotor.State()
 			leftState, _ := leftMotor.State()
 			errMsg := "Turn failed: Both motors aren't running" +
