@@ -1,3 +1,4 @@
+import copy
 import math
 
 
@@ -31,7 +32,7 @@ def calculate_angle_clockwise(target: Coordinate, robot_front: Coordinate, cente
 
 def calculate_parallel_vector_coordinates(start: Coordinate, vec: Vector, distance: float,
                                           counter_clockwise_rotation: bool) -> (Coordinate, Coordinate):
-    vector = vec
+    vector = copy.deepcopy(vec)
     if not counter_clockwise_rotation:
         vector = vector.invert()
 

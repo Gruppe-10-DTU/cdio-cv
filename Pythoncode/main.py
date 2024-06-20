@@ -7,6 +7,7 @@ import numpy
 
 import Pythoncode.model
 from Pythoncode.Pathfinding import VectorUtils
+from Pythoncode.Pathfinding.Collision import in_obstacle, collection_obstacle
 from Pythoncode.Pathfinding.Pathfinding import Pathfinding
 from Pythoncode.Pathfinding.drive_points import *
 from Pythoncode.grpc import protobuf_pb2_grpc, protobuf_pb2
@@ -30,7 +31,7 @@ def main():
     """goals = calculate_goals(corners)"""
     balls = CourtState.getProperty(CourtProperty.BALLS)
     drive_points = Drive_points(corners, pixel_per_cm)
-    pathfinding = Pathfinding(balls, robot.center, CourtState.getProperty(CourtProperty.OBSTACLE), pixel_per_cm)
+    pathfinding = Pathfinding(balls, robot.center, CourtState.getProperty(CourtProperty.OBSTACLE), pixel_per_cm, drive_points)
     commandHandler(pathfinding, drive_points)
 
 
@@ -44,16 +45,14 @@ def commandHandler(pathfinding, drive_points):
         stub = protobuf_pb2_grpc.RobotStub(channel)
         stub.Vacuum(protobuf_pb2.VacuumPower(power=True))
         stub.Vacuum(protobuf_pb2.VacuumPower(power=True))
-        robot = CourtState.getProperty(CourtProperty.ROBOT)
         while len(pathfinding.targets) > 0 or True:
+            robot = CourtState.getProperty(CourtProperty.ROBOT)
             target = pathfinding.get_closest(robot.center)
-
             drive_function(stub, target, drive_points)
-            #sleep(1.5)
             success = True
             while success:
                 try:
-                    CourtState.updateObjects(drive_points.drive_points,target)
+                    CourtState.updateObjects(drive_points.drive_points, target)
                     success = False
                 except Exception as e:
                     print("Robot not found")
@@ -68,7 +67,6 @@ def commandHandler(pathfinding, drive_points):
 
 def drive_function(stub, target: Ball, drive_points):
     robot = CourtState.getProperty(CourtProperty.ROBOT)
-    #sleep(0.5)
     """This should handle if we cannot see a ball, and move the robot towards the next drive point."""
     if target is None:
         print("Target is None. Moving to drive point...")
@@ -81,8 +79,8 @@ def drive_function(stub, target: Ball, drive_points):
     for i in range(len(corners)):
         in_corner = corners[i].is_in_corner(target.center)
         wall_close = target.get_distance_to_wall(corners[i], CornerUtils.get_next(corners[i], corners)) < 50.0
-        if in_corner or wall_close:
-            print("Target is in corner. Moving to drive point closest to target.")
+        if in_corner or wall_close or in_obstacle(box=CourtState.getProperty(CourtProperty.OBSTACLE), to=Coordinate(target.center.x,target.center.y)):
+            print("Dangerous target! Proceeding to best drive point.")
             drive_point = drive_points.get_closest_drive_point(target.center)
             if drive_points.is_on_drive_point(robot.center):
                 print("At drive point. Moving to target")
