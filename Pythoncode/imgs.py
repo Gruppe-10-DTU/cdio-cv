@@ -1,7 +1,6 @@
 # Saves an image for every frame in a given video capture (use with CVAT annotations)
 
 import cv2
-
 cap = cv2.VideoCapture("")
 count = 0
 max_count = 0
