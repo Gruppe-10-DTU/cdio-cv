@@ -5,13 +5,13 @@ import cv2
 import grpc
 import numpy
 
-import Pythoncode.model
 from Pythoncode.Pathfinding import VectorUtils
 from Pythoncode.Pathfinding.Collision import line_hits_rectangle
 from Pythoncode.Pathfinding.Pathfinding import Pathfinding
 from Pythoncode.Pathfinding.drive_points import *
+from Pythoncode.Pathfinding import Pathfinding, DeliverySystem, Drive_points, CornerUtils
 from Pythoncode.grpc import protobuf_pb2_grpc, protobuf_pb2
-from Pythoncode.model.Ball import Ball
+from Pythoncode.model import Ball, Vector
 from Pythoncode.model.CourtState import CourtState, CourtProperty
 
 pixel_per_cm = 2.0
@@ -64,7 +64,8 @@ def commandHandler(pathfinding, drive_points):
             pathfinding.update_target(CourtState.getProperty(CourtProperty.BALLS))
             
 
-
+        # True implies that ball will be delivered in the goal to the right of the camera
+        DeliverySystem.deliver_balls_to_goal(stub, robot, drive_points, drive, True)
 
 def drive_function(stub, target: Ball, drive_points):
     robot = CourtState.getProperty(CourtProperty.ROBOT)
@@ -104,7 +105,8 @@ def drive_function(stub, target: Ball, drive_points):
 
 
 
-def drive(stub, robot, target, backup=False, buffer = 0.0):
+
+def drive(stub, robot, target, backup=False, buffer = 0.0, speed = 90):
     #angle = VectorUtils.calculate_angle_clockwise(target, robot.front, robot.center)
     angle = VectorUtils.calculate_angle_clockwise(target, robot.front, robot.center)
     print("Turning " + str(angle))
@@ -120,12 +122,13 @@ def drive(stub, robot, target, backup=False, buffer = 0.0):
         print("Return value Move: " + str(move))
         sleep(1)
         print("Backing up "+str(length))
-        backed = stub.Move(protobuf_pb2.MoveRequest(direction=False, distance=int(length), speed=70))
+        backed = stub.Move(protobuf_pb2.MoveRequest(direction=False, distance=int(length), speed=speed))
         print("Return value Backup: " + str(backed))
     else:
         print("Speedy")
-        move = stub.Move(protobuf_pb2.MoveRequest(direction=True, distance=int(length), speed=70))
+        move = stub.Move(protobuf_pb2.MoveRequest(direction=True, distance=int(length), speed=speed))
         print("Return value Move: " + str(move))
+
 
 if __name__ == '__main__':
     main()
