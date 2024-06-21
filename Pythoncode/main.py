@@ -6,7 +6,8 @@ import grpc
 import numpy
 
 from Pythoncode.Pathfinding import VectorUtils
-from Pythoncode.Pathfinding import Pathfinding, DeliverySystem, Drive_points, CornerUtils
+from Pythoncode.Pathfinding import Pathfinding, DeliverySystem, CornerUtils
+from Pythoncode.Pathfinding.drive_points import Drive_points
 from Pythoncode.grpc import protobuf_pb2_grpc, protobuf_pb2
 from Pythoncode.model import Ball, Vector
 from Pythoncode.model.CourtState import CourtState, CourtProperty
@@ -37,34 +38,33 @@ def commandHandler(pathfinding, drive_points):
     config.read('config.ini')
     ip = config.get("ROBOT", "ip")
     CourtState.updateObjects(drive_points.drive_points,None)
+    try:
+        with grpc.insecure_channel(ip) as channel:
+            stub = protobuf_pb2_grpc.RobotStub(channel)
+            stub.Vacuum(protobuf_pb2.VacuumPower(power=True))
+            stub.Vacuum(protobuf_pb2.VacuumPower(power=True))
+            robot = CourtState.getProperty(CourtProperty.ROBOT)
+            while len(pathfinding.targets) > 0 or True:
+                target = pathfinding.get_closest(robot.center)
 
-    with grpc.insecure_channel(ip) as channel:
-        stub = protobuf_pb2_grpc.RobotStub(channel)
-        stub.Vacuum(protobuf_pb2.VacuumPower(power=True))
-        stub.Vacuum(protobuf_pb2.VacuumPower(power=True))
-        robot = CourtState.getProperty(CourtProperty.ROBOT)
-        while len(pathfinding.targets) > 0 or True:
-            target = pathfinding.get_closest(robot.center)
+                drive_function(stub, target, drive_points)
+                #sleep(1.5)
+                success = True
+                while success:
+                    try:
+                        CourtState.updateObjects(drive_points.drive_points,target)
+                        success = False
+                    except Exception as e:
+                        print("Robot not found")
+                        sleep(1)
 
-            drive_function(stub, target, drive_points)
-            #sleep(1.5)
-            success = True
-            while success:
-                try:
-                    CourtState.updateObjects(drive_points.drive_points,target)
-                    success = False
-                except Exception as e:
-                    print("Robot not found")
-                    sleep(1)
+                pathfinding.update_target(CourtState.getProperty(CourtProperty.BALLS))
 
-            pathfinding.update_target(CourtState.getProperty(CourtProperty.BALLS))
-            
-        print("Getting vip")
-        target = CourtState.getProperty(CourtProperty.VIP)
-        drive_function(stub, target, drive_points)
-
-        # True implies that ball will be delivered in the goal to the right of the camera
-        DeliverySystem.deliver_balls_to_goal(stub, robot, drive_points, drive, True)
+            # True implies that ball will be delivered in the goal to the right of the camera
+            DeliverySystem.deliver_balls_to_goal(stub, robot, drive_points, drive, True)
+    except Exception as e:
+        print("Robot died. Sleeping for 5")
+        sleep(5)
 
 def drive_function(stub, target: Ball, drive_points):
     robot = CourtState.getProperty(CourtProperty.ROBOT)
@@ -75,7 +75,6 @@ def drive_function(stub, target: Ball, drive_points):
         drive(stub, robot, drive_points.get_closest_drive_point(robot.center))
         return
 
-    wall_close = False
     corners = CourtState.getProperty(CourtProperty.CORNERS)
 
     for i in range(len(corners)):
@@ -88,6 +87,7 @@ def drive_function(stub, target: Ball, drive_points):
                 print("At drive point. Moving to target")
                 drive(stub, robot, target.center, True)
                 return
+
             drive(stub, robot, drive_point)
             return
     else:

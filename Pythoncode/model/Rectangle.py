@@ -1,4 +1,32 @@
+import math
+
+from Pythoncode.Pathfinding import VectorUtils
 from Pythoncode.model.coordinate import Coordinate
+
+
+def get_closest_points(point: Coordinate, candidates: [Coordinate]) -> [Coordinate, Coordinate]:
+    distance = math.inf
+    closest = None
+    second_closest = None
+    for p in candidates:
+        tmp = VectorUtils.get_length(p, point)
+        if tmp < distance:
+            closest = p
+            distance = tmp
+    distance = math.inf
+
+    index = candidates.index(closest)
+
+    for p in candidates:
+        if p == candidates[index]:
+            continue
+        tmp = VectorUtils.get_length(p, point)
+
+        if tmp < distance:
+            second_closest = p
+            distance = tmp
+
+    return closest, second_closest
 
 
 class Rectangle:
