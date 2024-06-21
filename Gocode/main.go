@@ -241,14 +241,14 @@ func (s *robotServer) Turn(_ context.Context, request *pbuf.TurnRequest) (*pbuf.
 		dynSpeed := Kp*(degrees-pos) + Kd*(pos-lastPos)
 		lastPos = pos
 		if speed > dynSpeed {
-			power = int(math.Max(dynSpeed, 25.0))
+			power = int(math.Max(dynSpeed, 28.0))
 		} else {
 			power = int(speed)
 		}
 		if overshot {
 			power *= -1
 		}
-		if oscillationCount >= 2 {
+		if oscillationCount > 2 {
 			forwardMotor.SetDutyCycleSetpoint(power)
 			backwardMotor.SetDutyCycleSetpoint(-power)
 		} else {
@@ -256,7 +256,7 @@ func (s *robotServer) Turn(_ context.Context, request *pbuf.TurnRequest) (*pbuf.
 			backwardMotor.Command(STOP)
 		}
 		time.Sleep(10 * time.Millisecond)
-		if !peripherherals.BothMotorsRunning() && oscillationCount >= 2 {
+		if !peripherherals.BothMotorsRunning() && oscillationCount > 2 {
 			rightState, _ := rightMotor.State()
 			leftState, _ := leftMotor.State()
 			errMsg := "Turn failed: Both motors aren't running" +
