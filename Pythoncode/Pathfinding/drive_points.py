@@ -68,7 +68,6 @@ class Drive_points:
 
     def get_closest_drive_point(self, point: Coordinate) -> Coordinate:
         closest = None
-        current = None
         distance = float('inf')
         for i in range(len(self.drive_points)):
             tmp_distance = Vector(point, self.drive_points[i]).length()

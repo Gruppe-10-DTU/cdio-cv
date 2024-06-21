@@ -9,13 +9,11 @@ from Pythoncode.Pathfinding import VectorUtils
 from Pythoncode.Pathfinding.Collision import in_obstacle
 from Pythoncode.Pathfinding.Pathfinding import Pathfinding
 from Pythoncode.Pathfinding.drive_points import *
-from Pythoncode.Pathfinding import Pathfinding, DeliverySystem, CornerUtils
+from Pythoncode.Pathfinding import DeliverySystem, CornerUtils
 from Pythoncode.grpc import protobuf_pb2_grpc, protobuf_pb2
 from Pythoncode.model import Ball
 from Pythoncode.model.Vector import Vector
 from Pythoncode.model.CourtState import CourtState, CourtProperty
-
-pixel_per_cm = 2.0
 
 
 def main():
@@ -26,13 +24,14 @@ def main():
     CourtState.initialize()
 
     corners = CourtState.getProperty(CourtProperty.CORNERS)
-    global pixel_per_cm
-    pixel_per_cm = CornerUtils.get_cm_per_pixel(corners, CourtState.getProperty(CourtProperty.BALLS), config)
+
+    scale = CornerUtils.get_cm_per_pixel(corners, CourtState.getProperty(CourtProperty.BALLS), config)
+    CourtState.set_property(CourtProperty.PIXEL_PER_CM, scale)
     robot = CourtState.getProperty(CourtProperty.ROBOT)
     """goals = calculate_goals(corners)"""
     balls = CourtState.getProperty(CourtProperty.BALLS)
-    drive_points = Drive_points(corners, pixel_per_cm)
-    pathfinding = Pathfinding(balls, robot.center, CourtState.getProperty(CourtProperty.OBSTACLE), pixel_per_cm, drive_points)
+    drive_points = Drive_points(corners, CourtState.getProperty(CourtProperty.PIXEL_PER_CM))
+    pathfinding = Pathfinding(balls, robot.center, CourtState.getProperty(CourtProperty.OBSTACLE), CourtState.getProperty(CourtProperty.PIXEL_PER_CM), drive_points)
     commandHandler(pathfinding, drive_points)
 
 
@@ -46,7 +45,7 @@ def commandHandler(pathfinding, drive_points):
         stub = protobuf_pb2_grpc.RobotStub(channel)
         stub.Vacuum(protobuf_pb2.VacuumPower(power=True))
         stub.Vacuum(protobuf_pb2.VacuumPower(power=True))
-        while len(pathfinding.targets) > 0 or True:
+        while len(pathfinding.targets) > 0:
             robot = CourtState.getProperty(CourtProperty.ROBOT)
             target = pathfinding.get_closest(robot.center)
             drive_function(stub, target, drive_points)
@@ -60,12 +59,8 @@ def commandHandler(pathfinding, drive_points):
                     sleep(1)
 
             pathfinding.update_target(CourtState.getProperty(CourtProperty.BALLS))
-            
-        print("Getting vip")
-        target = CourtState.getProperty(CourtProperty.VIP)
-        drive_function(stub, target, drive_points)
-        stub.Vacuum(protobuf_pb2.VacuumPower(power=False))
-
+        CourtState.updateObjects(None, None)
+        robot = CourtState.getProperty(CourtProperty.ROBOT)
         # True implies that ball will be delivered in the goal to the right of the camera
         DeliverySystem.deliver_balls_to_goal(stub, robot, drive_points, drive, True)
 
@@ -124,7 +119,7 @@ def drive(stub, robot, target, backup=False, is_drive_point=False):
     length_to_target = VectorUtils.get_length(target, robot.front)
     if is_drive_point:
         length_to_target += VectorUtils.get_length(robot.center, robot.front)
-    length = int(((length_to_target / pixel_per_cm)-3)*0.99)
+    length = int(((length_to_target / CourtState.getProperty(CourtProperty.PIXEL_PER_CM))-3)*0.9)
     print("Length: " + str(length))
     move = stub.Move(protobuf_pb2.MoveRequest(direction=True, distance=length, speed=70))
     print("Return value Move: " + str(move))

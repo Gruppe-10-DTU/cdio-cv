@@ -25,6 +25,7 @@ class CourtProperty(Enum):
     OBSTACLE = 4
     EGG = 5
     ROBOT = 6
+    PIXEL_PER_CM = 7
 
 
 class CourtState(object):
@@ -35,7 +36,7 @@ class CourtState(object):
     cap = None
 
     items = {CourtProperty.BALLS: list, CourtProperty.ROBOT: Robot, CourtProperty.VIP: Vip,
-             CourtProperty.CORNERS: list, CourtProperty.OBSTACLE: Coordinate}
+             CourtProperty.CORNERS: list, CourtProperty.OBSTACLE: Coordinate, CourtProperty.PIXEL_PER_CM: float}
 
     dist = None
     mtx = None
@@ -97,12 +98,13 @@ class CourtState(object):
         frame = cls.frame
         frame = cv2.undistort(frame, cls.mtx, cls.dist, None, cls.omtx)
         results = model.predict(frame, conf=0.5)
-        frame = results[0].plot()
+        #frame = results[0].plot()
         if cv2.waitKey(3000) & 0xFF == ord('q'):
             return
         img = cls.analyse_results(results, frame)
-        for drive_point in drive_points:
-            img = cv2.circle(img,(int(drive_point.x), int(drive_point.y)), radius=5, color=(255, 0, 0), thickness=-1)
+        if drive_points is not None:
+            for drive_point in drive_points:
+                img = cv2.circle(img,(int(drive_point.x), int(drive_point.y)), radius=5, color=(255, 0, 0), thickness=-1)
         cv2.imshow("YOLO", img)
 
 
@@ -220,3 +222,7 @@ class CourtState(object):
         ret = cls.cap.grab()
         _, frame = cls.cap.retrieve()
         return frame
+
+    @classmethod
+    def set_property(cls, property_name: CourtProperty, value):
+        cls.items[property_name] = value
