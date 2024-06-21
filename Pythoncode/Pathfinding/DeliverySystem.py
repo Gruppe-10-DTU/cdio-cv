@@ -55,7 +55,7 @@ def align_robot_with_delivery_point(robot, drive_point: Coordinate, delivery_poi
         # Slowly turn the robot and move it to the drive point
         rpc.Turn(protobuf_pb2.TurnRequest(degrees=angle, speed=50))
         offset = VectorUtils.get_length(robot.center, drive_point) / CourtState.getProperty(CourtProperty.PIXEL_PER_CM)
-        rpc.Move(protobuf_pb2.MoveRequest(direction=move_direction, distance=int(offset), speed=27))
+        rpc.Move(protobuf_pb2.MoveRequest(direction=move_direction, distance=int(offset), speed=35))
         CourtState.updateObjects([delivery_point, drive_point], drive_point)
         robot = CourtState.getProperty(CourtProperty.ROBOT)
     # point the robot to the delivery point
