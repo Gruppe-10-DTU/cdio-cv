@@ -9,7 +9,7 @@ from Pythoncode.Pathfinding import VectorUtils
 from Pythoncode.Pathfinding.Collision import line_hits_rectangle
 from Pythoncode.Pathfinding.Pathfinding import Pathfinding
 from Pythoncode.Pathfinding.drive_points import *
-from Pythoncode.Pathfinding import Pathfinding, DeliverySystem, Drive_points, CornerUtils
+from Pythoncode.Pathfinding import Pathfinding, DeliverySystem, CornerUtils
 from Pythoncode.grpc import protobuf_pb2_grpc, protobuf_pb2
 from Pythoncode.model import Ball, Vector
 from Pythoncode.model.CourtState import CourtState, CourtProperty
