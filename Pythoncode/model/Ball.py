@@ -14,6 +14,7 @@ class Ball:
         self.y2 = y2
         self.id = id
         self.center = Coordinate(x1 + (x2-x1)/2, y1 + (y2-y1)/2)
+        self.collection_point = None
 
     def get_distance_to_wall(self, corner1, corner2):
         wall = Vector(corner2.center.x - corner1.center.x, corner2.center.y - corner1.center.y)

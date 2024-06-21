@@ -98,15 +98,7 @@ class CourtState(object):
             return
         img = cls.analyse_results(results, frame)
         for drive_point in drive_points:
-            img = cv2.circle(img,(int(drive_point.x), int(drive_point.y)),radius=5,color=(255,0,0),thickness=-1)
-        #rbf = cv2.undistortImagePoints(numpy.array([[robot.front.x,robot.front.y]], dtype=numpy.float32), cls.mtx, cls.dist)
-        #rbc = cv2.undistortImagePoints(numpy.array([[robot.center.x,robot.center.y]], dtype=numpy.float32), cls.mtx, cls.dist)
-
-        #if target is not None:
-        #    img = cv2.arrowedLine(img, (rbf.x, rbf.y), (target.center.x, target.center.y),
-        #color=(255, 192, 203), thickness=-1)
-        #img = cv2.circle(img, (int(rbc[0][0][0]), int(rbc[0][0][1])), radius=5, color=(0, 255, 0), thickness=-1)
-        #img = cv2.circle(img, (int(rbf[0][0][0]), int(rbf[0][0][1])), radius=5, color=(0, 0, 255), thickness=-1)
+            img = cv2.circle(img,(int(drive_point.x), int(drive_point.y)), radius=5, color=(255, 0, 0), thickness=-1)
         cv2.imshow("YOLO", img)
 
 
@@ -122,18 +114,22 @@ class CourtState(object):
         robot_front = None
         obstacle = None
         for box in boxes:
-            x, y, w, h = box.xywh[0]
-            x = int(x)
-            y = int(y)
-            w = int(w)
-            h = int(h)
+            x0, y0, x1, y1 = box.xyxy[0]
 
             current_id = 0
 
             item = box.cls.item()
 
-            uc = cv2.undistortImagePoints(numpy.array([[x, y]], dtype=numpy.float32), cls.mtx,
-                                          cls.dist)
+            
+            undistorted_xyxy = cv2.undistortImagePoints(numpy.array([[x0, y0], [x1, y1]], dtype=numpy.float32), cls.mtx, cls.dist)
+            x0 = int(undistorted_xyxy[0][0][0])
+            y0 = int(undistorted_xyxy[0][0][1])
+            x1 = int(undistorted_xyxy[1][0][0])
+            y1 = int(undistorted_xyxy[1][0][1])
+
+            x = int(x0 + (x1-x0)/2)
+            y = int(y0 + (y1-y0)/2)
+
             color = (0, 255, 255)
             if results[0].names[item] == "ball":
                 color = (255, 255, 0)
@@ -143,10 +139,9 @@ class CourtState(object):
                 color = (0, 255, 0)
             elif results[0].names[item] == "r_front":
                 color = (0, 0, 255)
-            frame = cv2.circle(frame, (int(uc[0][0][0]), int(uc[0][0][1])), radius=5, color=color, thickness=-1)
+            frame = cv2.circle(frame, (int(x), int(y)), radius=5, color=color, thickness=-1)
 
             if results[0].names[item] == "ball":
-                x0, y0, x1, y1 = box.xyxy[0]
                 balls.append(Ball(int(x0), int(y0), int(x1), int(y1), current_id))
             elif results[0].names[item] == "r_front":
                 robot_front = Coordinate(x,y)
@@ -157,17 +152,14 @@ class CourtState(object):
                 robot_body = Coordinate(x,y)
                 #robot_body = projection.projection_from_coordinate(target=robot_body, height=22.5)
             elif results[0].names[item] == "corner":
-                x0, y0, x1, y1 = box.xyxy[0]
-                corner = Corner(int(x0), int(y0), int(x1), int(y1), current_id)
+                corner = Corner(x0, int(y0), int(x1), int(y1), current_id)
                 #corner.center = projection.projection_from_coordinate(corner.center, 7.2)
                 corners.append(corner)
             elif results[0].names[item] == "obstacle":
-                x0, y0, x1, y1 = box.xyxy[0]
-                obstacle = Rectangle(Coordinate(x0, y0), Coordinate(x1, y1))
+                obstacle = Rectangle(Coordinate(int(x0), int(y0)), Coordinate(int(x1), int(y1)))
             elif results[0].names[item] == "egg":
                 print("Egg")
             elif results[0].names[item] == "orange_ball":
-                x0, y0, x1, y1 = box.xyxy[0]
                 vipItem = Vip(int(x0), int(y0), int(x1), int(y1), current_id)
         """"This is the true center of the robot post adjustment of top-hat."""
         true_c = Coordinate((robot_front.x + robot_body.x) / 2, (robot_front.y + robot_body.y) / 2)
@@ -210,9 +202,9 @@ class CourtState(object):
     def frameThread(cls):
         ret = True
         while ret:
-            with cls.lock:
-                ret = cls.cap.grab()
-                _,cls.frame = cls.cap.retrieve()
+           #with cls.lock:
+            ret = cls.cap.grab()
+            _, cls.frame = cls.cap.retrieve()
         print("ret: " + str(ret))
 
 

@@ -7,7 +7,7 @@ import numpy
 
 import Pythoncode.model
 from Pythoncode.Pathfinding import VectorUtils
-from Pythoncode.Pathfinding.Collision import in_obstacle, collection_obstacle
+from Pythoncode.Pathfinding.Collision import in_obstacle
 from Pythoncode.Pathfinding.Pathfinding import Pathfinding
 from Pythoncode.Pathfinding.drive_points import *
 from Pythoncode.grpc import protobuf_pb2_grpc, protobuf_pb2
@@ -63,15 +63,29 @@ def commandHandler(pathfinding, drive_points):
         print("Getting vip")
         target = CourtState.getProperty(CourtProperty.VIP)
         drive_function(stub, target, drive_points)
+        stub.Vacuum(protobuf_pb2.VacuumPower(power=False))
 
 
 def drive_function(stub, target: Ball, drive_points):
     robot = CourtState.getProperty(CourtProperty.ROBOT)
+
+    if target is not None and target.collection_point is not None:
+        print("Target collection point not none")
+        on_drive_point, coordinate = drive_points.is_on_drive_point(robot.center)
+        if on_drive_point:
+            if coordinate.x == target.collection_point.x and coordinate.y == target.collection_point.y:
+                print("On collection point, moving to target.")
+                drive(stub, robot, target.center,True, False)
+                return
+        target = None
+
+
     """This should handle if we cannot see a ball, and move the robot towards the next drive point."""
     if target is None:
         print("Target is None. Moving to drive point...")
-        drive(stub, robot, drive_points.get_closest_drive_point(robot.center))
+        drive(stub, robot, drive_points.get_next_drive_point(robot.center), is_drive_point=True)
         return
+
 
     wall_close = False
     corners = CourtState.getProperty(CourtProperty.CORNERS)
@@ -79,36 +93,44 @@ def drive_function(stub, target: Ball, drive_points):
     for i in range(len(corners)):
         in_corner = corners[i].is_in_corner(target.center)
         wall_close = target.get_distance_to_wall(corners[i], CornerUtils.get_next(corners[i], corners)) < 50.0
-        if in_corner or wall_close or in_obstacle(box=CourtState.getProperty(CourtProperty.OBSTACLE), to=Coordinate(target.center.x,target.center.y)):
-            print("Dangerous target! Proceeding to best drive point.")
-            drive_point = drive_points.get_closest_drive_point(target.center)
-            if drive_points.is_on_drive_point(robot.center):
-                print("At drive point. Moving to target")
-                drive(stub, robot, target.center, True)
+        if in_corner or wall_close:
+            drive_point = drive_points.get_next_drive_point(target.center)
+            on_drive_point, coordinate = drive_points.is_on_drive_point(robot.center)
+            target.collection_point = drive_points.get_closest_drive_point(target.center)
+            if on_drive_point:
+                if coordinate.x == target.collection_point.x and coordinate.y == target.collection_point.y:
+                    print("At drive point. Moving to target")
+                    drive(stub, robot, target.center, True)
+                    return
+                drive(stub, robot, drive_point, is_drive_point=False)
                 return
-            drive(stub, robot, drive_point)
-            return
+
     else:
+        print("Going to target...")
         drive_points.last = None
         drive(stub, robot, target.center)
 
 
 
 
-def drive(stub, robot, target, backup=False):
-    #angle = VectorUtils.calculate_angle_clockwise(target, robot.front, robot.center)
+def drive(stub, robot, target, backup=False, is_drive_point=False):
     angle = VectorUtils.calculate_angle_clockwise(target, robot.front, robot.center)
     print("Turning " + str(angle))
     turn = stub.Turn(protobuf_pb2.TurnRequest(degrees=numpy.float32(angle)))
     print("Return value Turn: " + str(turn))
-    length = round((((((VectorUtils.get_length(target, robot.center))-(Vector(robot.front, robot.center).length())) / pixel_per_cm)+1)*0.95), 3)
-    print("Length: " + str(int(length)))
-    move = stub.Move(protobuf_pb2.MoveRequest(direction=True, distance=int(length), speed=70))
+    length_to_target = VectorUtils.get_length(target, robot.front)
+    if is_drive_point:
+        length_to_target += VectorUtils.get_length(robot.center, robot.front)
+    length = int(((length_to_target / pixel_per_cm)-3)*0.99)
+    print("Length: " + str(length))
+    move = stub.Move(protobuf_pb2.MoveRequest(direction=True, distance=length, speed=70))
     print("Return value Move: " + str(move))
     if backup:
         sleep(2)
-        print("Backing up "+str(length))
-        backed = stub.Move(protobuf_pb2.MoveRequest(direction=False, distance=int(length), speed=70))
+        if length > 10:
+            length = 10
+        print("Backing up " + str(length))
+        backed = stub.Move(protobuf_pb2.MoveRequest(direction=False, distance=int(length), speed=50))
         print("Return value Backup: " + str(backed))
 
 
