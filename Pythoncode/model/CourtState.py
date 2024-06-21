@@ -39,6 +39,7 @@ class CourtState(object):
 
     dist = None
     mtx = None
+    omtx = None
 
     @classmethod
     def initialize(cls):
@@ -46,16 +47,18 @@ class CourtState(object):
             'C:/Users/asbpo/Desktop/DTU/Softwareteknologi/4.Semester/62410_CDIO-project/RobotProject/cdio-cv/Pythoncode/calibration/mtx.txt')
         cls.dist = numpy.loadtxt(
             'C:/Users/asbpo/Desktop/DTU/Softwareteknologi/4.Semester/62410_CDIO-project/RobotProject/cdio-cv/Pythoncode/calibration/dist.txt')
+        cls.omtx = numpy.loadtxt(
+            'C:/Users/asbpo/Desktop/DTU/Softwareteknologi/4.Semester/62410_CDIO-project/RobotProject/cdio-cv/Pythoncode/calibration/omtx.txt')
 
         model = YOLO("../model/best.pt")
         cls.model = model
-        cls.projections = Projection(Coordinate(1389.0, 830.5), 162.5)
-        sleep(5.0)
         frame = None
         current_id = 0
         while frame is None:
             cls.cap.grab()
             _,frame = cls.cap.retrieve()
+
+        frame = cv2.undistort(frame, cls.mtx, cls.dist, None, cls.omtx)
 
 
         results = model.predict(frame, conf=0.5)
@@ -92,6 +95,7 @@ class CourtState(object):
             sleep(0.05)
 
         frame = cls.frame
+        frame = cv2.undistort(frame, cls.mtx, cls.dist, None, cls.omtx)
         results = model.predict(frame, conf=0.5)
         frame = results[0].plot()
         if cv2.waitKey(3000) & 0xFF == ord('q'):
@@ -162,8 +166,9 @@ class CourtState(object):
             elif results[0].names[item] == "orange_ball":
                 vipItem = Vip(int(x0), int(y0), int(x1), int(y1), current_id)
         """"This is the true center of the robot post adjustment of top-hat."""
-        true_c = Coordinate((robot_front.x + robot_body.x) / 2, (robot_front.y + robot_body.y) / 2)
-        robot = Robot(true_c, robot_front)
+        true_center = Coordinate(int((robot_front.x + robot_body.x) / 2), int((robot_front.y + robot_body.y) / 2))
+        robot = Robot(true_center, robot_front)
+        frame = cv2.circle(frame, (true_center.x, true_center.y), radius=5, color=(255, 0, 255), thickness=-1)
 
 
         cls.items[CourtProperty.VIP] = vipItem
