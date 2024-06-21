@@ -13,14 +13,12 @@ class Drive_points:
         self.drive_points = []
         self.drive_points = self.__generate_drive_points()
         self.last = None
-        #generate_drive_points()
 
     def __generate_drive_points(self):
         left_wall = Vector(self.corners[0].center, self.corners[1].center)
         top_wall = Vector(self.corners[0].center, self.corners[2].center)
         right_wall = Vector(self.corners[2].center, self.corners[3].center)
         bottom_wall = Vector(self.corners[1].center, self.corners[3].center)
-        drive_points = []
         for corner in self.corners:
             match corner.placement:
                 case Placement.TOP_LEFT:
@@ -43,14 +41,7 @@ class Drive_points:
                     #drive_points.append(bottom_right)
                     bottom_center = self.__calculate_center_drive_point(bottom_right, bottom_wall.invert())
                     #drive_points.append(bottom_center)
-        drive_points.append(top_left)
-        drive_points.append(top_center)
-        drive_points.append(top_right)
-        drive_points.append(right_center)
-        drive_points.append(bottom_right)
-        drive_points.append(bottom_center)
-        drive_points.append(bottom_left)
-        drive_points.append(left_center)
+        drive_points = [top_left, top_center, top_right, right_center, bottom_right, bottom_center, bottom_left,left_center]
         return drive_points
 
         

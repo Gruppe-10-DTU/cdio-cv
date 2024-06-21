@@ -2,6 +2,7 @@ package peripherals
 
 import (
 	"errors"
+	"fmt"
 	"github.com/ev3go/ev3dev"
 	"strings"
 )
@@ -20,11 +21,13 @@ func GetMotor(inp string) (*ev3dev.TachoMotor, error) {
 func BothMotorsRunning() bool {
 	leftMotor, err := GetMotor("left")
 	if err != nil {
+		fmt.Printf("Motor Error: %s", err)
 		return false
 	}
 
 	rightMotor, err := GetMotor("right")
 	if err != nil {
+		fmt.Printf("Motor Error: %s\n", err)
 		return false
 	}
 	leftState, _ := leftMotor.State()

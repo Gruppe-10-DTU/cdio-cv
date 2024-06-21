@@ -5,13 +5,14 @@ import cv2
 import grpc
 import numpy
 
-import Pythoncode.model
 from Pythoncode.Pathfinding import VectorUtils
 from Pythoncode.Pathfinding.Collision import in_obstacle
 from Pythoncode.Pathfinding.Pathfinding import Pathfinding
 from Pythoncode.Pathfinding.drive_points import *
+from Pythoncode.Pathfinding import Pathfinding, DeliverySystem, CornerUtils
 from Pythoncode.grpc import protobuf_pb2_grpc, protobuf_pb2
-from Pythoncode.model.Ball import Ball
+from Pythoncode.model import Ball
+from Pythoncode.model.Vector import Vector
 from Pythoncode.model.CourtState import CourtState, CourtProperty
 
 pixel_per_cm = 2.0
@@ -65,6 +66,8 @@ def commandHandler(pathfinding, drive_points):
         drive_function(stub, target, drive_points)
         stub.Vacuum(protobuf_pb2.VacuumPower(power=False))
 
+        # True implies that ball will be delivered in the goal to the right of the camera
+        DeliverySystem.deliver_balls_to_goal(stub, robot, drive_points, drive, True)
 
 def drive_function(stub, target: Ball, drive_points):
     robot = CourtState.getProperty(CourtProperty.ROBOT)
@@ -132,6 +135,7 @@ def drive(stub, robot, target, backup=False, is_drive_point=False):
         print("Backing up " + str(length))
         backed = stub.Move(protobuf_pb2.MoveRequest(direction=False, distance=int(length), speed=50))
         print("Return value Backup: " + str(backed))
+
 
 
 if __name__ == '__main__':
