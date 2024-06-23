@@ -2,7 +2,7 @@ from ultralytics import YOLO
 import torch
 
 # Model specific for training small objects
-model = YOLO("yolov8s-p2.yaml").load("../yolov8s.pt")
+model = YOLO("yolov8s-p2.yaml").load("yolov8s.pt")
 
 if __name__ == "__main__":
 
