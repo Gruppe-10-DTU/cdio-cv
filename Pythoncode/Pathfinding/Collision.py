@@ -5,7 +5,10 @@ import numpy as np
 
 from Pythoncode.Pathfinding import VectorUtils
 from Pythoncode.Pathfinding.Clipping import line_clips_rectangle
-from Pythoncode.model.Rectangle import Rectangle
+from Pythoncode.grpc.protobuf_pb2_grpc import Robot
+from Pythoncode.model.CourtState import CourtProperty, CourtState
+from Pythoncode.model.Rectangle import Rectangle, get_closest_points
+from Pythoncode.model.Vector import Vector
 from Pythoncode.model.coordinate import Coordinate
 
 CLEARANCE = 2
@@ -39,8 +42,6 @@ def robot_collides(box: Rectangle, begin: Coordinate, to: Coordinate, pixel_per_
 
 def in_obstacle(box: Rectangle, to: Coordinate):
     return box.c1.x <= to.x <= box.c2.x and box.c1.y <= to.y <= box.c2.y
-
-
 
 
 def turn_robot_internal(robot: Robot, point1: Coordinate, point2: Coordinate) -> float:

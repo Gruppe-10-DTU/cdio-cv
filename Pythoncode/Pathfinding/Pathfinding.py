@@ -1,5 +1,5 @@
 from Pythoncode.Pathfinding.Collision import robot_collides, in_obstacle
-from Pythoncode.model import Ball
+from Pythoncode.model import Ball, Egg
 from Pythoncode.model.Corner import *
 from Pythoncode.model.Rectangle import Rectangle
 
