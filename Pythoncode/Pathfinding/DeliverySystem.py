@@ -13,8 +13,8 @@ def deliver_balls_to_goal(rpc, robot, drive_points, drive, big_goal=True):
     target_drive_point_index = 3 if big_goal else 7
     target_drive_point = drive_points.get_drive_points()[target_drive_point_index]
     # Drive to the target drive point
-    while Collision.p_clips(obstacle, robot.center, target_drive_point,
-                            CourtState.getProperty(CourtProperty.PIXEL_PER_CM)):
+    while Collision.robot_collides(obstacle, robot.center, target_drive_point,
+                                   CourtState.getProperty(CourtProperty.PIXEL_PER_CM)):
         CourtState.updateObjects(drive_points.drive_points, target_drive_point)
         robot = CourtState.getProperty(CourtProperty.ROBOT)
         route_point = drive_points.get_next_drive_point(robot.center)
