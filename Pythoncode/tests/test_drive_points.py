@@ -59,7 +59,7 @@ class Test(TestCase):
         current = start
         previous = None
         for i in range(8):
-            next = dp.get_closest_drive_point(current)
+            next = dp.get_next_drive_point(current)
             self.assertNotEqual(previous, next)
             previous = current
             current = next

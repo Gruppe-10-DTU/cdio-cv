@@ -10,6 +10,8 @@ from Pythoncode.model.Corner import Corner
 
 from Pythoncode.model.Rectangle import Rectangle, get_closest_points
 from Pythoncode.model.Robot import Robot
+from Pythoncode.Pathfinding import VectorUtils, drive_points
+from Pythoncode.model.Rectangle import Rectangle
 from Pythoncode.model.coordinate import Coordinate
 
 """
@@ -43,7 +45,7 @@ def calculate_endpoint_outcode(box: Rectangle, coordinate: Coordinate):
 
 
 def line_hits_rectangle(box: Rectangle, begin: Coordinate, to: Coordinate):
-    if box.c1.x <= to.x <= box.c2.x and box.c1.y <= to.y <= box.c2.y:
+    if in_obstacle(box, to):
         return False
 
     c1 = copy.deepcopy(begin)
@@ -89,6 +91,28 @@ def line_hits_rectangle(box: Rectangle, begin: Coordinate, to: Coordinate):
                 end = calculate_endpoint_outcode(box, c2)
 
     return does_clip
+
+def p_clips(box: Rectangle, begin: Coordinate, to: Coordinate, pixel_per_cm: int):
+    left_p1, left_p2 = VectorUtils.calculate_parallel_vector_coordinates(begin,
+                                                                         VectorUtils.get_vector(begin, to),
+                                                                         pixel_per_cm * 10, True)
+    right_p1, right_p2 = VectorUtils.calculate_parallel_vector_coordinates(begin,
+                                                                           VectorUtils.get_vector(begin, to),
+                                                                           pixel_per_cm * 10, False)
+    clips = (line_hits_rectangle(box, begin, to) or
+             line_hits_rectangle(box, left_p1, left_p2) or
+             line_hits_rectangle(box, right_p1, right_p2))
+    print("Center hit: " + str(line_hits_rectangle(box, begin, to)) + "\n" +
+          "Left hit: " + str(line_hits_rectangle(box, left_p1, left_p2)) + "\n" +
+          "Right hit: " + str(line_hits_rectangle(box, right_p1, right_p2)) + "\n")
+
+    return clips
+
+
+def in_obstacle(box: Rectangle, to: Coordinate):
+    return box.c1.x <= to.x <= box.c2.x and box.c1.y <= to.y <= box.c2.y
+
+
 
 
 def turn_robot(robot: Robot, point1: Coordinate, point2: Coordinate) -> float:
