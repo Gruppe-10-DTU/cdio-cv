@@ -3,6 +3,7 @@ from Pythoncode.model import Ball
 from Pythoncode.Pathfinding.CornerUtils import *
 from Pythoncode.model import Ball
 from Pythoncode.model.Corner import *
+from Pythoncode.model.Egg import Egg
 from Pythoncode.model.Rectangle import Rectangle
 
 

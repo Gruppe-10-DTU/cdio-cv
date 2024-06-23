@@ -10,6 +10,10 @@ from Pythoncode.Pathfinding.Collision import in_obstacle
 from Pythoncode.Pathfinding.Pathfinding import Pathfinding
 from Pythoncode.Pathfinding.drive_points import *
 from Pythoncode.Pathfinding import DeliverySystem, CornerUtils
+from Pythoncode.Pathfinding.Collision import line_hits_rectangle
+from Pythoncode.Pathfinding.Pathfinding import Pathfinding
+from Pythoncode.Pathfinding.drive_points import *
+from Pythoncode.Pathfinding import Pathfinding, DeliverySystem, CornerUtils
 from Pythoncode.grpc import protobuf_pb2_grpc, protobuf_pb2
 from Pythoncode.model import Ball
 from Pythoncode.model.Vector import Vector
@@ -84,25 +88,31 @@ def drive_function(stub, target: Ball, drive_points):
         drive(stub, robot, drive_points.get_next_drive_point(robot.center), is_drive_point=True)
         return
 
-
     wall_close = False
     corners = CourtState.getProperty(CourtProperty.CORNERS)
+    egg = CourtState.getProperty(CourtProperty.EGG)
+    egg_close = egg.ball_inside_buffer(target.center)
+    print("Testing close to egg. Result = " + str(egg_close))
 
     for i in range(len(corners)):
         in_corner = corners[i].is_in_corner(target.center)
         wall_close = target.get_distance_to_wall(corners[i], CornerUtils.get_next(corners[i], corners)) < 50.0
-        if in_corner or wall_close:
+        if in_corner or wall_close or egg_close:
             drive_point = drive_points.get_next_drive_point(target.center)
             on_drive_point, coordinate = drive_points.is_on_drive_point(robot.center)
             target.collection_point = drive_points.get_closest_drive_point(target.center)
+
             if on_drive_point:
                 if coordinate.x == target.collection_point.x and coordinate.y == target.collection_point.y:
                     print("At drive point. Moving to target")
-                    drive(stub, robot, target.center, True)
-                    return
-                drive(stub, robot, drive_point, is_drive_point=False)
+                    drive(stub, robot, target.center, backup=True)
+                elif egg_close:
+                    drive(stub, robot, target.center, backup=True, buffer=5)
+                else:
+                    drive(stub, robot, drive_point, is_drive_point=False)
                 return
-
+            drive(stub, robot, drive_point)
+            return
     else:
         print("Going to target...")
         drive_points.last = None
@@ -111,9 +121,11 @@ def drive_function(stub, target: Ball, drive_points):
 
 
 
-def drive(stub, robot, target, backup=False, is_drive_point=False):
+def drive(stub, robot, target, backup=False, buffer = 0.0, speed = 90, is_drive_point=False):
+    #angle = VectorUtils.calculate_angle_clockwise(target, robot.front, robot.center)
     angle = VectorUtils.calculate_angle_clockwise(target, robot.front, robot.center)
     print("Turning " + str(angle))
+
     turn = stub.Turn(protobuf_pb2.TurnRequest(degrees=numpy.float32(angle)))
     print("Return value Turn: " + str(turn))
     length_to_target = VectorUtils.get_length(target, robot.front)
@@ -121,16 +133,21 @@ def drive(stub, robot, target, backup=False, is_drive_point=False):
         length_to_target += VectorUtils.get_length(robot.center, robot.front)
     length = int(((length_to_target / CourtState.getProperty(CourtProperty.PIXEL_PER_CM))-3)*0.9)
     print("Length: " + str(length))
-    move = stub.Move(protobuf_pb2.MoveRequest(direction=True, distance=length, speed=70))
-    print("Return value Move: " + str(move))
     if backup:
+        print("Going slow")
+        move = stub.Move(protobuf_pb2.MoveRequest(direction=True, distance=int(length), speed=30))
+        print("Return value Move: " + str(move))
+
         sleep(2)
         if length > 10:
             length = 10
         print("Backing up " + str(length))
         backed = stub.Move(protobuf_pb2.MoveRequest(direction=False, distance=int(length), speed=50))
         print("Return value Backup: " + str(backed))
-
+    else:
+        print("Speedy")
+        move = stub.Move(protobuf_pb2.MoveRequest(direction=True, distance=int(length), speed=speed))
+        print("Return value Move: " + str(move))
 
 
 if __name__ == '__main__':

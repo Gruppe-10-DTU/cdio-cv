@@ -12,6 +12,7 @@ from Pythoncode.Pathfinding.CornerUtils import set_placements, get_corners_as_li
 from Pythoncode.Pathfinding.Projection import Projection
 from Pythoncode.model.Ball import Ball
 from Pythoncode.model.Corner import Corner
+from Pythoncode.model.Egg import Egg
 from Pythoncode.model.Rectangle import Rectangle
 from Pythoncode.model.Robot import Robot
 from Pythoncode.model.Vip import Vip
@@ -106,6 +107,7 @@ class CourtState(object):
             for drive_point in drive_points:
                 img = cv2.circle(img,(int(drive_point.x), int(drive_point.y)), radius=5, color=(255, 0, 0), thickness=-1)
         cv2.imshow("YOLO", img)
+        cv2.waitKey()
 
 
     @classmethod
@@ -117,6 +119,7 @@ class CourtState(object):
         robot = None
         vipItem = None
         robot_body = None
+        egg = None
         robot_front = None
         obstacle = None
         for box in boxes:
@@ -126,7 +129,7 @@ class CourtState(object):
 
             item = box.cls.item()
 
-            
+
             undistorted_xyxy = cv2.undistortImagePoints(numpy.array([[x0, y0], [x1, y1]], dtype=numpy.float32), cls.mtx, cls.dist)
             x0 = int(undistorted_xyxy[0][0][0])
             y0 = int(undistorted_xyxy[0][0][1])
@@ -164,7 +167,8 @@ class CourtState(object):
             elif results[0].names[item] == "obstacle":
                 obstacle = Rectangle(Coordinate(int(x0), int(y0)), Coordinate(int(x1), int(y1)))
             elif results[0].names[item] == "egg":
-                print("Egg")
+                x0, y0, x1, y1 = box.xyxy[0]
+                egg = Egg(int(x0), int(y0), int(x1), int(y1))
             elif results[0].names[item] == "orange_ball":
                 vipItem = Vip(int(x0), int(y0), int(x1), int(y1), current_id)
         """"This is the true center of the robot post adjustment of top-hat."""
@@ -172,6 +176,23 @@ class CourtState(object):
         robot = Robot(true_center, robot_front)
         frame = cv2.circle(frame, (true_center.x, true_center.y), radius=5, color=(255, 0, 255), thickness=-1)
 
+        if obstacle is not None and egg is not None:
+            egg.calculate_buffers(obstacle)
+
+            uc = cv2.undistortImagePoints(numpy.array([[egg.buffer_center.x, egg.buffer_center.y]], dtype=numpy.float32), cls.mtx,
+                                          cls.dist)
+            color = (0, 255, 255)
+
+            frame = cv2.circle(frame, (int(uc[0][0][0]), int(uc[0][0][1])), radius=5, color=color, thickness=-1)
+            uc = cv2.undistortImagePoints(numpy.array([[egg.buffer_c2.x, egg.buffer_c2.y]], dtype=numpy.float32), cls.mtx,
+                                          cls.dist)
+            color = (255, 0, 0)
+            frame = cv2.circle(frame, (int(uc[0][0][0]), int(uc[0][0][1])), radius=5, color=color, thickness=-1)
+            v1 = numpy.array([int(egg.buffer.c1.x), int(egg.buffer.c1.y)])
+            v2 = numpy.array([int(egg.buffer.c2.x), int(egg.buffer.c2.y)])
+            cv2.rectangle(frame, v1, v2, color=(255, 0, 0), thickness=1)
+
+            cls.items[CourtProperty.EGG] = egg
 
         cls.items[CourtProperty.VIP] = vipItem
         if robot is not None:
@@ -186,7 +207,7 @@ class CourtState(object):
     @classmethod
     def setupCam(cls):
         # cap = cv2.VideoCapture('videos/with_egg.mp4')
-        cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+        cap = cv2.VideoCapture(1, cv2.CAP_DSHOW)
         cap.set(cv2.CAP_PROP_BUFFERSIZE, 3)
         width = 1280
         height = 720
