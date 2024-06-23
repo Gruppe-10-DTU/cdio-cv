@@ -1,5 +1,5 @@
 """
-This code very heavily inspired by an implementation of the Cohen-Sutherland algorithm for line clipping
+This code uses an implementation of the Cohen-Sutherland algorithm for line clipping
 
 Sources:
 
