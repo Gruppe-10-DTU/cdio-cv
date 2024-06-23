@@ -35,7 +35,7 @@ def drive_corners():
         stub = protobuf_pb2_grpc.RobotStub(channel)
         while True:
             robot = CourtState.getProperty(CourtProperty.ROBOT)
-            drive_point = drive_points.get_closest_drive_point(robot.center)
+            drive_point = drive_points.get_next_drive_point(robot.center)
             drive(stub, robot, drive_point)
 
             sleep(1.5)
