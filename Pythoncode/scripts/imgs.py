@@ -3,11 +3,10 @@
 import cv2
 cap = cv2.VideoCapture("")
 count = 0
-max_count = 0
 
 ret, frame = cap.read()
 
-while ret and max_count >= count:
+while ret:
     cv2.imwrite(f"img/frame_{str(count).zfill(6)}.jpg", frame)
     count += 1
 
