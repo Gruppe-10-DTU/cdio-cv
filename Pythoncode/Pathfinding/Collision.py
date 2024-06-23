@@ -115,24 +115,19 @@ def in_obstacle(box: Rectangle, to: Coordinate):
 
 
 
-def turn_robot(robot: Robot, point1: Coordinate, point2: Coordinate) -> float:
+def turn_robot_internal(robot: Robot, point1: Coordinate, point2: Coordinate) -> float:
     # two points define the line
     normalized_wall = Vector(point1, point2).normalize()
     ap = Vector(robot.center, point1)
     dot_product = ap.get_dot_product(normalized_wall)
     point_on_obstacle = point1.add_vector(normalized_wall.scale(dot_product))  # x is a point on a line
-    robot_length = robot.get_centerline_as_vector().length() + CLEARANCE
+    robot_length = robot.get_centerline_as_vector().length() / 2 + CLEARANCE
     return VectorUtils.get_length(point_on_obstacle, robot.center) - robot_length
-
-
-def turn_robot(robot: Robot, obstacle: Rectangle) -> float:
-    point1, point2 = get_closest_points(robot.center, [obstacle.c1, obstacle.c4, obstacle.c2, obstacle.c3])
-    return turn_robot(robot, point1, point2)
 
 
 def turn_robot(robot: Robot) -> float:
     corner_centers = [corner.center for corner in CourtState.getProperty(CourtProperty.CORNERS)]
     obstacle = CourtState.getProperty(CourtProperty.OBSTACLE)
     corner_point1, corner_point2 = get_closest_points(robot.center, corner_centers)
-    obstacle_point1, obstacle_point2 = get_closest_points(robot.center, obstacle)
-    return max(turn_robot(robot, obstacle_point1, obstacle_point2), turn_robot(robot, corner_point1, corner_point2))
+    obstacle_point1, obstacle_point2 = get_closest_points(robot.center, obstacle.get_corners())
+    return max(turn_robot_internal(robot, obstacle_point1, obstacle_point2), turn_robot_internal(robot, corner_point1, corner_point2))
