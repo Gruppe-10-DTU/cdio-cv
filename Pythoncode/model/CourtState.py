@@ -43,10 +43,12 @@ class CourtState(object):
 
     @classmethod
     def initialize(cls):
-        # Pre calibrated values for the webcam
-        cls.mtx = numpy.loadtxt('.\\calibration\\mtx.txt')
-        cls.dist = numpy.loadtxt('.\\calibration\\dist.txt')
-        cls.omtx = numpy.loadtxt('.\\calibration\\omtx.txt')
+        cls.mtx = numpy.loadtxt(
+            'calibration/mtx.txt')
+        cls.dist = numpy.loadtxt(
+            'calibration/dist.txt')
+        cls.omtx = numpy.loadtxt(
+            'calibration/omtx.txt')
 
         model = YOLO("../model/best.pt")
         cls.model = model
@@ -155,16 +157,6 @@ class CourtState(object):
 
         if obstacle is not None and egg is not None:
             egg.calculate_buffers(obstacle)
-
-            color = (0, 255, 255)
-            frame = cv2.circle(frame, (egg.buffer_center.x, egg.buffer_center.y), radius=5, color=color, thickness=-1)
-
-            color = (255, 0, 0)
-            frame = cv2.circle(frame, (egg.buffer_c2.x, egg.buffer_c2.y), radius=5, color=color, thickness=-1)
-
-            v1 = numpy.array([int(egg.buffer.c1.x), int(egg.buffer.c1.y)])
-            v2 = numpy.array([int(egg.buffer.c2.x), int(egg.buffer.c2.y)])
-            cv2.rectangle(frame, v1, v2, color=(255, 0, 0), thickness=1)
 
             cls.items[CourtProperty.EGG] = egg
 

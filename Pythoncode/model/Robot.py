@@ -1,4 +1,5 @@
 from Pythoncode.Pathfinding import VectorUtils
+from Pythoncode.model.Vector import Vector
 from Pythoncode.model.coordinate import Coordinate
 
 
@@ -7,5 +8,5 @@ class Robot:
         self.front = front
         self.center = center
 
-    def get_centerline(self):
-        return VectorUtils.get_vector(self.front.x, self.front.y)
+    def get_centerline_as_vector(self):
+        return Vector(self.front, self.center)
