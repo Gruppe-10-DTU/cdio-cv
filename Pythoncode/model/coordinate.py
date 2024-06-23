@@ -5,3 +5,6 @@ class Coordinate:
 
     def add_vector(self, vector):
         return Coordinate(self.x + vector.x, self.y + vector.y)
+
+    def to_tuble(self) -> tuple:
+        return self.x, self.y

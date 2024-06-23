@@ -46,11 +46,11 @@ class CourtState(object):
     @classmethod
     def initialize(cls):
         cls.mtx = numpy.loadtxt(
-            'C:/Users/asbpo/Desktop/DTU/Softwareteknologi/4.Semester/62410_CDIO-project/RobotProject/cdio-cv/Pythoncode/calibration/mtx.txt')
+            'calibration/mtx.txt')
         cls.dist = numpy.loadtxt(
-            'C:/Users/asbpo/Desktop/DTU/Softwareteknologi/4.Semester/62410_CDIO-project/RobotProject/cdio-cv/Pythoncode/calibration/dist.txt')
+            'calibration/dist.txt')
         cls.omtx = numpy.loadtxt(
-            'C:/Users/asbpo/Desktop/DTU/Softwareteknologi/4.Semester/62410_CDIO-project/RobotProject/cdio-cv/Pythoncode/calibration/omtx.txt')
+            'calibration/omtx.txt')
 
         model = YOLO("../model/best.pt")
         cls.model = model
@@ -85,7 +85,7 @@ class CourtState(object):
         cls.items[CourtProperty.CORNERS] = get_corners_as_list(corners)
         cls.analyse_results(results, frame)
 
-        cv2.imshow("YOLO", results[0].plot())
+        #cv2.imshow("YOLO", results[0].plot())
 
     @classmethod
     def updateObjects(cls,drive_points,target):
@@ -107,7 +107,7 @@ class CourtState(object):
             for drive_point in drive_points:
                 img = cv2.circle(img,(int(drive_point.x), int(drive_point.y)), radius=5, color=(255, 0, 0), thickness=-1)
         cv2.imshow("YOLO", img)
-        cv2.waitKey()
+        #cv2.waitKey()
 
 
     @classmethod
@@ -178,19 +178,6 @@ class CourtState(object):
 
         if obstacle is not None and egg is not None:
             egg.calculate_buffers(obstacle)
-
-            uc = cv2.undistortImagePoints(numpy.array([[egg.buffer_center.x, egg.buffer_center.y]], dtype=numpy.float32), cls.mtx,
-                                          cls.dist)
-            color = (0, 255, 255)
-
-            frame = cv2.circle(frame, (int(uc[0][0][0]), int(uc[0][0][1])), radius=5, color=color, thickness=-1)
-            uc = cv2.undistortImagePoints(numpy.array([[egg.buffer_c2.x, egg.buffer_c2.y]], dtype=numpy.float32), cls.mtx,
-                                          cls.dist)
-            color = (255, 0, 0)
-            frame = cv2.circle(frame, (int(uc[0][0][0]), int(uc[0][0][1])), radius=5, color=color, thickness=-1)
-            v1 = numpy.array([int(egg.buffer.c1.x), int(egg.buffer.c1.y)])
-            v2 = numpy.array([int(egg.buffer.c2.x), int(egg.buffer.c2.y)])
-            cv2.rectangle(frame, v1, v2, color=(255, 0, 0), thickness=1)
 
             cls.items[CourtProperty.EGG] = egg
 

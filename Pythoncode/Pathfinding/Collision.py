@@ -1,5 +1,15 @@
 import copy
+import math
 
+import numpy as np
+
+from Pythoncode.Pathfinding import VectorUtils, CornerUtils
+from Pythoncode.model.CourtState import CourtProperty, CourtState
+from Pythoncode.model.Vector import Vector
+from Pythoncode.model.Corner import Corner
+
+from Pythoncode.model.Rectangle import Rectangle, get_closest_points
+from Pythoncode.model.Robot import Robot
 from Pythoncode.Pathfinding import VectorUtils, drive_points
 from Pythoncode.model.Rectangle import Rectangle
 from Pythoncode.model.coordinate import Coordinate
@@ -13,6 +23,9 @@ LEFT = 1
 RIGHT = 2
 BOTTOM = 4
 TOP = 8
+
+CLEARANCE = 2
+TURN_DEGREES = 15
 
 
 def calculate_endpoint_outcode(box: Rectangle, coordinate: Coordinate):
@@ -100,3 +113,21 @@ def in_obstacle(box: Rectangle, to: Coordinate):
     return box.c1.x <= to.x <= box.c2.x and box.c1.y <= to.y <= box.c2.y
 
 
+
+
+def turn_robot_internal(robot: Robot, point1: Coordinate, point2: Coordinate) -> float:
+    # two points define the line
+    normalized_wall = Vector(point1, point2).normalize()
+    ap = Vector(robot.center, point1)
+    dot_product = ap.get_dot_product(normalized_wall)
+    point_on_obstacle = point1.add_vector(normalized_wall.scale(dot_product))  # x is a point on a line
+    robot_length = robot.get_centerline_as_vector().length() / 2 + CLEARANCE
+    return VectorUtils.get_length(point_on_obstacle, robot.center) - robot_length
+
+
+def turn_robot(robot: Robot) -> float:
+    corner_centers = [corner.center for corner in CourtState.getProperty(CourtProperty.CORNERS)]
+    obstacle = CourtState.getProperty(CourtProperty.OBSTACLE)
+    corner_point1, corner_point2 = get_closest_points(robot.center, corner_centers)
+    obstacle_point1, obstacle_point2 = get_closest_points(robot.center, obstacle.get_corners())
+    return max(turn_robot_internal(robot, obstacle_point1, obstacle_point2), turn_robot_internal(robot, corner_point1, corner_point2))

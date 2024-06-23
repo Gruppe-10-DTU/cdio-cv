@@ -17,7 +17,7 @@ class Pathfinding:
         self.drive_points = drive_points
 
 
-    def get_closest(self, point: Coordinate) -> Ball:
+    def get_closest(self, point: Coordinate, egg: Egg) -> Ball:
         closest_distance = math.inf
         m = None
         for target in self.targets:
@@ -28,6 +28,16 @@ class Pathfinding:
                 vector_end_coordinate = Coordinate(self.obstacle.center.x + best_vector.x, self.obstacle.center.y + best_vector.y)
                 best_driving_point = self.drive_points.get_closest_drive_point(point=vector_end_coordinate)
                 distance += VectorUtils.get_length(target.center,best_driving_point)
+
+                clips = p_clips(self.obstacle, point, best_driving_point, int(self.pixel_per_cm))
+                target.collection_point = best_driving_point
+            elif egg.ball_inside_buffer(target.center):
+                best_vector = VectorUtils.get_vector(egg.center, target.center)
+                best_vector = best_vector.scale_to_length(350)
+                vector_end_coordinate = Coordinate(egg.center.x + best_vector.x,
+                                                   egg.center.y + best_vector.y)
+                best_driving_point = self.drive_points.get_closest_drive_point(point=vector_end_coordinate)
+                distance += VectorUtils.get_length(target.center, best_driving_point)
 
                 clips = p_clips(self.obstacle, point, best_driving_point, int(self.pixel_per_cm))
                 target.collection_point = best_driving_point
