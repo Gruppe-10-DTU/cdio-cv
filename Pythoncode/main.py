@@ -7,6 +7,7 @@ import numpy
 
 from Pythoncode.Pathfinding import VectorUtils
 from Pythoncode.Pathfinding import Pathfinding, DeliverySystem, CornerUtils
+from Pythoncode.Pathfinding.Collision import turn_robot
 from Pythoncode.Pathfinding.drive_points import Drive_points
 from Pythoncode.grpc import protobuf_pb2_grpc, protobuf_pb2
 from Pythoncode.model import Ball, Vector
@@ -107,11 +108,13 @@ def drive(stub, robot, target, backup=False, speed = 90):
     print("Length: " + str(int(length)))
     move = stub.Move(protobuf_pb2.MoveRequest(direction=True, distance=int(length), speed=speed))
     print("Return value Move: " + str(move))
-    if backup:
+    if backup or turn_robot(robot) > 0:
         sleep(2)
         print("Backing up "+str(length))
         backed = stub.Move(protobuf_pb2.MoveRequest(direction=False, distance=int(length), speed=70))
         print("Return value Backup: " + str(backed))
+
+
 
 
 
