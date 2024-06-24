@@ -27,7 +27,6 @@ def main():
     scale = CornerUtils.get_cm_per_pixel(corners, CourtState.getProperty(CourtProperty.BALLS), config)
     CourtState.set_property(CourtProperty.PIXEL_PER_CM, scale)
     robot = CourtState.getProperty(CourtProperty.ROBOT)
-    """goals = calculate_goals(corners)"""
     balls = CourtState.getProperty(CourtProperty.BALLS)
     drive_points = Drive_points(corners, CourtState.getProperty(CourtProperty.PIXEL_PER_CM))
     pathfinding = Pathfinding(balls, robot.center, CourtState.getProperty(CourtProperty.OBSTACLE), CourtState.getProperty(CourtProperty.PIXEL_PER_CM), drive_points)
@@ -138,7 +137,6 @@ def drive_function(stub, target: Ball, drive_points):
 
 
 def drive(stub, robot, target, backup=False, buffer = 0.0, speed = 90, is_drive_point=False):
-    #angle = VectorUtils.calculate_angle_clockwise(target, robot.front, robot.center)
     angle = VectorUtils.calculate_angle_clockwise(target, robot.front, robot.center)
     print("Turning " + str(angle))
 

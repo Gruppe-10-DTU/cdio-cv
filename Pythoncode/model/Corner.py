@@ -22,7 +22,9 @@ class Corner:
 
     def is_in_corner(self, target: Coordinate) -> bool:
         leng = math.floor(VectorUtils.get_vector(target, self.center).length())
-        return leng <= 150
+        if leng <= 100:
+            return True
+        return False
 
 
 class Placement(Enum):
