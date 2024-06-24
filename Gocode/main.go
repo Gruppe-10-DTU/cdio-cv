@@ -371,12 +371,12 @@ func precisionTurn(request *pbuf.TurnRequest) (*pbuf.Status, error) {
 	rightMotor.SetStopAction(HOLD)
 
 	var forwardMotor *ev3dev.TachoMotor
-	direction := 1.0
+	var direction float64
 	if degrees < 0 {
-		direction = -1
+		direction = -1.0
 		forwardMotor = rightMotor
 	} else {
-		direction = 1
+		direction = 1.0
 		forwardMotor = leftMotor
 	}
 	cmPerDeg := RobotWidth * 2 * math.Pi / 360.0
