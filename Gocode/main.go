@@ -399,7 +399,7 @@ func precisionTurn(request *pbuf.TurnRequest) (*pbuf.Status, error) {
 		leftMotor.Command(STOP)
 		return &pbuf.Status{ErrCode: false}, gErr
 	}
-	if math.Abs(float64(degrees)-gyroDeg) < 1.0 {
+	if math.Abs(float64(degrees)-gyroDeg) < 1.5 {
 		return &pbuf.Status{ErrCode: true}, nil
 	}
 	offset := "Offset is: " + strconv.FormatFloat(degrees-gyroDeg, 'g', -1, 32)
