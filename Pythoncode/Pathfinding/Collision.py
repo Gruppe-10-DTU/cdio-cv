@@ -24,7 +24,7 @@ def line_collides_with_rectangle(box: Rectangle, begin: Coordinate, to: Coordina
     return line_clips_rectangle(box, begin, to)
 
 
-def robot_collides(box: Rectangle, begin: Coordinate, to: Coordinate, pixel_per_cm: int):
+def robot_collides(box: Rectangle, egg: Egg, begin: Coordinate, to: Coordinate, pixel_per_cm: int):
     left_p1, left_p2 = VectorUtils.calculate_parallel_vector_coordinates(begin,
                                                                          VectorUtils.get_vector(begin, to),
                                                                          pixel_per_cm * 10, True)
@@ -33,11 +33,13 @@ def robot_collides(box: Rectangle, begin: Coordinate, to: Coordinate, pixel_per_
                                                                            pixel_per_cm * 10, False)
     collides = (line_collides_with_rectangle(box, begin, to) or
                 line_collides_with_rectangle(box, left_p1, left_p2) or
-                line_collides_with_rectangle(box, right_p1, right_p2))
+                line_collides_with_rectangle(box, right_p1, right_p2) or 
+                line_clipping_egg(egg, begin, to, pixel_per_cm))
 
     print("Center hit: " + str(line_collides_with_rectangle(box, begin, to)) + "\n" +
           "Left hit: " + str(line_collides_with_rectangle(box, left_p1, left_p2)) + "\n" +
-          "Right hit: " + str(line_collides_with_rectangle(box, right_p1, right_p2)) + "\n")
+          "Right hit: " + str(line_collides_with_rectangle(box, right_p1, right_p2)) + "\n" +
+          "Egg hit: " + str(line_clipping_egg(egg, begin, to, pixel_per_cm)) + "\n")
 
     return collides
 
@@ -64,15 +66,15 @@ def turn_robot(robot: Robot) -> float:
     return max(turn_robot_internal(robot, obstacle_point1, obstacle_point2), turn_robot_internal(robot, corner_point1, corner_point2))
 
 
-def line_clipping_egg(egg: Egg, begin: Coordinate, end: Coordinate) -> bool:
+def line_clipping_egg(egg: Egg, begin: Coordinate, end: Coordinate, pixel_per_cm) -> bool:
     egg_center = egg.center
     path = Vector(end.x - begin.x, end.y - begin.y)
     path_length = path.length()
     begin_egg = Vector(egg_center.x - begin.x, egg_center.y - begin.y)
     egg_path_lenght = abs(begin_egg.get_dot_product(path))/abs(path_length)
-    if egg_path_lenght < EGG_BUFFER:
+    if egg_path_lenght < EGG_BUFFER * pixel_per_cm:
         return True
     begin_egg_length = begin_egg.length()
     end_egg_lenght = Vector(egg_center, end).length()
-    return begin_egg_length < EGG_BUFFER or end_egg_lenght < EGG_BUFFER
+    return begin_egg_length < EGG_BUFFER* pixel_per_cm or end_egg_lenght < EGG_BUFFER * pixel_per_cm
 
