@@ -362,7 +362,7 @@ func precisionTurn(degrees int) (*pbuf.Status, error) {
 		fmt.Printf("%s", errMsg)
 		return &pbuf.Status{ErrCode: false, Message: &errMsg}, err
 	}
-
+	peripherherals.ResetGyros()
 	leftMotor.Command(RESET)
 	rightMotor.Command(RESET)
 
@@ -385,5 +385,21 @@ func precisionTurn(degrees int) (*pbuf.Status, error) {
 	forwardMotor.SetSpeedSetpoint((forwardMotor.MaxSpeed() * 7) / 10)
 	forwardMotor.Command(REL_POS)
 	time.Sleep(500 * time.Millisecond)
-	return &pbuf.Status{ErrCode: true}, nil
+	gyroDeg, gyroCount, gErr := peripherherals.GetGyroValue()
+	if gyroCount == 0 {
+		rightState, _ := rightMotor.State()
+		leftState, _ := leftMotor.State()
+		errMsg := "Turn failed: Error reading gyro" +
+			"\n\tRight state: " + rightState.String() + "\tLeft state:" + leftState.String() +
+			"\n\tAngle: " + strconv.FormatFloat(gyroDeg, 'g', -1, 32) + "\n"
+		fmt.Printf("%s", errMsg)
+		rightMotor.Command(STOP)
+		leftMotor.Command(STOP)
+		return &pbuf.Status{ErrCode: false}, gErr
+	}
+	if gyroDeg-float64(degrees) < 1.0 {
+		return &pbuf.Status{ErrCode: true}, nil
+	}
+
+	return &pbuf.Status{ErrCode: false}, nil
 }
