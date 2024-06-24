@@ -2,6 +2,7 @@ import copy
 import math
 
 import numpy as np
+from numpy.linalg import norm
 
 from Pythoncode.Pathfinding import VectorUtils, CornerUtils
 from Pythoncode.Pathfinding.Clipping import line_clips_rectangle
@@ -11,7 +12,7 @@ from Pythoncode.model.Rectangle import Rectangle, get_closest_points
 from Pythoncode.model.Vector import Vector
 from Pythoncode.model.coordinate import Coordinate
 
-CLEARANCE = 2
+CLEARANCE = 1.7
 TURN_DEGREES = 15
 
 
@@ -46,13 +47,15 @@ def in_obstacle(box: Rectangle, to: Coordinate):
 
 def turn_robot_internal(turning_point: Coordinate, robot_length: float, point1: Coordinate, point2: Coordinate) -> float:
     # two points define the line
-    normalized_wall = Vector(point1, point2).normalize()
-    ap = Vector(turning_point, point1)
-    dot_product = ap.get_dot_product(normalized_wall)
-    point_on_obstacle = point1.add_vector(normalized_wall.scale(dot_product))  # x is a point on a line
-    robot_length = robot_length / 2 + CLEARANCE
-    ball_position =VectorUtils.get_length(point_on_obstacle, turning_point)
-    return ball_position - robot_length
+    p1 = np.array([point1.x, point1.y])
+    p2 = np.array([point2.x, point2.y])
+    p3 = np.array([turning_point.x, turning_point.y])
+
+    # x is a point on a line
+    robot_radius = robot_length * CLEARANCE
+    ball_position = np.abs(norm(np.cross(p2-p1, p1-p3))) / norm(p2-p1)
+    difference = ball_position - robot_radius
+    return difference
 
 
 def turn_robot(point: Coordinate, robot_length: float) -> float:
@@ -61,11 +64,13 @@ def turn_robot(point: Coordinate, robot_length: float) -> float:
 
     for corner in corners:
         next_corner = CornerUtils.get_next(corner, corners)
+        length = turn_robot_internal(point, robot_length, corner.center, next_corner.center)
         if turn_robot_internal(point, robot_length, corner.center, next_corner.center) < 0:
-            close_items.append((corner.center, next_corner.center))
+            close_items.append(length)
 
     obstacle = CourtState.getProperty(CourtProperty.OBSTACLE)
     obstacle_point1, obstacle_point2 = get_closest_points(point, obstacle.get_corners())
-    close_items.append((obstacle_point1, obstacle_point2))
-    lengths = [turn_robot_internal(point, robot_length, value[0], value[1]) for value in close_items]
-    return min(lengths)
+    length = turn_robot_internal(point, robot_length, obstacle_point1, obstacle_point2)
+    close_items.append(length)
+
+    return min(close_items)

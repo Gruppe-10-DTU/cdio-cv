@@ -167,9 +167,8 @@ def drive(stub, robot, target, backup=False, buffer = 0.0, speed = 90, is_drive_
 
     print("Return value Move: " + str(move))
     if backup or turn_robot(robot.center, VectorUtils.get_length(robot.center, robot.front)) < 0:
-    #if backup:
         sleep(2)
-        if length > 20:
+        if length > 20 and backup:
             length = 20
         print("Backing up "+str(length))
         backed = stub.Move(protobuf_pb2.MoveRequest(direction=False, distance=int(length), speed=speed))
