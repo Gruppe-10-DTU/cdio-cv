@@ -153,13 +153,12 @@ def drive(stub, robot, target, backup=False, buffer = 0.0, speed = 90, is_drive_
     length = int(((length_to_target / CourtState.getProperty(CourtProperty.PIXEL_PER_CM))
                  ) * 0.9) - buffer
     print("Length: " + str(length))
-    if buffer > 0:
-        move = stub.Move(protobuf_pb2.MoveRequest(direction=True, distance=int(length), speed=speed))
-    else:
-        move = stub.Move(protobuf_pb2.MoveRequest(direction=True, distance=int(length), speed=speed))
+
+    move = stub.Move(protobuf_pb2.MoveRequest(direction=True, distance=int(length), speed=speed))
 
     print("Return value Move: " + str(move))
-    if backup or turn_robot(robot) < 0:
+    #if backup or turn_robot(target.center, VectorUtils.get_length(robot.center, robot.front)) > 0:
+    if backup:
         sleep(2)
         if length > 20:
             length = 20
