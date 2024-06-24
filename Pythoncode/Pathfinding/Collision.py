@@ -51,7 +51,8 @@ def turn_robot_internal(turning_point: Coordinate, robot_length: float, point1: 
     dot_product = ap.get_dot_product(normalized_wall)
     point_on_obstacle = point1.add_vector(normalized_wall.scale(dot_product))  # x is a point on a line
     robot_length = robot_length / 2 + CLEARANCE
-    return VectorUtils.get_length(point_on_obstacle, turning_point) - robot_length
+    ball_position =VectorUtils.get_length(point_on_obstacle, turning_point)
+    return ball_position - robot_length
 
 
 def turn_robot(point: Coordinate, robot_length: float) -> float:

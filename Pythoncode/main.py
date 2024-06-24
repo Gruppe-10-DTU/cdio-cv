@@ -42,7 +42,7 @@ def commandHandler(pathfinding, drive_points):
             CourtState.updateObjects(drive_points.drive_points,None)
             with grpc.insecure_channel(ip) as channel:
                 stub = protobuf_pb2_grpc.RobotStub(channel)
-                stub.Vacuum(protobuf_pb2.VacuumPower(power=True))
+                #stub.Vacuum(protobuf_pb2.VacuumPower(power=True))
                 while len(pathfinding.targets) > 0:
                     egg = CourtState.getProperty(CourtProperty.EGG)
                     robot = CourtState.getProperty(CourtProperty.ROBOT)
@@ -161,9 +161,12 @@ def drive(stub, robot, target, backup=False, buffer = 0.0, speed = 90, is_drive_
     print("Length: " + str(length))
 
     move = stub.Move(protobuf_pb2.MoveRequest(direction=True, distance=int(length), speed=speed))
+    CourtState.updateObjects(None, None)
+
+    robot = CourtState.getProperty(CourtProperty.ROBOT)
 
     print("Return value Move: " + str(move))
-    if backup or turn_robot(target, VectorUtils.get_length(robot.center, robot.front)) < 0:
+    if backup or turn_robot(robot.center, VectorUtils.get_length(robot.center, robot.front)) < 0:
     #if backup:
         sleep(2)
         if length > 20:
