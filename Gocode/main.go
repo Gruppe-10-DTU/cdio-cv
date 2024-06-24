@@ -15,7 +15,7 @@ import (
 )
 
 const WheelDiameter float64 = 5.6
-const RobotWidth float64 = 19
+const RobotWidth float64 = 16
 const (
 	RUN     = "run-forever"
 	DIR     = "run-direct"
@@ -384,7 +384,7 @@ func precisionTurn(degrees int) (*pbuf.Status, error) {
 	forwardMotor.SetPositionSetpoint(int(motorPos))
 	forwardMotor.SetSpeedSetpoint((forwardMotor.MaxSpeed() * 7) / 10)
 	forwardMotor.Command(REL_POS)
-	time.Sleep(500 * time.Millisecond)
+	time.Sleep(1 * time.Second)
 	gyroDeg, gyroCount, gErr := peripherherals.GetGyroValue()
 	if gyroCount == 0 {
 		rightState, _ := rightMotor.State()
