@@ -1,4 +1,5 @@
 import configparser
+import math
 from time import sleep
 
 import grpc
@@ -43,7 +44,6 @@ def commandHandler(pathfinding, drive_points):
             with grpc.insecure_channel(ip) as channel:
                 stub = protobuf_pb2_grpc.RobotStub(channel)
                 stub.Vacuum(protobuf_pb2.VacuumPower(power=True))
-                stub.Vacuum(protobuf_pb2.VacuumPower(power=True))
                 while len(pathfinding.targets) > 0:
                     egg = CourtState.getProperty(CourtProperty.EGG)
                     robot = CourtState.getProperty(CourtProperty.ROBOT)
@@ -62,12 +62,21 @@ def commandHandler(pathfinding, drive_points):
                 CourtState.updateObjects(None, None)
                 robot = CourtState.getProperty(CourtProperty.ROBOT)
                 # True implies that ball will be delivered in the goal to the right of the camera
-                DeliverySystem.deliver_balls_to_goal(stub, robot, drive_points, drive, True)
+                DeliverySystem.deliver_balls_to_goal(stub, robot, drive_points, drive, False)
+                """"Hacky fix"""
+                stub.Vacuum(protobuf_pb2.VacuumPower(True))
+                sleep(2)
+                stub.Vacuum(protobuf_pb2.VacuumPower(False))
+                sleep(2)
+                stub.Vacuum(protobuf_pb2.VacuumPower(True))
+                sleep(2)
+                stub.Vacuum(protobuf_pb2.VacuumPower(False))
                 break
         except Exception as e:
             print(str(e))
             print("Robot died. Sleeping for 5")
             sleep(2)
+
 
 def drive_function(stub, target: Ball, drive_points):
     robot = CourtState.getProperty(CourtProperty.ROBOT)
@@ -78,11 +87,18 @@ def drive_function(stub, target: Ball, drive_points):
         on_drive_point, coordinate = drive_points.is_on_drive_point(robot.center)
         if on_drive_point:
             if coordinate.x == target.collection_point.x and coordinate.y == target.collection_point.y:
-                print("On collection point, moving to target.")
+                length_to_target = VectorUtils.get_length(target.center, robot.front)
+                length = int(((length_to_target / CourtState.getProperty(CourtProperty.PIXEL_PER_CM)) * 0.5))
+                drive(stub, robot, target.center, buffer= length)
+
+                CourtState.updateObjects(drive_points.drive_points, None)
+                robot = CourtState.getProperty(CourtProperty.ROBOT)
                 if egg.ball_inside_buffer(target.center):
                     drive(stub, robot, target.center, backup=True, is_drive_point=False, buffer = 2.3)
                 else:
-                    drive(stub, robot, target.center, backup=True, is_drive_point=False)
+                    CourtState.updateObjects(drive_points.drive_points, None)
+                    robot = CourtState.getProperty(CourtProperty.ROBOT)
+                    drive(stub, robot, target.center, backup=True, is_drive_point=False, buffer=4)
                 return
         print("Drive to collection point")
         drive(stub, robot, target.collection_point, is_drive_point=True)
@@ -102,24 +118,21 @@ def drive_function(stub, target: Ball, drive_points):
         in_corner = corners[i].is_in_corner(target.center)
         wall_close = target.get_distance_to_wall(corners[i], CornerUtils.get_next(corners[i], corners)) < 50.0
         if in_corner or wall_close:
-            drive_point = drive_points.get_next_drive_point(target.center)
+            drive_point = drive_points.get_closest_drive_point(target.center)
             on_drive_point, coordinate = drive_points.is_on_drive_point(robot.center)
             target.collection_point = drive_points.get_closest_drive_point(target.center)
-
             if on_drive_point:
                 if coordinate.x == target.collection_point.x and coordinate.y == target.collection_point.y:
                     print("At drive point. Moving to target")
                     drive(stub, robot, target.center, backup=True)
+                    return
                 else:
-                    drive(drive(stub, robot, target.collection_point, is_drive_point=True))
+                    drive(stub, robot, drive_points.get_next_drive_point(target.center), is_drive_point=True)
                 return
 
-        drive(stub, robot, drive_point, is_drive_point=True)
-        return
-    else:
-        print("Going to target...")
-        drive_points.last = None
-        drive(stub, robot, target.center)
+    print("Going to target...")
+    drive_points.last = None
+    drive(stub, robot, target.center, buffer=5)
 
 
 
@@ -130,11 +143,17 @@ def drive(stub, robot, target, backup=False, buffer = 0.0, speed = 90, is_drive_
     print("Turning " + str(angle))
 
     turn = stub.Turn(protobuf_pb2.TurnRequest(degrees=numpy.float32(angle)))
+    """"DO NOT CHANGE THIS. 
+    We calculate angle from center and turn then drive the value of this subtracted from the center.
+    This is necessary, or we overshoot if the angle between front and ball is too large.
+    """
     print("Return value Turn: " + str(turn))
-    length_to_target = VectorUtils.get_length(target, robot.front)
-    if is_drive_point:
-        length_to_target += VectorUtils.get_length(robot.center, robot.front)
-    length = int(((length_to_target / CourtState.getProperty(CourtProperty.PIXEL_PER_CM)) - 3) * 0.9) - buffer
+    length_to_target = VectorUtils.get_length(target, robot.center)
+    if not is_drive_point:
+        length_to_target -= VectorUtils.get_length(robot.center, robot.front)
+    print("length to target: "+ str(length_to_target))
+    length = int(((length_to_target / CourtState.getProperty(CourtProperty.PIXEL_PER_CM))
+                 ) * 0.9) - buffer
     print("Length: " + str(length))
     if buffer > 0:
         move = stub.Move(protobuf_pb2.MoveRequest(direction=True, distance=int(length), speed=speed))
@@ -144,8 +163,8 @@ def drive(stub, robot, target, backup=False, buffer = 0.0, speed = 90, is_drive_
     print("Return value Move: " + str(move))
     if backup or turn_robot(robot) < 0:
         sleep(2)
-        if length > 10:
-            length = 10
+        if length > 20:
+            length = 20
         print("Backing up "+str(length))
         backed = stub.Move(protobuf_pb2.MoveRequest(direction=False, distance=int(length), speed=speed))
         print("Return value Backup: " + str(backed))

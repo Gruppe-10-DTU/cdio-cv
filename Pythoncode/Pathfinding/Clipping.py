@@ -34,7 +34,7 @@ def calculate_endpoint_outcode(box: Rectangle, coordinate: Coordinate):
     return outcode
 
 
-def line_clips_rectangle(box: Rectangle, begin: Coordinate, to: Coordinate) -> (bool, Coordinate, Coordinate):
+def line_clips_rectangle(box: Rectangle, begin: Coordinate, to: Coordinate) -> bool:
     c1 = copy.deepcopy(begin)
     c2 = copy.deepcopy(to)
 
@@ -77,4 +77,4 @@ def line_clips_rectangle(box: Rectangle, begin: Coordinate, to: Coordinate) -> (
                 c2.y = y
                 end = calculate_endpoint_outcode(box, c2)
 
-    return does_clip, c1, c2
+    return does_clip

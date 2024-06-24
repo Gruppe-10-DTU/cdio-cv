@@ -70,7 +70,7 @@ class CourtState(object):
                 y0 = int(y0)
                 x1 = int(x1)
                 y1 = int(y1)
-                corner = Corner(x0, y0, x1, y1)
+                corner = Corner(x0, y0, x1, y1,current_id)
                 corners[current_id] = corner
                 current_id += 1
 
@@ -93,7 +93,7 @@ class CourtState(object):
         frame = cv2.undistort(cls.frame, cls.mtx, cls.dist, None, cls.omtx)
         results = model.predict(frame, conf=0.5)
 
-        if cv2.waitKey(1) == ord('q'):
+        if cv2.waitKey(1000) == ord('q'):
             return
 
         img = cls.analyse_results(results, frame)
@@ -134,7 +134,7 @@ class CourtState(object):
                     balls.append(Ball(x0, y0, x1, y1))
                 case "corner":
                     color = (100, 190, 255)
-                    corner = Corner(x0, y0, x1, y1)
+                    corner = Corner(x0, y0, x1, y1,0)
                     corners.append(corner)
                 case "r_body":
                     color = (0, 255, 0)
@@ -172,7 +172,7 @@ class CourtState(object):
 
     @classmethod
     def setupCam(cls):
-        cap = cv2.VideoCapture(1, cv2.CAP_DSHOW)
+        cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
         cap.set(cv2.CAP_PROP_BUFFERSIZE, 3)
         width = 1280
         height = 720
