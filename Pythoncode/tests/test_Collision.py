@@ -61,6 +61,6 @@ class Test(TestCase):
         clipped = line_clipping_egg(egg_center, begin, end)    
         self.assertFalse(clipped)
         begin = Coordinate(1, 1)
-        end = Coordinate(10, 20)
+        end = Coordinate(300, 300)
         clipped = line_clipping_egg(egg_center, begin, end)    
         self.assertTrue(clipped)
