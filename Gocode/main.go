@@ -383,7 +383,7 @@ func precisionTurn(request *pbuf.TurnRequest) (*pbuf.Status, error) {
 	cmPerPulse := WheelDiameter * math.Pi / float64(forwardMotor.CountPerRot())
 	motorPos := math.Round(degrees * direction * cmPerDeg / cmPerPulse)
 	forwardMotor.SetPositionSetpoint(int(motorPos))
-	forwardMotor.SetSpeedSetpoint((forwardMotor.MaxSpeed() * 6) / 10)
+	forwardMotor.SetSpeedSetpoint(forwardMotor.MaxSpeed() / 2)
 	forwardMotor.SetRampUpSetpoint(500 * time.Millisecond)
 	forwardMotor.Command(REL_POS)
 	time.Sleep(1 * time.Second)
@@ -399,7 +399,7 @@ func precisionTurn(request *pbuf.TurnRequest) (*pbuf.Status, error) {
 		leftMotor.Command(STOP)
 		return &pbuf.Status{ErrCode: false}, gErr
 	}
-	if math.Abs(float64(degrees)-gyroDeg) < 1.5 {
+	if math.Abs(degrees-gyroDeg) < 1.5 {
 		return &pbuf.Status{ErrCode: true}, nil
 	}
 	offset := "Offset is: " + strconv.FormatFloat(degrees-gyroDeg, 'g', -1, 32)
