@@ -1,7 +1,7 @@
 from unittest import TestCase
 
 from Pythoncode.model.Rectangle import Rectangle
-from Pythoncode.Pathfinding.Collision import line_hits_rectangle
+from Pythoncode.Pathfinding.Collision import line_collides_with_rectangle
 from Pythoncode.model.coordinate import Coordinate
 
 
@@ -13,7 +13,7 @@ class Test(TestCase):
         x1 = 9
         y1 = 11
 
-        clipped = line_hits_rectangle(box, Coordinate(x0, y0), Coordinate(x1, y1))
+        clipped = line_collides_with_rectangle(box, Coordinate(x0, y0), Coordinate(x1, y1))
 
         self.assertTrue(clipped)
 
@@ -25,7 +25,7 @@ class Test(TestCase):
         x1 = 8
         y1 = 11
 
-        clipped = line_hits_rectangle(box, Coordinate(x0, y0), Coordinate(x1, y1))
+        clipped = line_collides_with_rectangle(box, Coordinate(x0, y0), Coordinate(x1, y1))
 
         self.assertFalse(clipped)
 
@@ -37,7 +37,7 @@ class Test(TestCase):
         x1 = 4
         y1 = 4
 
-        clipped = line_hits_rectangle(box, Coordinate(x0, y0), Coordinate(x1, y1))
+        clipped = line_collides_with_rectangle(box, Coordinate(x0, y0), Coordinate(x1, y1))
 
         self.assertFalse(clipped)
 
@@ -49,6 +49,6 @@ class Test(TestCase):
         x1 = 14
         y1 = 14
 
-        clipped = line_hits_rectangle(box, Coordinate(x0, y0), Coordinate(x1, y1))
+        clipped = line_collides_with_rectangle(box, Coordinate(x0, y0), Coordinate(x1, y1))
 
         self.assertFalse(clipped)

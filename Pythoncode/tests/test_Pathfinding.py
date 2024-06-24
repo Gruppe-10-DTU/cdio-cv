@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from Pythoncode.Pathfinding.Collision import line_hits_rectangle
+from Pythoncode.Pathfinding.Collision import line_collides_with_rectangle
 from Pythoncode.Pathfinding.Pathfinding import Pathfinding
 from Pythoncode.model.Ball import Ball
 from Pythoncode.model.Rectangle import Rectangle

@@ -1,11 +1,5 @@
 #!/bin/bash
 
-name="$(uname -s)"
-case "${name}" in
-    Darwin*)    prog="python3";;
-    *)          prog="python"
-esac
-
 proto_dir=../../Gocode/proto
 proto_file=protobuf.proto
 out_dir=.

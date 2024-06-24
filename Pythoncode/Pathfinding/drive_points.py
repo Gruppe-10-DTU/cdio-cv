@@ -3,8 +3,8 @@ from Pythoncode.model.Corner import Placement
 from Pythoncode.model.Vector import Vector
 from Pythoncode.Pathfinding import CornerUtils
 
-PRECICION = 20 # drive point tolereance
-WALL_DISTANCE = 25 # wall clearance
+PRECICION = 15 # drive point tolereance
+WALL_DISTANCE = 28 # wall clearance
 
 class Drive_points:
     def __init__(self, corners, mapscale):
@@ -48,7 +48,7 @@ class Drive_points:
     def get_drive_points(self):
         return self.drive_points
 
-    def get_closest_drive_point(self, point: Coordinate) -> Coordinate:
+    def get_next_drive_point(self, point: Coordinate) -> Coordinate:
         closest = None
         current = None
         distance = float('inf')
@@ -66,16 +66,27 @@ class Drive_points:
         self.last = current
         return closest
 
+    def get_closest_drive_point(self, point: Coordinate) -> Coordinate:
+        closest = None
+        distance = float('inf')
+        for i in range(len(self.drive_points)):
+            tmp_distance = Vector(point, self.drive_points[i]).length()
+            if tmp_distance > PRECICION * self.scale and tmp_distance < distance:
+                distance = tmp_distance
+                closest = self.drive_points[i]
+        return closest
+
     def get_closest_drive_point_vector(self, point) -> Vector:
-        end = self.get_closest_drive_point(point)
+        end = self.get_next_drive_point(point)
         return Vector(end.x - point.x, end.y - point.y)
 
-    def is_on_drive_point(self,point: Coordinate) -> bool:
+    def is_on_drive_point(self, point: Coordinate) -> (bool, Coordinate):
         for i in range(len(self.drive_points)):
             tmp_distance = Vector(point,self.drive_points[i]).length()
             if tmp_distance < PRECICION * self.scale:
-                return True
-        return False
+                return True, self.drive_points[i]
+        return False, None
+
 
     def __calculate_corner_drive_point(self, corner, wall1, wall2) -> Coordinate:
         vec1 = wall1.scale(WALL_DISTANCE * self.scale / wall1.length())
