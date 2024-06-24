@@ -93,7 +93,7 @@ class CourtState(object):
         frame = cv2.undistort(cls.frame, cls.mtx, cls.dist, None, cls.omtx)
         results = model.predict(frame, conf=0.5)
 
-        if cv2.waitKey(1500) == ord('q'):
+        if cv2.waitKey(500) == ord('q'):
             return
 
         img = cls.analyse_results(results, frame)
@@ -172,7 +172,7 @@ class CourtState(object):
 
     @classmethod
     def setupCam(cls):
-        cap = cv2.VideoCapture(1, cv2.CAP_DSHOW)
+        cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
         cap.set(cv2.CAP_PROP_BUFFERSIZE, 3)
         width = 1280
         height = 720

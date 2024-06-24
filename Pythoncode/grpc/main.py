@@ -17,13 +17,11 @@ def run():
             stub.Move(protobuf_pb2.MoveRequest(direction=True,distance=1,speed=30))
             
         """
-        #stub.Move(protobuf_pb2.MoveRequest(direction=True,distance=1,speed=70))
-        stub.Vacuum(protobuf_pb2.VacuumPower(power=False))
-        """stub.Move(protobuf_pb2.MoveRequest(direction=True,distance=70,speed=100))
-        stub.Vacuum(protobuf_pb2.VacuumPower(power=True))
-        stub.Move(protobuf_pb2.MoveRequest(direction=True, distance=30, speed=60))
-        stub.Move(protobuf_pb2.MoveRequest(direction=False,distance=30, speed=60))
-        stub.Vacuum(protobuf_pb2.VacuumPower(power=False))"""
+        while True:
+            stub.Vacuum(protobuf_pb2.VacuumPower(power=False))
+            sleep(4)
+            stub.Vacuum(protobuf_pb2.VacuumPower(power=True))
+            sleep(5)
 
 
 

@@ -20,7 +20,7 @@ class Pathfinding:
             distance = VectorUtils.get_length(target.center, point)
             if in_obstacle(self.obstacle, target.center):
                 best_vector = VectorUtils.get_vector(self.obstacle.center, target.center)
-                best_vector = best_vector.scale_to_length(350)
+                best_vector = best_vector.scale_to_length(400)
                 vector_end_coordinate = Coordinate(self.obstacle.center.x + best_vector.x, self.obstacle.center.y + best_vector.y)
                 best_driving_point = self.drive_points.get_closest_drive_point(point=vector_end_coordinate)
                 distance += VectorUtils.get_length(target.center, best_driving_point)

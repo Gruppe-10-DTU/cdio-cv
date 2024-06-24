@@ -42,7 +42,7 @@ def commandHandler(pathfinding, drive_points):
             CourtState.updateObjects(drive_points.drive_points,None)
             with grpc.insecure_channel(ip) as channel:
                 stub = protobuf_pb2_grpc.RobotStub(channel)
-                #stub.Vacuum(protobuf_pb2.VacuumPower(power=True))
+                stub.Vacuum(protobuf_pb2.VacuumPower(power=True))
                 while len(pathfinding.targets) > 0:
                     egg = CourtState.getProperty(CourtProperty.EGG)
                     robot = CourtState.getProperty(CourtProperty.ROBOT)
@@ -82,7 +82,7 @@ def drive_function(stub, target: Ball, drive_points):
                 if egg.ball_inside_buffer(target.center):
                     drive(stub, robot, target.center, backup=True, is_drive_point=False, buffer = 5)
                 else:
-                    drive(stub, robot, target.center, backup=True, is_drive_point=False, buffer=3)
+                    drive(stub, robot, target.center, backup=True, is_drive_point=False, buffer=4)
                 return
         print("Drive to collection point")
         drive(stub, robot, target.collection_point, is_drive_point=True)
@@ -126,7 +126,7 @@ def drive(stub, robot, target, backup=False, buffer = 0.0, speed = 90, is_drive_
         length_to_target = VectorUtils.get_length(target, robot.center)
         if not is_drive_point:
             length_to_target -= VectorUtils.get_length(robot.center, robot.front)
-        length = float(((length_to_target / CourtState.getProperty(CourtProperty.PIXEL_PER_CM)) * 0.5))
+        length = float(((length_to_target / CourtState.getProperty(CourtProperty.PIXEL_PER_CM)) * (2/3)))
         angle = VectorUtils.calculate_angle_clockwise(target, robot.front, robot.center)
         length = math.floor(length)
         print("Turning " + str(angle))
@@ -152,15 +152,14 @@ def drive(stub, robot, target, backup=False, buffer = 0.0, speed = 90, is_drive_
     if not is_drive_point:
         length_to_target -= VectorUtils.get_length(robot.center, robot.front)
     print("length to target: "+ str(length_to_target))
-    length = (length_to_target / CourtState.getProperty(CourtProperty.PIXEL_PER_CM))
-    if length > buffer:
-        length = length - buffer
-    if length > 4:
-        length = length-3
-    length = math.floor(length)
-    print("Length: " + str(length))
+    length = (length_to_target / CourtState.getProperty(CourtProperty.PIXEL_PER_CM)) - buffer - 3
 
-    move = stub.Move(protobuf_pb2.MoveRequest(direction=True, distance=int(length), speed=speed))
+    length = max(length,1)
+    print("Length: " + str(length))
+    if backup:
+        move = stub.Move(protobuf_pb2.MoveRequest(direction=True, distance=int(length), speed=25))
+    else:
+        move = stub.Move(protobuf_pb2.MoveRequest(direction=True, distance=int(length), speed=speed))
     CourtState.updateObjects(None, None)
 
     robot = CourtState.getProperty(CourtProperty.ROBOT)
