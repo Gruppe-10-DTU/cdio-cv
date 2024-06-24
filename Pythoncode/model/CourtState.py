@@ -93,7 +93,7 @@ class CourtState(object):
         frame = cv2.undistort(cls.frame, cls.mtx, cls.dist, None, cls.omtx)
         results = model.predict(frame, conf=0.5)
 
-        if cv2.waitKey(1000) == ord('q'):
+        if cv2.waitKey(1500) == ord('q'):
             return
 
         img = cls.analyse_results(results, frame)

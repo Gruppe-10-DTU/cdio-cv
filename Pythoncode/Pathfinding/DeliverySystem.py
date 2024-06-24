@@ -32,6 +32,11 @@ def deliver_balls_to_goal(rpc, robot, drive_points, drive, big_goal=True):
         rpc.Vacuum(protobuf_pb2.VacuumPower(power=False))
         #sleep(0.5)
         #rpc.Move(protobuf_pb2.MoveRequest(direction=True,distance=1,speed=30))
+        while True:
+            rpc.Vacuum(protobuf_pb2.VacuumPower(power=True))
+            sleep(7)
+            rpc .Vacuum(protobuf_pb2.VacuumPower(power=False))
+            sleep(6)
 
         print("Balls delivered successfully!")
     else:
@@ -42,7 +47,7 @@ def deliver_balls_to_goal(rpc, robot, drive_points, drive, big_goal=True):
 def align_robot_with_delivery_point(robot, drive_point: Coordinate, delivery_point: Coordinate, rpc) -> bool:
     CourtState.updateObjects([delivery_point, drive_point], drive_point)
     robot = CourtState.getProperty(CourtProperty.ROBOT)
-    while VectorUtils.get_length(robot.center, drive_point) > 2.0 * CourtState.getProperty(CourtProperty.PIXEL_PER_CM):
+    while VectorUtils.get_length(robot.center, drive_point) > 1.5 * CourtState.getProperty(CourtProperty.PIXEL_PER_CM):
         angle = VectorUtils.calculate_angle_clockwise(drive_point, robot.front, robot.center)
         move_direction = True
         # turn opposite and reverse if it is shorter

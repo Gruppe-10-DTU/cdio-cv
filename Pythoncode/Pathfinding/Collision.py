@@ -3,7 +3,7 @@ import math
 
 import numpy as np
 
-from Pythoncode.Pathfinding import VectorUtils
+from Pythoncode.Pathfinding import VectorUtils, CornerUtils
 from Pythoncode.Pathfinding.Clipping import line_clips_rectangle
 from Pythoncode.grpc.protobuf_pb2_grpc import Robot
 from Pythoncode.model.CourtState import CourtProperty, CourtState

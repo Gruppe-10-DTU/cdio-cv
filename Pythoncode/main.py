@@ -63,13 +63,6 @@ def commandHandler(pathfinding, drive_points):
                 # True implies that ball will be delivered in the goal to the right of the camera
                 DeliverySystem.deliver_balls_to_goal(stub, robot, drive_points, drive, False)
                 """"Hacky fix"""
-                stub.Vacuum(protobuf_pb2.VacuumPower(True))
-                sleep(2)
-                stub.Vacuum(protobuf_pb2.VacuumPower(False))
-                sleep(2)
-                stub.Vacuum(protobuf_pb2.VacuumPower(True))
-                sleep(2)
-                stub.Vacuum(protobuf_pb2.VacuumPower(False))
                 break
         except Exception as e:
             print(str(e))
@@ -86,18 +79,10 @@ def drive_function(stub, target: Ball, drive_points):
         on_drive_point, coordinate = drive_points.is_on_drive_point(robot.center)
         if on_drive_point:
             if coordinate.x == target.collection_point.x and coordinate.y == target.collection_point.y:
-                length_to_target = VectorUtils.get_length(target.center, robot.front)
-                length = int(((length_to_target / CourtState.getProperty(CourtProperty.PIXEL_PER_CM)) * 0.5))
-                drive(stub, robot, target.center, buffer= length)
-
-                CourtState.updateObjects(drive_points.drive_points, None)
-                robot = CourtState.getProperty(CourtProperty.ROBOT)
                 if egg.ball_inside_buffer(target.center):
-                    drive(stub, robot, target.center, backup=True, is_drive_point=False, buffer = 2.3)
+                    drive(stub, robot, target.center, backup=True, is_drive_point=False, buffer = 5)
                 else:
-                    CourtState.updateObjects(drive_points.drive_points, None)
-                    robot = CourtState.getProperty(CourtProperty.ROBOT)
-                    drive(stub, robot, target.center, backup=True, is_drive_point=False, buffer=4)
+                    drive(stub, robot, target.center, backup=True, is_drive_point=False, buffer=3)
                 return
         print("Drive to collection point")
         drive(stub, robot, target.collection_point, is_drive_point=True)
@@ -146,12 +131,18 @@ def drive(stub, robot, target, backup=False, buffer = 0.0, speed = 90, is_drive_
     This is necessary, or we overshoot if the angle between front and ball is too large.
     """
     print("Return value Turn: " + str(turn))
+    CourtState.updateObjects(None, None)
+    robot = CourtState.getProperty(CourtProperty.ROBOT)
     length_to_target = VectorUtils.get_length(target, robot.center)
     if not is_drive_point:
         length_to_target -= VectorUtils.get_length(robot.center, robot.front)
     print("length to target: "+ str(length_to_target))
-    length = int(((length_to_target / CourtState.getProperty(CourtProperty.PIXEL_PER_CM))
-                 ) * 0.9) - buffer
+    length = (length_to_target / CourtState.getProperty(CourtProperty.PIXEL_PER_CM))
+    if length > buffer:
+        length = length - buffer
+    if length > 4:
+        length = length-3
+    length = math.floor(length)
     print("Length: " + str(length))
 
     move = stub.Move(protobuf_pb2.MoveRequest(direction=True, distance=int(length), speed=speed))
