@@ -15,6 +15,7 @@ import (
 )
 
 const WheelDiameter float64 = 5.6
+const RobotWidth float64 = 19
 const (
 	RUN     = "run-forever"
 	DIR     = "run-direct"
@@ -178,6 +179,9 @@ func (s *robotServer) Move(_ context.Context, request *pbuf.MoveRequest) (*pbuf.
 }
 
 func (s *robotServer) Turn(_ context.Context, request *pbuf.TurnRequest) (*pbuf.Status, error) {
+	if math.Abs(float64(request.Degrees)) > 10.0 {
+		return precisionTurn(int(request.Degrees))
+	}
 	leftMotor, err := peripherherals.GetMotor("left")
 	if err != nil {
 		errMsg := "Turn failed: Error getting left motor\n"
@@ -342,5 +346,44 @@ func (s *robotServer) StopMovement(_ context.Context, _ *pbuf.Empty) (*pbuf.Stat
 func (s *robotServer) Stats(_ context.Context, _ *pbuf.Status) (*pbuf.Status, error) {
 	/* TODO */
 
+	return &pbuf.Status{ErrCode: true}, nil
+}
+
+func precisionTurn(degrees int) (*pbuf.Status, error) {
+	leftMotor, err := peripherherals.GetMotor("left")
+	if err != nil {
+		errMsg := "Turn failed: Error getting left motor\n"
+		fmt.Printf("%s", errMsg)
+		return &pbuf.Status{ErrCode: false, Message: &errMsg}, err
+	}
+	rightMotor, err := peripherherals.GetMotor("right")
+	if err != nil {
+		errMsg := "Turn failed: Error getting right motor\n"
+		fmt.Printf("%s", errMsg)
+		return &pbuf.Status{ErrCode: false, Message: &errMsg}, err
+	}
+
+	leftMotor.Command(RESET)
+	rightMotor.Command(RESET)
+
+	leftMotor.SetStopAction(HOLD)
+	rightMotor.SetStopAction(HOLD)
+
+	var forwardMotor *ev3dev.TachoMotor
+	direction := 1
+	if degrees < 0 {
+		direction = -1
+		forwardMotor = rightMotor
+	} else {
+		direction = 1
+		forwardMotor = leftMotor
+	}
+	cmPerDeg := RobotWidth * 2 * math.Pi / 360
+	cmPerPulse := WheelDiameter * math.Pi / float64(forwardMotor.CountPerRot())
+	motorPos := float64(degrees*direction) * cmPerDeg / cmPerPulse
+	forwardMotor.SetPositionSetpoint(int(motorPos))
+	forwardMotor.SetSpeedSetpoint((forwardMotor.MaxSpeed() * 7) / 10)
+	forwardMotor.Command(REL_POS)
+	time.Sleep(500 * time.Millisecond)
 	return &pbuf.Status{ErrCode: true}, nil
 }
