@@ -56,11 +56,15 @@ def turn_robot_internal(turning_point: Coordinate, robot_length: float, point1: 
 
 def turn_robot(point: Coordinate, robot_length: float) -> float:
     corners = CourtState.getProperty(CourtProperty.CORNERS)
-    close_corners = []
-    #for corner in corners:
+    close_items = []
 
-    corner_centers = [corner.center for corner in CourtState.getProperty(CourtProperty.CORNERS)]
+    for corner in corners:
+        next_corner = CornerUtils.get_next(corner, corners)
+        if turn_robot_internal(point, robot_length, corner.center, next_corner.center) < 0:
+            close_items.append((corner.center, next_corner.center))
+
     obstacle = CourtState.getProperty(CourtProperty.OBSTACLE)
-    corner_point1, corner_point2 = get_closest_points(point, corner_centers)
     obstacle_point1, obstacle_point2 = get_closest_points(point, obstacle.get_corners())
-    return max(turn_robot_internal(point, robot_length, obstacle_point1, obstacle_point2), turn_robot_internal(point, robot_length, corner_point1, corner_point2))
+    close_items.append((obstacle_point1, obstacle_point2))
+    lengths = [turn_robot_internal(point, robot_length, value[0], value[1]) for value in close_items]
+    return min(lengths)

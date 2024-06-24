@@ -122,6 +122,21 @@ def drive_function(stub, target: Ball, drive_points):
 
 
 def drive(stub, robot, target, backup=False, buffer = 0.0, speed = 90, is_drive_point=False):
+    if backup:
+        length_to_target = VectorUtils.get_length(target, robot.center)
+        if not is_drive_point:
+            length_to_target -= VectorUtils.get_length(robot.center, robot.front)
+        length = float(((length_to_target / CourtState.getProperty(CourtProperty.PIXEL_PER_CM)) * 0.5))
+        angle = VectorUtils.calculate_angle_clockwise(target, robot.front, robot.center)
+        length = math.floor(length)
+        print("Turning " + str(angle))
+
+        turn = stub.Turn(protobuf_pb2.TurnRequest(degrees=numpy.float32(angle)))
+        move = stub.Move(protobuf_pb2.MoveRequest(direction=True, distance=int(length), speed=speed))
+
+        CourtState.updateObjects(None, None)
+        robot = CourtState.getProperty(CourtProperty.ROBOT)
+
     angle = VectorUtils.calculate_angle_clockwise(target, robot.front, robot.center)
     print("Turning " + str(angle))
 
@@ -148,8 +163,8 @@ def drive(stub, robot, target, backup=False, buffer = 0.0, speed = 90, is_drive_
     move = stub.Move(protobuf_pb2.MoveRequest(direction=True, distance=int(length), speed=speed))
 
     print("Return value Move: " + str(move))
-    #if backup or turn_robot(target.center, VectorUtils.get_length(robot.center, robot.front)) > 0:
-    if backup:
+    if backup or turn_robot(target, VectorUtils.get_length(robot.center, robot.front)) < 0:
+    #if backup:
         sleep(2)
         if length > 20:
             length = 20
