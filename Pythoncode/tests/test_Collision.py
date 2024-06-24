@@ -1,7 +1,7 @@
 from unittest import TestCase
 
 from Pythoncode.model.Rectangle import Rectangle
-from Pythoncode.Pathfinding.Collision import line_collides_with_rectangle
+from Pythoncode.Pathfinding.Collision import line_collides_with_rectangle, line_clipping_egg
 from Pythoncode.model.coordinate import Coordinate
 
 
@@ -52,3 +52,15 @@ class Test(TestCase):
         clipped = line_collides_with_rectangle(box, Coordinate(x0, y0), Coordinate(x1, y1))
 
         self.assertFalse(clipped)
+
+
+    def test_line_clipping_egg(self):
+        egg_center = Coordinate(250, 250)
+        begin = Coordinate(1, 1)
+        end = Coordinate(10, 20)
+        clipped = line_clipping_egg(egg_center, begin, end)    
+        self.assertFalse(clipped)
+        begin = Coordinate(1, 1)
+        end = Coordinate(10, 20)
+        clipped = line_clipping_egg(egg_center, begin, end)    
+        self.assertTrue(clipped)

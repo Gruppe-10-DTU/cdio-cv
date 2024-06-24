@@ -9,10 +9,12 @@ from Pythoncode.grpc.protobuf_pb2_grpc import Robot
 from Pythoncode.model.CourtState import CourtProperty, CourtState
 from Pythoncode.model.Rectangle import Rectangle, get_closest_points
 from Pythoncode.model.Vector import Vector
+from Pythoncode.model.Egg import Egg
 from Pythoncode.model.coordinate import Coordinate
 
 CLEARANCE = 2
 TURN_DEGREES = 15
+EGG_BUFFER = 10
 
 
 def line_collides_with_rectangle(box: Rectangle, begin: Coordinate, to: Coordinate):
@@ -60,3 +62,17 @@ def turn_robot(robot: Robot) -> float:
     corner_point1, corner_point2 = get_closest_points(robot.center, corner_centers)
     obstacle_point1, obstacle_point2 = get_closest_points(robot.center, obstacle.get_corners())
     return max(turn_robot_internal(robot, obstacle_point1, obstacle_point2), turn_robot_internal(robot, corner_point1, corner_point2))
+
+
+def line_clipping_egg(egg: Egg, begin: Coordinate, end: Coordinate) -> bool:
+    egg_center = egg.center
+    path = Vector(end.x - begin.x, end.y - begin.y)
+    path_length = path.length()
+    begin_egg = Vector(egg_center.x - begin.x, egg_center.y - begin.y)
+    egg_path_lenght = abs(begin_egg.get_dot_product(path))/abs(path_length)
+    if egg_path_lenght < EGG_BUFFER:
+        return True
+    begin_egg_length = begin_egg.length()
+    end_egg_lenght = Vector(egg_center, end).length()
+    return begin_egg_length < EGG_BUFFER or end_egg_lenght < EGG_BUFFER
+
