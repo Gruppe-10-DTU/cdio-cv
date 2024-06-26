@@ -70,7 +70,7 @@ class CourtState(object):
                 y0 = int(y0)
                 x1 = int(x1)
                 y1 = int(y1)
-                corner = Corner(x0, y0, x1, y1)
+                corner = Corner(x0, y0, x1, y1,current_id)
                 corners[current_id] = corner
                 current_id += 1
 
@@ -93,14 +93,11 @@ class CourtState(object):
         frame = cv2.undistort(cls.frame, cls.mtx, cls.dist, None, cls.omtx)
         results = model.predict(frame, conf=0.5)
 
-        if cv2.waitKey(1) == ord('q'):
+        if cv2.waitKey(200) == ord('q'):
             return
 
         img = cls.analyse_results(results, frame)
-        if drive_points is not None:
-            for drive_point in drive_points:
-                img = cv2.circle(img,(int(drive_point.x), int(drive_point.y)), radius=5, color=(255, 0, 0), thickness=-1)
-        cv2.imshow("YOLO", img)
+        #cv2.imshow("YOLO", img)
 
 
     @classmethod
@@ -127,20 +124,15 @@ class CourtState(object):
             x = int(x0 + (x1-x0)/2)
             y = int(y0 + (y1-y0)/2)
 
-            color = (0, 255, 255)
             match results[0].names[item]:
                 case "ball":
-                    color = (255, 255, 0)
                     balls.append(Ball(x0, y0, x1, y1))
                 case "corner":
-                    color = (100, 190, 255)
-                    corner = Corner(x0, y0, x1, y1)
+                    corner = Corner(x0, y0, x1, y1,0)
                     corners.append(corner)
                 case "r_body":
-                    color = (0, 255, 0)
                     robot_body = Coordinate(x, y)
                 case "r_front":
-                    color = (0, 0, 255)
                     robot_front = Coordinate(x, y)
                 case "obstacle":
                     obstacle = Rectangle(Coordinate(x0, y0), Coordinate(x1, y1))
@@ -149,11 +141,9 @@ class CourtState(object):
                 case "orange_ball":
                     vipItem = Vip(x0, y0, x1, y1)
 
-            frame = cv2.circle(frame, (x, y), radius=5, color=color, thickness=-1)
         """"This is the true center of the robot post adjustment of top-hat."""
         true_center = Coordinate(int((robot_front.x + robot_body.x) / 2), int((robot_front.y + robot_body.y) / 2))
         robot = Robot(true_center, robot_front)
-        frame = cv2.circle(frame, (true_center.x, true_center.y), radius=5, color=(255, 0, 255), thickness=-1)
 
         if obstacle is not None and egg is not None:
             egg.calculate_buffers(obstacle)
@@ -172,7 +162,7 @@ class CourtState(object):
 
     @classmethod
     def setupCam(cls):
-        cap = cv2.VideoCapture(1, cv2.CAP_DSHOW)
+        cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
         cap.set(cv2.CAP_PROP_BUFFERSIZE, 3)
         width = 1280
         height = 720
