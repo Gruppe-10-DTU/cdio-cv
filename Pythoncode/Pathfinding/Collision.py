@@ -12,7 +12,7 @@ from Pythoncode.model.Rectangle import Rectangle, get_closest_points
 from Pythoncode.model.Vector import Vector
 from Pythoncode.model.coordinate import Coordinate
 
-CLEARANCE = 1.7
+CLEARANCE = 1.5
 TURN_DEGREES = 15
 
 
@@ -33,10 +33,6 @@ def robot_collides(box: Rectangle, begin: Coordinate, to: Coordinate, pixel_per_
     collides = (line_collides_with_rectangle(box, begin, to) or
                 line_collides_with_rectangle(box, left_p1, left_p2) or
                 line_collides_with_rectangle(box, right_p1, right_p2))
-
-    print("Center hit: " + str(line_collides_with_rectangle(box, begin, to)) + "\n" +
-          "Left hit: " + str(line_collides_with_rectangle(box, left_p1, left_p2)) + "\n" +
-          "Right hit: " + str(line_collides_with_rectangle(box, right_p1, right_p2)) + "\n")
 
     return collides
 

@@ -30,14 +30,17 @@ def deliver_balls_to_goal(rpc, robot, drive_points, drive, big_goal=True):
     if alignment_successful:
         # 3: Turn off the motor to release balls (done)
         #rpc.Move(protobuf_pb2.MoveRequest(direction=True,distance=1,speed=30))
-        while True:
-            rpc .Vacuum(protobuf_pb2.VacuumPower(power=False))
+        for i in range(3):
+            rpc.Vacuum(protobuf_pb2.VacuumPower(power=False))
             sleep(6)
             rpc.Vacuum(protobuf_pb2.VacuumPower(power=True))
-            sleep(7)
-
-
+            sleep(4)
+        sleep(2)
+        rpc.Vacuum(protobuf_pb2.VacuumPower(power=False))
+        rpc.Move(protobuf_pb2.MoveRequest(direction=False, distance=20, speed=50))
+        rpc.Move(protobuf_pb2.MoveRequest(direction=True, distance=22, speed=80))
         print("Balls delivered successfully!")
+
     else:
         # Failed to align. need to implement realignment
         print("Alignment failed. Cannot deliver balls.")
@@ -59,22 +62,22 @@ def align_robot_with_delivery_point(robot, drive_point: Coordinate, delivery_poi
         # Slowly turn the robot and move it to the drive point
         rpc.Turn(protobuf_pb2.TurnRequest(degrees=angle, speed=50))
         offset = VectorUtils.get_length(robot.center, drive_point) / CourtState.getProperty(CourtProperty.PIXEL_PER_CM)
-        rpc.Move(protobuf_pb2.MoveRequest(direction=move_direction, distance=int(offset), speed=35))
+        rpc.Move(protobuf_pb2.MoveRequest(direction=move_direction, distance=int(offset), speed=50))
         CourtState.updateObjects([delivery_point, drive_point], drive_point)
         robot = CourtState.getProperty(CourtProperty.ROBOT)
     # point the robot to the delivery point
     delivery_distance = VectorUtils.get_length(robot.front, delivery_point) / CourtState.getProperty(
         CourtProperty.PIXEL_PER_CM)  # - 1 * CourtState.getProperty(CourtProperty.PIXEL_PER_CM)
-    while delivery_distance > 0.5:
+    while delivery_distance > 1:
         angle = VectorUtils.calculate_angle_clockwise(delivery_point, robot.front, robot.center)
-        if angle > 4 or angle < -4:
+        if angle > 3 or angle < -3:
             rpc.Turn(protobuf_pb2.TurnRequest(degrees=angle, speed=50))
         # Move the robot to the delivery point
         CourtState.updateObjects([delivery_point, drive_point], drive_point)
         robot = CourtState.getProperty(CourtProperty.ROBOT)
         delivery_distance = ((VectorUtils.get_length(robot.front, delivery_point) / CourtState.getProperty(
             CourtProperty.PIXEL_PER_CM)) - 4)
-        rpc.Move(protobuf_pb2.MoveRequest(direction=True, distance=int(delivery_distance/2), speed=30))
+        rpc.Move(protobuf_pb2.MoveRequest(direction=True, distance=int(delivery_distance/2), speed=50))
         CourtState.updateObjects([delivery_point, drive_point], drive_point)
         robot = CourtState.getProperty(CourtProperty.ROBOT)
         delivery_distance = ((VectorUtils.get_length(robot.front, delivery_point) / CourtState.getProperty(
