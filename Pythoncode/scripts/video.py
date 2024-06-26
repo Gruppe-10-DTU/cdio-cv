@@ -1,5 +1,8 @@
 """
-Source: https://tsaith.github.io/combine-images-into-a-video-with-python-3-and-opencv-3.html
+Source:
+TH, 2015: "Combine images into a video with Python 3 and OpenCv 3"
+accessed 25.06.2024:
+https://tsaith.github.io/combine-images-into-a-video-with-python-3-and-opencv-3.html
 """
 
 import cv2

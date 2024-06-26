@@ -1,6 +1,9 @@
 """
 Inspired by official ultralytics documentation on object tracking with YOLO.
-Source: https://docs.ultralytics.com/modes/track/#persisting-tracks-loop
+Source:
+Ultralytics, 2024: "Multi-Object Tracking with Ultralytics YOLO"
+accessed 11.06.2024:
+https://docs.ultralytics.com/modes/track/#persisting-tracks-loop
 """
 
 import cv2

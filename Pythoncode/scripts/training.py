@@ -1,3 +1,10 @@
+"""
+Source for the specific YOLO model variant usage:
+Github, 2023: "Small object under 15px detection"
+accessed 20.03.2024
+https://github.com/ultralytics/ultralytics/issues/981
+"""
+
 from ultralytics import YOLO
 import torch
 
