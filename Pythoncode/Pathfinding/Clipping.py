@@ -1,11 +1,10 @@
 """
 This code uses an implementation of the Cohen-Sutherland algorithm for line clipping
 
-Sources:
-
+Source:
+dilli_hangraei, 2024: "Line Clipping Algorithm ~ Part I"
+accessed 18.06.2024:
 https://medium.com/@dillihangrae/line-clipping-algorithm-part-i-6db9e8ce4cce
-https://en.wikipedia.org/wiki/Cohen%E2%80%93Sutherland_algorithm
-
 """
 import copy
 

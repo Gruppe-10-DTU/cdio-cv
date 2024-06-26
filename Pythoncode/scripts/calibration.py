@@ -2,6 +2,8 @@
 Calculate calibration values for the webcam and save to text files. Use values to undistort image later when running robot.
 
 Source:
+OpenCV, 2024: "Camera calibration"
+accessed 18.06.2024:
 https://docs.opencv.org/4.x/dc/dbb/tutorial_py_calibration.html
 """
 
