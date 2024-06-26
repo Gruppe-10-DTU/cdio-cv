@@ -34,7 +34,7 @@ func BothMotorsRunning() bool {
 	rightState, _ := rightMotor.State()
 	leftString := leftState.String()
 	rightString := rightState.String()
-	leftMotorRunning := strings.Contains(leftString, "running") || strings.Contains(leftString, "ramping")
-	rightMotorRunning := strings.Contains(rightString, "running") || strings.Contains(rightString, "ramping")
-	return leftMotorRunning && rightMotorRunning
+	leftMotorStopped := strings.Contains(leftString, "stalled") || strings.Contains(leftString, "stopped")
+	rightMotorStopped := strings.Contains(rightString, "stalled") || strings.Contains(rightString, "stopped")
+	return !leftMotorStopped && !rightMotorStopped
 }
