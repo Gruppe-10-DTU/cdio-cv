@@ -15,6 +15,7 @@ import (
 )
 
 const WheelDiameter float64 = 5.6
+const RobotWidth float64 = 17.5
 const (
 	RUN     = "run-forever"
 	DIR     = "run-direct"
@@ -178,6 +179,9 @@ func (s *robotServer) Move(_ context.Context, request *pbuf.MoveRequest) (*pbuf.
 }
 
 func (s *robotServer) Turn(_ context.Context, request *pbuf.TurnRequest) (*pbuf.Status, error) {
+	if math.Abs(float64(request.Degrees)) <= 15.0 {
+		return precisionTurn(request)
+	}
 	leftMotor, err := peripherherals.GetMotor("left")
 	if err != nil {
 		errMsg := "Turn failed: Error getting left motor\n"
@@ -241,7 +245,7 @@ func (s *robotServer) Turn(_ context.Context, request *pbuf.TurnRequest) (*pbuf.
 		dynSpeed := Kp*(degrees-pos) + Kd*(pos-lastPos)
 		lastPos = pos
 		if speed > dynSpeed {
-			power = int(math.Max(dynSpeed, 38.0))
+			power = int(math.Max(dynSpeed, 40.0))
 		} else {
 			power = int(speed)
 		}
@@ -343,4 +347,61 @@ func (s *robotServer) Stats(_ context.Context, _ *pbuf.Status) (*pbuf.Status, er
 	/* TODO */
 
 	return &pbuf.Status{ErrCode: true}, nil
+}
+
+func precisionTurn(request *pbuf.TurnRequest) (*pbuf.Status, error) {
+	degrees := float64(request.Degrees)
+	leftMotor, err := peripherherals.GetMotor("left")
+	if err != nil {
+		errMsg := "Turn failed: Error getting left motor\n"
+		fmt.Printf("%s", errMsg)
+		return &pbuf.Status{ErrCode: false, Message: &errMsg}, err
+	}
+	rightMotor, err := peripherherals.GetMotor("right")
+	if err != nil {
+		errMsg := "Turn failed: Error getting right motor\n"
+		fmt.Printf("%s", errMsg)
+		return &pbuf.Status{ErrCode: false, Message: &errMsg}, err
+	}
+	peripherherals.ResetGyros()
+	leftMotor.Command(RESET)
+	rightMotor.Command(RESET)
+
+	leftMotor.SetStopAction(HOLD)
+	rightMotor.SetStopAction(HOLD)
+
+	var forwardMotor *ev3dev.TachoMotor
+	var direction float64
+	if degrees < 0 {
+		direction = -1.0
+		forwardMotor = rightMotor
+	} else {
+		direction = 1.0
+		forwardMotor = leftMotor
+	}
+	cmPerDeg := RobotWidth * 2 * math.Pi / 360.0
+	cmPerPulse := WheelDiameter * math.Pi / float64(forwardMotor.CountPerRot())
+	motorPos := math.Round(degrees * direction * cmPerDeg / cmPerPulse)
+	forwardMotor.SetPositionSetpoint(int(motorPos))
+	forwardMotor.SetSpeedSetpoint(forwardMotor.MaxSpeed() / 2)
+	forwardMotor.SetRampUpSetpoint(500 * time.Millisecond)
+	forwardMotor.Command(REL_POS)
+	time.Sleep(1 * time.Second)
+	gyroDeg, gyroCount, gErr := peripherherals.GetGyroValue()
+	if gyroCount == 0 {
+		rightState, _ := rightMotor.State()
+		leftState, _ := leftMotor.State()
+		errMsg := "Turn failed: Error reading gyro" +
+			"\n\tRight state: " + rightState.String() + "\tLeft state:" + leftState.String() +
+			"\n\tAngle: " + strconv.FormatFloat(gyroDeg, 'g', -1, 32) + "\n"
+		fmt.Printf("%s", errMsg)
+		rightMotor.Command(STOP)
+		leftMotor.Command(STOP)
+		return &pbuf.Status{ErrCode: false}, gErr
+	}
+	if math.Abs(degrees-gyroDeg) < 1.5 {
+		return &pbuf.Status{ErrCode: true}, nil
+	}
+	offset := "Offset is: " + strconv.FormatFloat(degrees-gyroDeg, 'g', -1, 32)
+	return &pbuf.Status{ErrCode: false, Message: &offset}, nil
 }
